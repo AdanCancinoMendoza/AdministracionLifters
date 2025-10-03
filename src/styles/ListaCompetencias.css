@@ -1,0 +1,231 @@
+/* ===============================
+   CompetenciasDashboard.css (corregido y optimizado)
+   =============================== */
+
+/* ===============================
+   Estilos principales del dashboard
+   =============================== */
+.competencias-dashboard {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  background: #f9fafb;
+  color: #1f2937;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ===============================
+   Header
+   =============================== */
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.dashboard-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  display: inline-block;
+  padding-bottom: 6px;
+}
+
+/* ===============================
+   Contenedor principal
+   =============================== */
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column; /* apilado por defecto */
+  gap: 24px;
+  box-sizing: border-box;
+}
+
+/* ===============================
+   Filtros de búsqueda
+   =============================== */
+.competencias-filtros {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap; /* permite salto a siguiente línea */
+  gap: 12px;
+  align-items: center;
+  justify-content: center; /* centrado para que no se amontonen */
+  padding: 8px 4px;
+  box-sizing: border-box;
+}
+
+.filtro-busqueda {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #fff;
+  color: #374151;
+  flex: 1 1 320px;
+  min-width: 220px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.filtro-estado {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #fff;
+  color: #374151;
+  flex: 0 0 180px;
+  min-width: 160px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.filtro-busqueda:focus,
+.filtro-estado:focus {
+  border-color: #4e79a7;
+  outline: none;
+  box-shadow: 0 0 6px rgba(78, 121, 167, 0.18);
+}
+
+/* ===============================
+   Gráfica
+   =============================== */
+.competencias-grafica {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.competencias-grafica > div,
+.competencias-grafica canvas {
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* ===============================
+   Lista de competencias
+   =============================== */
+.competencias-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* ===============================
+   Tarjeta de competencia
+   =============================== */
+.competencia-card {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.competencia-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.1);
+}
+
+.competencia-card-img {
+/* Imagen de la competencia */
+  width: 100%;
+  max-height: 280px; /* Aumentamos la altura */
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  display: block;
+
+
+}
+
+.competencia-card-body {
+  padding: 16px 20px;
+}
+
+.competencia-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.competencia-card-body p {
+  font-size: 14px;
+  margin: 6px 0;
+  color: #374151;
+}
+
+.competencia-card-participantes {
+  font-weight: 600;
+  color: #2563eb;
+  margin-top: 8px;
+}
+
+/* ===============================
+   Estado
+   =============================== */
+.competencia-estado {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.competencia-estado-activa {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.competencia-estado-concluida {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.competencia-map {
+  margin-top: 15px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+/* ===============================
+   Layout en pantallas grandes
+   =============================== */
+@media (min-width: 992px) {
+  .dashboard-container {
+    display: grid;
+    grid-template-columns: 1fr; /* filtros y gráfica apilados */
+    grid-template-rows: auto auto auto;
+    gap: 24px;
+  }
+
+  /* filtros arriba */
+  .competencias-filtros {
+    justify-content: flex-start;
+  }
+
+  /* gráfica justo debajo */
+  .competencias-grafica {
+    grid-row: 2 / 3;
+  }
+
+  /* lista debajo de todo */
+  .competencias-lista {
+    grid-row: 3 / 4;
+  }
+
+  /* ajustar tamaño de imagen en desktop */
+  .competencia-card-img {
+    height: 180px;
+  }
+}

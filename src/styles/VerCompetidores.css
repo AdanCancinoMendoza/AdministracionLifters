@@ -1,0 +1,286 @@
+/* ===============================
+   Contenedor principal
+   =============================== */
+.competidores-container {
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  background-color: #f9fafb;
+  color: #1f2937;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+/* ===============================
+   Encabezado
+   =============================== */
+.competidores-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.competidores-titulo {
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #111827;
+}
+
+.competidores-descripcion {
+  font-size: 1rem;
+  color: #6b7280;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* ===============================
+   Resumen de competidores
+   =============================== */
+.competidores-resumen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f472b6;
+  color: white;
+  border-radius: 12px;
+  padding: 0.8rem 1.2rem;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.competidores-resumen-texto {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.competidores-resumen-numero {
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+/* ===============================
+   Tarjeta de competencia
+   =============================== */
+.competencia-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.competencia-foto {
+  width: 100%;
+  height: 250px; /* altura predefinida */
+  object-fit: cover;
+  display: block;
+}
+
+.competencia-info {
+  padding: 1rem 1.5rem;
+  text-align: center;
+}
+
+.competencia-nombre {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111827;
+}
+
+.competencia-fechas {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* ===============================
+   Tabla de competidores
+   =============================== */
+.competidores-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.competidores-tabla th,
+.competidores-tabla td {
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.competidores-tabla th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+.competidores-tabla tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+/* ===============================
+   Botones de acción
+   =============================== */
+.competidor-acciones {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-ver-baucher,
+.btn-editar,
+.btn-eliminar {
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  transition: background-color 0.3s;
+  color: white;
+}
+
+.btn-ver-baucher {
+  background-color: #9ca3af;
+}
+
+.btn-ver-baucher:hover {
+  background-color: #6b7280;
+}
+
+.btn-editar {
+  background-color: #3b82f6;
+}
+
+.btn-editar:hover {
+  background-color: #2563eb;
+}
+
+.btn-eliminar {
+  background-color: #ef4444;
+}
+
+.btn-eliminar:hover {
+  background-color: #dc2626;
+}
+
+/* ===============================
+   Modal
+   =============================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 14px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  animation: fadeIn 0.3s ease;
+  text-align: left;
+}
+
+.modal-titulo {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+}
+
+/* Inputs dentro del modal */
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-form label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.modal-form input {
+  padding: 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.modal-form input:focus {
+  border-color: #f472b6;
+  box-shadow: 0 0 0 3px rgba(244,114,182,0.25);
+}
+
+/* Botones en modal */
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.btn-guardar {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.btn-guardar:hover {
+  background-color: #059669;
+}
+
+.btn-cancelar {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.btn-cancelar:hover {
+  background-color: #dc2626;
+}
+
+
+
+/* ===============================
+   Imagen de Baucher en Modal
+   =============================== */
+.modal-imagen {
+  width: 100%;            /* ocupa todo el ancho disponible del modal */
+  max-width: 400px;       /* tamaño máximo de la imagen */
+  max-height: 400px;      /* altura máxima para que no desborde */
+  height: auto;           /* altura proporcional */
+  border-radius: 12px;
+  object-fit: contain;    /* mantiene proporciones sin recortar */
+  display: block;
+  margin: 0 auto 1rem auto; /* centrado y margen inferior */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* ===============================
+   Animación
+   =============================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

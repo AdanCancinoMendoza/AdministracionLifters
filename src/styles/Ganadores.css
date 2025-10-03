@@ -1,0 +1,177 @@
+/* ===== Global ===== */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #f5f7fa;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+.seccion-logros {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.titulo-logros {
+  text-align: center;
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  color: #1a1a2e;
+}
+
+.descripcion-logros {
+  text-align: center;
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 2rem;
+}
+
+/* ===== Categoría ===== */
+.bloque-categoria {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+  gap: 2rem;
+  flex-wrap: wrap;
+  padding: 1.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background-color: #fdfdfd;
+  transition: transform 0.2s;
+}
+
+.bloque-categoria:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== Lista de Ganadores ===== */
+.lista-ganadores {
+  flex: 1;
+  min-width: 280px;
+}
+
+.lista-ganadores h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: #1a1a2e;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ganador-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #f7f9fc;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.ganador-item:hover {
+  background-color: #eaf0fb;
+}
+
+.icono-medalla {
+  margin-right: 1rem;
+}
+
+.input-ganador {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  margin-right: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+.input-ganador:focus {
+  border-color: #1a237e;
+  outline: none;
+}
+
+.separador {
+  margin: 0 0.5rem;
+  color: #777;
+}
+
+/* ===== Imagen de la Categoría ===== */
+.imagen-categoria {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.imagen-categoria img {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-subir {
+  padding: 0.5rem 1rem;
+  background-color: #1a237e; /* Azul marino */
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-subir:hover {
+  background-color: #283593;
+}
+
+/* ===== Botón Guardar ===== */
+.guardar-btn {
+  display: block;
+  margin: 2rem auto 0 auto;
+  padding: 0.75rem 2rem;
+  background-color: #1a237e; /* Azul marino */
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.guardar-btn:hover {
+  background-color: #283593;
+  transform: translateY(-2px);
+}
+
+/* ===== Responsivo ===== */
+@media (max-width: 900px) {
+  .bloque-categoria {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lista-ganadores,
+  .imagen-categoria {
+    min-width: 100%;
+  }
+
+  .imagen-categoria img {
+    max-width: 100%;
+  }
+}
