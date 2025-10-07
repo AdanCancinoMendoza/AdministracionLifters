@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Edit, Trash2, FileText, Users } from "lucide-react";
 import "../../../styles/VerCompetidores.css";
+import { db } from "../../../firebase";
+import { collection, getDocs, query, where, orderBy, Timestamp } from "firebase/firestore";
 
 interface Competidor {
-  id: number;
+  id: string;
   nombre: string;
   apellidos: string;
   peso: number;
@@ -14,40 +16,60 @@ interface Competidor {
 }
 
 interface Competencia {
-  id: number;
+  id: string;
   nombre: string;
-  fechaInicio: string;
-  fechaCierre: string;
+  fechaInicio: Timestamp;
+  fechaCierre: Timestamp;
   foto: string;
   competidores: Competidor[];
 }
 
-const competencias: Competencia[] = [
-  {
-    id: 1,
-    nombre: "Powerlifting Estatal",
-    fechaInicio: "2025-10-01",
-    fechaCierre: "2025-10-05",
-    foto: "https://escapadas.mexicodesconocido.com.mx/wp-content/uploads/2024/01/Puebla-Ciudad-visitmexico.jpg",
-    competidores: [
-      {
-        id: 1,
-        nombre: "Carlos",
-        apellidos: "García",
-        peso: 82.5,
-        categoria: "-83kg",
-        telefono: "555-123-4567",
-        correo: "carlos@example.com",
-        baucherUrl: "https://imgv2-1-f.scribdassets.com/img/document/358541868/original/f077a82030/1?v=1",
-      },
-    ],
-  },
-];
-
 export default function VerCompetidores() {
+  const [competencias, setCompetencias] = useState<Competencia[]>([]);
   const [baucherUrl, setBaucherUrl] = useState<string | null>(null);
   const [competidorEditar, setCompetidorEditar] = useState<Competidor | null>(null);
   const [competidorEliminar, setCompetidorEliminar] = useState<Competidor | null>(null);
+
+  useEffect(() => {
+    const fetchCompetencias = async () => {
+      const now = Timestamp.now();
+      const q = query(
+        collection(db, "competencias"),
+        where("fechaCierre", ">", now),
+        orderBy("fechaCierre", "asc")
+      );
+
+      const querySnapshot = await getDocs(q);
+      const competenciasData: Competencia[] = [];
+
+      for (const docSnap of querySnapshot.docs) {
+        const data = docSnap.data();
+        const competidoresSnap = await getDocs(collection(db, `competencias/${docSnap.id}/competidores`));
+        const competidores: Competidor[] = competidoresSnap.docs.map(c => ({
+          id: c.id,
+          nombre: c.data().nombre,
+          apellidos: c.data().apellidos,
+          peso: c.data().peso,
+          categoria: c.data().categoria,
+          telefono: c.data().telefono,
+          correo: c.data().correo,
+          baucherUrl: c.data().baucherUrl || "",
+        }));
+        competenciasData.push({
+          id: docSnap.id,
+          nombre: data.nombre,
+          fechaInicio: data.fechaInicio,
+          fechaCierre: data.fechaCierre,
+          foto: data.foto,
+          competidores,
+        });
+      }
+
+      setCompetencias(competenciasData);
+    };
+
+    fetchCompetencias();
+  }, []);
 
   const totalCompetidores = competencias.reduce(
     (acc, comp) => acc + comp.competidores.length,
@@ -56,7 +78,6 @@ export default function VerCompetidores() {
 
   return (
     <div className="competidores-container">
-      {/* Encabezado */}
       <div className="competidores-header">
         <h1 className="competidores-titulo">Gestión de Competidores</h1>
         <p className="competidores-descripcion">
@@ -65,7 +86,6 @@ export default function VerCompetidores() {
         </p>
       </div>
 
-      {/* Resumen */}
       <div className="competidores-resumen">
         <Users size={40} />
         <div>
@@ -74,19 +94,14 @@ export default function VerCompetidores() {
         </div>
       </div>
 
-      {/* Secciones de competencias */}
       {competencias.map((competencia) => (
         <div key={competencia.id} className="competencia-card">
           <div className="competencia-info">
-            <img
-              src={competencia.foto}
-              alt={competencia.nombre}
-              className="competencia-foto"
-            />
+            <img src={competencia.foto} alt={competencia.nombre} className="competencia-foto" />
             <div>
               <h2 className="competencia-nombre">{competencia.nombre}</h2>
               <p className="competencia-fechas">
-                {competencia.fechaInicio} - {competencia.fechaCierre}
+                {competencia.fechaInicio.toDate().toLocaleDateString()} - {competencia.fechaCierre.toDate().toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -113,22 +128,13 @@ export default function VerCompetidores() {
                   <td>{c.telefono}</td>
                   <td>{c.correo}</td>
                   <td className="competidor-acciones">
-                    <button
-                      className="btn-ver-baucher"
-                      onClick={() => setBaucherUrl(c.baucherUrl)}
-                    >
+                    <button className="btn-ver-baucher" onClick={() => setBaucherUrl(c.baucherUrl)}>
                       <FileText size={16} />
                     </button>
-                    <button
-                      className="btn-editar"
-                      onClick={() => setCompetidorEditar(c)}
-                    >
+                    <button className="btn-editar" onClick={() => setCompetidorEditar(c)}>
                       <Edit size={16} />
                     </button>
-                    <button
-                      className="btn-eliminar"
-                      onClick={() => setCompetidorEliminar(c)}
-                    >
+                    <button className="btn-eliminar" onClick={() => setCompetidorEliminar(c)}>
                       <Trash2 size={16} />
                     </button>
                   </td>
@@ -139,20 +145,17 @@ export default function VerCompetidores() {
         </div>
       ))}
 
-      {/* Modal Baucher */}
+      {/* Modales */}
       {baucherUrl && (
         <div className="modal-overlay" onClick={() => setBaucherUrl(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3 className="modal-titulo">Baucher de Pago</h3>
             <img src={baucherUrl} alt="Baucher" className="modal-imagen" />
-            <button className="modal-cerrar" onClick={() => setBaucherUrl(null)}>
-              Cerrar
-            </button>
+            <button className="modal-cerrar" onClick={() => setBaucherUrl(null)}>Cerrar</button>
           </div>
         </div>
       )}
 
-      {/* Modal Editar */}
       {competidorEditar && (
         <div className="modal-overlay" onClick={() => setCompetidorEditar(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -173,7 +176,6 @@ export default function VerCompetidores() {
         </div>
       )}
 
-      {/* Modal Eliminar */}
       {competidorEliminar && (
         <div className="modal-overlay" onClick={() => setCompetidorEliminar(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { GoogleMap, LoadScript, Marker } from "@react-google-maps/api";
+import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -10,11 +9,17 @@ import {
   CategoryScale,
   LinearScale,
 } from "chart.js";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { collection, onSnapshot, Timestamp } from "firebase/firestore";
+import { db } from "../../../firebase";
 import "../../../styles/ListaCompetencias.css";
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 export interface Competencia {
+  id?: string;
   nombre: string;
   tipo: string;
   foto: string;
@@ -30,58 +35,74 @@ export interface Competencia {
   participantes: number;
 }
 
+// Icono personalizado para Leaflet
+const marcadorIcono = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+  iconSize: [30, 30],
+});
+
 const ListaCompetencias: React.FC = () => {
+  const [competencias, setCompetencias] = useState<Competencia[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [filtro, setFiltro] = useState<"Todas" | "Activa" | "Concluida">("Todas");
 
-  const competencias: Competencia[] = [
-    {
-      nombre: "Carrera 5K Puebla",
-      tipo: "Presencial",
-      foto: "https://media.istockphoto.com/id/1135093085/es/foto/discovery-mexico-campeche.jpg?s=612x612&w=0&k=20&c=v6c4Lg2aFZHZP_OrXLmCcozJfp-MXiq_EyKydCpdMvU=",
-      fechaInicio: new Date("2025-09-01"),
-      fechaCierre: new Date("2025-09-08"),
-      fechaEvento: new Date("2025-09-10"),
-      categoria: "Deporte",
-      costo: 200,
-      ubicacion: "Puebla, México",
-      lat: 19.0413,
-      lng: -98.2062,
-      estado: "Activa",
-      participantes: 120,
-    },
-    {
-      nombre: "Torneo de Ajedrez Virtual",
-      tipo: "Virtual",
-      foto: "https://media.istockphoto.com/id/1338780047/es/foto/catedral-de-san-francisco-de-campeche.jpg?s=612x612&w=0&k=20&c=urkZDp4I1gdAIhoDLkfgKRNyXQiC7HTQZyTkF4puNrk=",
-      fechaInicio: new Date("2025-08-15"),
-      fechaCierre: new Date("2025-08-25"),
-      fechaEvento: new Date("2025-08-30"),
-      categoria: "Cultura",
-      costo: 50,
-      ubicacion: "Online",
-      lat: null,
-      lng: null,
-      estado: "Concluida",
-      participantes: 45,
-    },
-    {
-      nombre: "Maratón Ciudad de México",
-      tipo: "Híbrido",
-      foto: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0GbpPLoK9tzdH6DEts33-5h_vCKl3vDzw6w&s",
-      fechaInicio: new Date("2025-07-10"),
-      fechaCierre: new Date("2025-07-30"),
-      fechaEvento: new Date("2025-08-05"),
-      categoria: "Deporte",
-      costo: 500,
-      ubicacion: "CDMX, México",
-      lat: 19.4326,
-      lng: -99.1332,
-      estado: "Concluida",
-      participantes: 200,
-    },
-  ];
+  // Escuchar cambios en tiempo real de Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "competencias"), (snapshot) => {
+      const lista: Competencia[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
 
+        const fechaInicio =
+          data.fechaInicio instanceof Timestamp ? data.fechaInicio.toDate() : null;
+        const fechaCierre =
+          data.fechaCierre instanceof Timestamp ? data.fechaCierre.toDate() : null;
+        const fechaEvento =
+          data.fechaEvento instanceof Timestamp ? data.fechaEvento.toDate() : null;
+
+        let lat = data.lat;
+        let lng = data.lng;
+
+        // Si se almacenó en formato texto
+        if (!lat && typeof data.ubicacion === "string" && data.ubicacion.includes("Lat:")) {
+          const match = data.ubicacion.match(/Lat:\s*([-0-9.]+),\s*Lng:\s*([-0-9.]+)/);
+          if (match) {
+            lat = parseFloat(match[1]);
+            lng = parseFloat(match[2]);
+          }
+        }
+
+        let estado: "Activa" | "Concluida" = "Activa";
+        if (fechaEvento && fechaEvento.getTime() < Date.now()) {
+          estado = "Concluida";
+        }
+
+        const participantes = data.participantes ?? 0;
+
+        return {
+          id: doc.id,
+          nombre: data.nombre ?? "Sin nombre",
+          tipo: data.tipo ?? "Desconocido",
+          foto: data.foto ?? "",
+          fechaInicio,
+          fechaCierre,
+          fechaEvento,
+          categoria: data.categoria ?? "General",
+          costo: data.costo ?? 0,
+          ubicacion: data.ubicacion ?? "",
+          lat: lat ?? null,
+          lng: lng ?? null,
+          estado,
+          participantes,
+        };
+      });
+
+      setCompetencias(lista);
+    });
+
+    return () => unsub();
+  }, []);
+
+  // Búsqueda + filtro
   const competenciasFiltradas = competencias.filter((c) => {
     const coincideBusqueda = c.nombre.toLowerCase().includes(busqueda.toLowerCase());
     const coincideFiltro = filtro === "Todas" || c.estado === filtro;
@@ -89,32 +110,45 @@ const ListaCompetencias: React.FC = () => {
   });
 
   const totalParticipantes = competenciasFiltradas.reduce(
-    (sum, c) => sum + c.participantes,
+    (sum, c) => sum + (c.participantes || 0),
     0
   );
 
-  // Datos para gráfica
-  const chartData = {
-    labels: competenciasFiltradas.map((c) => c.nombre),
-    datasets: [
-      {
-        label: "Participantes",
-        data: competenciasFiltradas.map((c) => c.participantes),
-        backgroundColor: ["#4e79a7", "#f28e2b", "#76b7b2", "#e15759"],
-        borderRadius: 8,
-      },
-    ],
-  };
+  // Datos para la gráfica (solo si hay registros)
+  const chartData =
+    competenciasFiltradas.length > 0
+      ? {
+          labels: competenciasFiltradas.map((c) => c.nombre),
+          datasets: [
+            {
+              label: "Participantes",
+              data: competenciasFiltradas.map((c) => c.participantes || 0),
+              backgroundColor: "#4e79a7",
+              borderRadius: 8,
+            },
+          ],
+        }
+      : {
+          labels: ["Sin datos"],
+          datasets: [
+            {
+              label: "Participantes",
+              data: [0],
+              backgroundColor: "#ccc",
+            },
+          ],
+        };
 
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: {
-        display: false,
-      },
+      legend: { display: false },
       title: {
         display: true,
-        text: `Total de Participantes: ${totalParticipantes}`,
+        text:
+          totalParticipantes > 0
+            ? `Total de Participantes: ${totalParticipantes}`
+            : "Aún no hay competidores registrados",
         color: "#333",
         font: { size: 16, weight: "bold" },
       },
@@ -132,7 +166,7 @@ const ListaCompetencias: React.FC = () => {
       </header>
 
       <div className="dashboard-container">
-        {/* Barra de búsqueda y filtros */}
+        {/* Filtros */}
         <div className="competencias-filtros">
           <input
             type="text"
@@ -152,15 +186,15 @@ const ListaCompetencias: React.FC = () => {
           </select>
         </div>
 
-        {/* Gráfica de participantes */}
+        {/* Gráfica */}
         <div className="competencias-grafica">
           <Bar data={chartData} options={chartOptions} />
         </div>
 
-        {/* Lista de competencias */}
+        {/* 🏁 Lista */}
         <div className="competencias-lista">
-          {competenciasFiltradas.map((c, index) => (
-            <div className="competencia-card" key={index}>
+          {competenciasFiltradas.map((c) => (
+            <div className="competencia-card" key={c.id}>
               <img
                 src={c.foto}
                 alt={c.nombre}
@@ -173,33 +207,47 @@ const ListaCompetencias: React.FC = () => {
                 <p><strong>Categoría:</strong> {c.categoria}</p>
                 <p><strong>Costo:</strong> ${c.costo}</p>
                 <p>
-                  <strong>Fechas:</strong> {c.fechaInicio?.toLocaleDateString()} - {c.fechaCierre?.toLocaleDateString()} <br />
-                  <strong>Evento:</strong> {c.fechaEvento?.toLocaleDateString()}
+                  <strong>Evento:</strong>{" "}
+                  {c.fechaEvento?.toLocaleDateString() ?? "No definida"}
                 </p>
                 <p className="competencia-card-participantes">
-                  👥 {c.participantes} participantes
+                  {c.participantes > 0
+                    ? `${c.participantes} participantes`
+                    : "Sin competidores registrados"}
                 </p>
                 <p><strong>Ubicación:</strong> {c.ubicacion}</p>
-                <span className={`competencia-estado competencia-estado-${c.estado.toLowerCase()}`}>
+                <span
+                  className={`competencia-estado competencia-estado-${c.estado.toLowerCase()}`}
+                >
                   {c.estado}
                 </span>
 
+                {/* Mapa con Leaflet */}
                 {c.lat && c.lng && (
                   <div className="competencia-map">
-                    <LoadScript googleMapsApiKey="TU_API_KEY_AQUI">
-                      <GoogleMap
-                        mapContainerStyle={{ width: "100%", height: "200px", borderRadius: "10px" }}
-                        center={{ lat: c.lat, lng: c.lng }}
-                        zoom={12}
-                      >
-                        <Marker position={{ lat: c.lat, lng: c.lng }} />
-                      </GoogleMap>
-                    </LoadScript>
+                    <MapContainer
+                      center={[c.lat, c.lng]}
+                      zoom={13}
+                      style={{ width: "100%", height: "200px", borderRadius: "10px" }}
+                      scrollWheelZoom={false}
+                    >
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      <Marker position={[c.lat, c.lng]} icon={marcadorIcono}>
+                        <Popup>{c.nombre}</Popup>
+                      </Marker>
+                    </MapContainer>
                   </div>
                 )}
               </div>
             </div>
           ))}
+
+          {competenciasFiltradas.length === 0 && (
+            <p className="sin-datos">No hay competencias registradas aún.</p>
+          )}
         </div>
       </div>
     </div>

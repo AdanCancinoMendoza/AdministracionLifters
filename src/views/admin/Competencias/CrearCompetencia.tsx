@@ -7,7 +7,7 @@ import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebas
 import "../../../styles/CrearCompetencia.css";
 import ModalCarga from "../../../components/ModalCarga";
 
-// 🚀 Leaflet
+//  Leaflet
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 

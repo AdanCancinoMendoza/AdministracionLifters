@@ -20,6 +20,7 @@ import {
   Flag,
 } from "lucide-react";
 import "../styles/menu.css";
+import Logo from "../assets/LOgo.png"
 
 interface SubmenuItem {
   path: string;
@@ -213,7 +214,7 @@ const MenuAdmin = () => {
         </ul>
         {/* Logo al final */}
         <div className="menu-footer">
-          <img src="/icons/logo_lifters.png" alt="Logo LIFTERS" />
+          <img src={Logo} alt="Logo LIFTERS" />
         </div>
       </nav>
     </>
