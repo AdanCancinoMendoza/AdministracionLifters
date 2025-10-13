@@ -1,51 +1,46 @@
-// src/views/admin/Inicio/Editar.tsx
+// NO GUARDA LA IMAGEN
 import React, { useRef, useState, useEffect } from "react";
 import "../../../styles/editarInicio.css";
 import { FaEdit, FaCheckCircle } from "react-icons/fa";
 
-// IMPORTACIONES DE FIREBASE (ruta según tu estructura)
-import { db, storage } from "../../../firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
-
 export default function Editar() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
+
+  const [texto, setTexto] = useState(""); // Texto de bienvenida
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // DEBUG: comprueba que db y storage están definidos (quita si quieres)
-  useEffect(() => {
-    console.log("DEBUG firebase db:", !!db, "storage:", !!storage);
-  }, []);
-
-  // Cargar datos guardados (si existen)
+  // Cargar datos desde backend
   useEffect(() => {
     const load = async () => {
       try {
-        const docRef = doc(db, "inicio", "config");
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          const data = snap.data() as any;
-          const texto = data?.textoBienvenida ?? "";
-          const imagen = data?.imagen ?? "https://assets.worldgym.com/media/38_e605e5d776.png";
+        const res = await fetch("/api/inicio"); // Proxy Vite
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        const data = await res.json();
 
-          const textarea = document.getElementById("textoBienvenida") as HTMLTextAreaElement | null;
-          if (textarea) textarea.value = texto;
-          if (imgRef.current) imgRef.current.src = imagen;
+        setTexto(data.Descripcion || "");
+        if (imgRef.current) {
+          imgRef.current.src = data.Imagen || "https://assets.worldgym.com/media/38_e605e5d776.png";
         }
       } catch (err) {
-        console.error("Error cargando config desde Firestore:", err);
+        console.error("Error cargando datos desde backend:", err);
+        alert("❌ Error cargando datos del servidor");
+      } finally {
+        setLoading(false);
       }
     };
 
     load();
   }, []);
 
+  // Abrir selector de archivo
   const handleEditImage = () => {
     fileInputRef.current?.click();
   };
 
+  // Cambiar imagen localmente
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -54,56 +49,51 @@ export default function Editar() {
     if (imgRef.current) imgRef.current.src = url;
   };
 
+  // Guardar cambios en backend
   const handleGuardar = async () => {
-    const textarea = document.getElementById("textoBienvenida") as HTMLTextAreaElement | null;
-    const texto = textarea?.value || "";
-
-    if (guardando) return; // evita clicks múltiples
+    if (guardando) return;
     setGuardando(true);
 
     try {
-      if (!db) throw new Error("Firestore no inicializado (db undefined)");
-      if (!storage) throw new Error("Firebase Storage no inicializado (storage undefined)");
+      const formData = new FormData();
+      formData.append("texto", texto);
+      if (selectedFile) formData.append("imagen", selectedFile);
 
-      let imageUrl = "";
-
-      // Subir imagen si existe
-      if (selectedFile) {
-        // Usa un nombre único para evitar colisiones
-        const uniqueName = `${Date.now()}_${selectedFile.name}`;
-        const sRef = storageRef(storage, `imagenes/${uniqueName}`);
-
-        // Subida
-        const uploadResult = await uploadBytes(sRef, selectedFile).catch((e) => {
-          // capturar errores de upload por separado para información más clara
-          console.error("Error en uploadBytes:", e);
-          throw e;
-        });
-
-        // Obtener URL
-        imageUrl = await getDownloadURL(sRef);
-        console.log("Imagen subida, URL:", imageUrl, "uploadResult:", uploadResult);
-      }
-
-      // Guardar en Firestore
-      const docRef = doc(db, "inicio", "config");
-      await setDoc(docRef, {
-        textoBienvenida: texto,
-        imagen: imageUrl || (imgRef.current?.src ?? "https://assets.worldgym.com/media/38_e605e5d776.png"),
-        updatedAt: new Date().toISOString(),
+      const res = await fetch("/api/inicio", {
+        method: "PUT",
+        body: formData,
       });
 
-      alert("✅ Cambios guardados en Firebase");
+      if (!res.ok) {
+        // Intentar leer JSON de error
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          data = { message: res.statusText || "Error desconocido" };
+        }
+        throw new Error(data.message || "Error al guardar");
+      }
+
+      const data = await res.json();
+      alert("✅ Cambios guardados correctamente");
+
+      // Limpiar selección de archivo
+      setSelectedFile(null);
+
+      // Actualizar imagen si cambió
+      if (data.imagenUrl && imgRef.current) {
+        imgRef.current.src = data.imagenUrl;
+      }
     } catch (error: any) {
-      // Muestra información detallada del error
-      console.error("❌ Error al guardar:", error);
-      const code = error?.code ?? "";
-      const message = error?.message ?? JSON.stringify(error);
-      alert(`Hubo un error al guardar los cambios.\n\n${code} ${message}`);
+      console.error("Error guardando datos:", error);
+      alert(`❌ Error al guardar: ${error.message}`);
     } finally {
       setGuardando(false);
     }
   };
+
+  if (loading) return <p>Cargando datos...</p>;
 
   return (
     <div className="page-content">
@@ -117,17 +107,26 @@ export default function Editar() {
         <div className="ContenedorImagenTexto">
           {/* Bloque imagen */}
           <div className="IMagen_Bienvenida_Cambiar">
-            <img ref={imgRef} />
+            <img ref={imgRef} alt="Imagen de inicio" />
             <button className="btn-editar" type="button" onClick={handleEditImage}>
               <FaEdit /> Editar Imagen
             </button>
-
-            <input type="file" ref={fileInputRef} accept="image/*" style={{ display: "none" }} onChange={handleImageChange} />
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleImageChange}
+            />
           </div>
 
           {/* Bloque texto */}
           <div className="Texto_Bienvenida_Cambiar">
-            <textarea id="textoBienvenida" name="textoBienvenida" placeholder="Escribe el texto de bienvenida aquí..." defaultValue=""></textarea>
+            <textarea
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              placeholder="Escribe el texto de bienvenida aquí..."
+            />
             <button className="btn-guardar" type="button" onClick={handleGuardar} disabled={guardando}>
               <FaCheckCircle /> {guardando ? "Guardando..." : "Guardar Cambios"}
             </button>
