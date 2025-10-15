@@ -1,4 +1,3 @@
-// NO GUARDA LA IMAGEN
 import React, { useRef, useState, useEffect } from "react";
 import "../../../styles/editarInicio.css";
 import { FaEdit, FaCheckCircle } from "react-icons/fa";
@@ -21,8 +20,15 @@ export default function Editar() {
         const data = await res.json();
 
         setTexto(data.Descripcion || "");
+
         if (imgRef.current) {
-          imgRef.current.src = data.Imagen || "https://assets.worldgym.com/media/38_e605e5d776.png";
+          // 🔹 Si la URL de la imagen es relativa, la convertimos en absoluta
+          const url = data.Imagen?.startsWith("http")
+            ? data.Imagen
+            : data.Imagen
+            ? `http://localhost:3001${data.Imagen}`
+            : "https://assets.worldgym.com/media/38_e605e5d776.png";
+          imgRef.current.src = url;
         }
       } catch (err) {
         console.error("Error cargando datos desde backend:", err);
@@ -65,7 +71,6 @@ export default function Editar() {
       });
 
       if (!res.ok) {
-        // Intentar leer JSON de error
         let data;
         try {
           data = await res.json();
@@ -81,9 +86,12 @@ export default function Editar() {
       // Limpiar selección de archivo
       setSelectedFile(null);
 
-      // Actualizar imagen si cambió
+      // 🔹 Actualizar imagen si cambió y convertir URL si es relativa
       if (data.imagenUrl && imgRef.current) {
-        imgRef.current.src = data.imagenUrl;
+        const url = data.imagenUrl.startsWith("http")
+          ? data.imagenUrl
+          : `http://localhost:3001${data.imagenUrl}`;
+        imgRef.current.src = url;
       }
     } catch (error: any) {
       console.error("Error guardando datos:", error);
@@ -99,7 +107,9 @@ export default function Editar() {
     <div className="page-content">
       <h1 className="titulo-panel">Panel de Inicio</h1>
       <hr className="borde-separacion" />
-      <p className="descripcion-panel">En esta sección podrás editar parámetros del inicio</p>
+      <p className="descripcion-panel">
+        En esta sección podrás editar parámetros del inicio
+      </p>
 
       <div className="CambiarImagenTexto_Bienvenida borde-separacion">
         <h2>Cambiar imagen y texto de Inicio</h2>
@@ -127,7 +137,12 @@ export default function Editar() {
               onChange={(e) => setTexto(e.target.value)}
               placeholder="Escribe el texto de bienvenida aquí..."
             />
-            <button className="btn-guardar" type="button" onClick={handleGuardar} disabled={guardando}>
+            <button
+              className="btn-guardar"
+              type="button"
+              onClick={handleGuardar}
+              disabled={guardando}
+            >
               <FaCheckCircle /> {guardando ? "Guardando..." : "Guardar Cambios"}
             </button>
           </div>

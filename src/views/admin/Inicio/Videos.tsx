@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { FaPlus, FaSave, FaSyncAlt, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
+import { FaPlus, FaSyncAlt, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
 import "../../../styles/VideoCompetencia.css";
-import { storage, db } from "../../../firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { collection, doc, setDoc, getDocs, deleteDoc } from "firebase/firestore";
 
 type TipoVideo = "youtube" | "local";
 
 interface VideoData {
-  id?: string;
+  id?: number;
   tipo: TipoVideo;
   src: string;
 }
@@ -21,17 +18,18 @@ const Videos: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // 🔹 Cargar videos desde Firestore al iniciar
+  // 🔹 Cargar videos desde la base de datos
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "videos"));
-        const videosData: VideoData[] = [];
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data() as VideoData;
-          videosData.push({ ...data, id: docSnap.id });
-        });
-        setVideos(videosData);
+        const res = await fetch("http://localhost:3001/api/videos");
+        const data = await res.json();
+        const mappedVideos = data.map((v: any) => ({
+          id: v.id,
+          tipo: v.linkVideo ? "youtube" : "local",
+          src: v.linkVideo ?? v.videoLocal,
+        }));
+        setVideos(mappedVideos);
       } catch (error) {
         console.error("Error al cargar videos:", error);
       }
@@ -64,19 +62,16 @@ const Videos: React.FC = () => {
       setFile(selectedFile);
       setVideoTipo("local");
       const localUrl = URL.createObjectURL(selectedFile);
-      setUrlVideo(localUrl); // Preview local
+      setUrlVideo(localUrl); // vista previa
     }
   };
 
-  // 🔹 Función para convertir cualquier URL de YouTube en URL de embed
   const convertirYouTubeEmbed = (url: string) => {
     try {
       const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/;
       const match = url.match(regex);
-      if (match && match[1]) {
-        return `https://www.youtube.com/embed/${match[1]}`;
-      }
-      return url; // Si no coincide, devolver la misma URL
+      if (match && match[1]) return `https://www.youtube.com/embed/${match[1]}`;
+      return url;
     } catch {
       return url;
     }
@@ -87,35 +82,51 @@ const Videos: React.FC = () => {
 
     setLoading(true);
     try {
-      let finalUrl = urlVideo;
+      let formData = new FormData();
 
-      // Si es video YouTube, convertir a embed
-      if (videoTipo === "youtube") {
-        finalUrl = convertirYouTubeEmbed(urlVideo);
-      }
-
-      // Si es video local, subirlo a Storage
       if (videoTipo === "local" && file) {
-        const storageRef = ref(storage, `videos/${Date.now()}_${file.name}`);
-        await uploadBytes(storageRef, file);
-        finalUrl = await getDownloadURL(storageRef);
+        formData.append("videoLocal", file);
+        formData.append("tipo", "local");
+      } else if (videoTipo === "youtube") {
+        formData.append("tipo", "youtube");
+        formData.append("src", convertirYouTubeEmbed(urlVideo));
       }
 
+      // Agregar
       if (modal.tipo === "agregar") {
-        const docRef = doc(collection(db, "videos"));
-        await setDoc(docRef, { tipo: videoTipo, src: finalUrl });
-        setVideos([...videos, { tipo: videoTipo, src: finalUrl, id: docRef.id }]);
-      } else if (modal.tipo === "reemplazar" && modal.index !== undefined) {
+        const res = await fetch("http://localhost:3001/api/videos", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        setVideos([
+          ...videos,
+          {
+            id: data.id,
+            tipo: data.linkVideo ? "youtube" : "local",
+            src: data.linkVideo ?? data.videoLocal,
+          },
+        ]);
+      }
+      // Reemplazar
+      else if (modal.tipo === "reemplazar" && modal.index !== undefined) {
         const videoId = videos[modal.index].id!;
-        await setDoc(doc(db, "videos", videoId), { tipo: videoTipo, src: finalUrl });
+        await fetch(`http://localhost:3001/api/videos/${videoId}`, {
+          method: "PUT",
+          body: formData,
+        });
         const updatedVideos = [...videos];
-        updatedVideos[modal.index] = { tipo: videoTipo, src: finalUrl, id: videoId };
+        updatedVideos[modal.index] = {
+          id: videoId,
+          tipo: videoTipo,
+          src: videoTipo === "youtube" ? convertirYouTubeEmbed(urlVideo) : urlVideo,
+        };
         setVideos(updatedVideos);
       }
 
       cerrarModal();
     } catch (error) {
-      console.error("Error al guardar el video:", error);
+      console.error("Error al guardar video:", error);
       alert("Hubo un error al guardar el video.");
     } finally {
       setLoading(false);
@@ -125,7 +136,7 @@ const Videos: React.FC = () => {
   const eliminarVideo = async (index: number) => {
     try {
       const videoId = videos[index].id!;
-      await deleteDoc(doc(db, "videos", videoId));
+      await fetch(`http://localhost:3001/api/videos/${videoId}`, { method: "DELETE" });
       setVideos(videos.filter((_, i) => i !== index));
       cerrarModal();
     } catch (error) {

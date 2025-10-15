@@ -2,9 +2,6 @@ import React, { useState, useEffect } from "react";
 import "../../../styles/Ganadores.css";
 import MenuAdmin from "../../../components/menu";
 import { FaMedal } from "react-icons/fa";
-import { storage, db } from "../../../firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { collection, doc, setDoc, getDocs } from "firebase/firestore";
 
 interface Ganador {
   nombre: string;
@@ -13,10 +10,11 @@ interface Ganador {
 }
 
 interface Categoria {
-  id?: string;
+  id?: number;
   nombre: string;
-  imagen: string;
+  imagen: string; // Ruta del servidor
   ganadores: Ganador[];
+  file?: File; // Archivo para subir
 }
 
 const medallas: Record<string, string> = {
@@ -25,30 +23,51 @@ const medallas: Record<string, string> = {
   bronce: "#CD7F32",
 };
 
-// Inicialmente vacío
 const initialCategorias: Categoria[] = [
-  { nombre: "Sentadilla", imagen: "", ganadores: [{ nombre: "", peso: "", medalla: "oro" }, { nombre: "", peso: "", medalla: "plata" }, { nombre: "", peso: "", medalla: "bronce" }] },
-  { nombre: "Peso Muerto", imagen: "", ganadores: [{ nombre: "", peso: "", medalla: "oro" }, { nombre: "", peso: "", medalla: "plata" }, { nombre: "", peso: "", medalla: "bronce" }] },
-  { nombre: "Press de Banca", imagen: "", ganadores: [{ nombre: "", peso: "", medalla: "oro" }, { nombre: "", peso: "", medalla: "plata" }, { nombre: "", peso: "", medalla: "bronce" }] },
+  {
+    nombre: "Sentadilla",
+    imagen: "",
+    ganadores: [
+      { nombre: "", peso: "", medalla: "oro" },
+      { nombre: "", peso: "", medalla: "plata" },
+      { nombre: "", peso: "", medalla: "bronce" },
+    ],
+  },
+  {
+    nombre: "Peso Muerto",
+    imagen: "",
+    ganadores: [
+      { nombre: "", peso: "", medalla: "oro" },
+      { nombre: "", peso: "", medalla: "plata" },
+      { nombre: "", peso: "", medalla: "bronce" },
+    ],
+  },
+  {
+    nombre: "Press de Banca",
+    imagen: "",
+    ganadores: [
+      { nombre: "", peso: "", medalla: "oro" },
+      { nombre: "", peso: "", medalla: "plata" },
+      { nombre: "", peso: "", medalla: "bronce" },
+    ],
+  },
 ];
+
+const SERVER_BASE_URL = "http://localhost:3001";
 
 const SeccionLogros: React.FC = () => {
   const [categorias, setCategorias] = useState<Categoria[]>(initialCategorias);
   const [loading, setLoading] = useState(false);
 
-  // Cargar datos desde Firestore si existen
+  // 🔹 Cargar categorías desde el backend
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "categorias"));
-        if (!querySnapshot.empty) {
-          const categoriasData: Categoria[] = [];
-          querySnapshot.forEach((docSnap) => {
-            const data = docSnap.data() as Categoria;
-            categoriasData.push({ ...data, id: docSnap.id });
-          });
-          setCategorias(categoriasData);
-        }
+        const res = await fetch(`${SERVER_BASE_URL}/api/categorias`);
+        if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) setCategorias(data);
       } catch (error) {
         console.error("Error al cargar categorías:", error);
       }
@@ -56,6 +75,7 @@ const SeccionLogros: React.FC = () => {
     fetchCategorias();
   }, []);
 
+  // 🔹 Cambiar datos de ganadores
   const handleGanadorChange = (
     catIndex: number,
     ganIndex: number,
@@ -67,50 +87,47 @@ const SeccionLogros: React.FC = () => {
     setCategorias(newCategorias);
   };
 
+  // 🔹 Cambiar imagen (previsualización + guardar archivo)
   const handleImagenChange = (catIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const newCategorias = [...categorias];
-    newCategorias[catIndex].imagen = URL.createObjectURL(file); // Preview
-    newCategorias[catIndex]["file"] = file; // Guardar referencia para subir
+    newCategorias[catIndex].imagen = URL.createObjectURL(file);
+    newCategorias[catIndex].file = file;
     setCategorias(newCategorias);
   };
 
+  // 🔹 Guardar categorías y ganadores
   const handleGuardar = async () => {
     setLoading(true);
     try {
-      const categoriasActualizadas = await Promise.all(
-        categorias.map(async (cat) => {
-          let imagenUrl = cat.imagen;
+      const formData = new FormData();
 
-          // Subir imagen a Firebase Storage si se seleccionó un archivo
-          if ((cat as any).file) {
-            const file = (cat as any).file as File;
-            const storageRef = ref(storage, `categorias/${Date.now()}_${file.name}`);
-            await uploadBytes(storageRef, file);
-            imagenUrl = await getDownloadURL(storageRef);
-          }
+      const categoriasToSubmit = categorias.map((cat) => ({
+        id: cat.id,
+        nombre: cat.nombre,
+        ganadores: cat.ganadores,
+      }));
+      formData.append("categorias", JSON.stringify(categoriasToSubmit));
 
-          const categoriaData = {
-            nombre: cat.nombre,
-            imagen: imagenUrl,
-            ganadores: cat.ganadores,
-          };
+      categorias.forEach((cat, i) => {
+        if (cat.file) formData.append(`imagen-${cat.id || `new-${i}`}`, cat.file);
+      });
 
-          if (cat.id) {
-            await setDoc(doc(db, "categorias", cat.id), categoriaData);
-            return { ...categoriaData, id: cat.id };
-          } else {
-            const docRef = doc(collection(db, "categorias"));
-            await setDoc(docRef, categoriaData);
-            return { ...categoriaData, id: docRef.id };
-          }
-        })
-      );
+      const res = await fetch(`${SERVER_BASE_URL}/api/categorias`, {
+        method: "POST",
+        body: formData,
+      });
 
-      setCategorias(categoriasActualizadas);
-      alert("Categorías y ganadores guardados correctamente ✅");
+      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+      const data = await res.json();
+      alert(data.message || "Cambios guardados correctamente");
+
+      // 🔁 Recargar datos actualizados
+      const res2 = await fetch(`${SERVER_BASE_URL}/api/categorias`);
+      const updated = await res2.json();
+      setCategorias(updated);
     } catch (error) {
       console.error("Error al guardar:", error);
       alert("Hubo un error al guardar los datos.");
@@ -125,7 +142,8 @@ const SeccionLogros: React.FC = () => {
       <div className="seccion-logros">
         <h1 className="titulo-logros">Sección de Logros</h1>
         <p className="descripcion-logros">
-          Aquí puedes ver y editar los logros de cada categoría, incluyendo los ganadores y sus resultados.
+          Aquí puedes ver y editar los logros de cada categoría, incluyendo los
+          ganadores y sus resultados.
         </p>
 
         {categorias.map((cat, catIndex) => (
@@ -135,7 +153,6 @@ const SeccionLogros: React.FC = () => {
               <ul>
                 {cat.ganadores.map((g, i) => (
                   <li key={i} className="ganador-item">
-                    {/* Icono fijo según medalla */}
                     <FaMedal size={24} color={medallas[g.medalla]} className="icono-medalla" />
                     <input
                       type="text"
@@ -158,7 +175,13 @@ const SeccionLogros: React.FC = () => {
             </div>
 
             <div className="imagen-categoria">
-              {cat.imagen && <img src={cat.imagen} alt={cat.nombre} />}
+              {cat.imagen && (
+                <img
+                  src={cat.file ? cat.imagen : `${SERVER_BASE_URL}${cat.imagen}`}
+                  alt={cat.nombre}
+                  className="imagen-preview"
+                />
+              )}
               <label htmlFor={`file-${catIndex}`} className="btn-subir">
                 Reemplazar imagen
               </label>
@@ -167,6 +190,7 @@ const SeccionLogros: React.FC = () => {
                 id={`file-${catIndex}`}
                 onChange={(e) => handleImagenChange(catIndex, e)}
                 hidden
+                accept="image/*"
               />
             </div>
           </div>
@@ -180,5 +204,4 @@ const SeccionLogros: React.FC = () => {
   );
 };
 
-const Ganadores = SeccionLogros;
-export default Ganadores;
+export default SeccionLogros;
