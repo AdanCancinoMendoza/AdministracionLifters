@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
-import { db, storage } from "../../../firebase";
-import { collection, addDoc, Timestamp, onSnapshot } from "firebase/firestore";
-import { ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import "../../../styles/CrearCompetencia.css";
 import ModalCarga from "../../../components/ModalCarga";
 
-//  Leaflet
+// Leaflet
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
-
-// Icono default para Leaflet
 import "leaflet/dist/leaflet.css";
+
+// Configurar ícono para Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon-2x.png",
@@ -35,11 +32,11 @@ export interface Competencia {
 }
 
 interface CrearCompetenciaProps {
-  onCrear: () => void;
+  onCrear?: () => void; // 🔹 Ahora opcional
 }
 
 const tipos = ["Presencial", "Virtual", "Híbrido"];
-const categorias = ["Deporte", "Cultura", "Tecnología", "Arte"];
+const categorias = ["Deporte", "Culturismo"];
 
 const LocationMarker = ({
   onSelect,
@@ -49,7 +46,6 @@ const LocationMarker = ({
   externalPosition: [number, number] | null;
 }) => {
   const [position, setPosition] = useState<[number, number] | null>(null);
-
   const map = useMap();
 
   useMapEvents({
@@ -91,17 +87,6 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
   const [search, setSearch] = useState("");
   const [searchPosition, setSearchPosition] = useState<[number, number] | null>(null);
 
-  // 🟢 DEBUG: escuchar en tiempo real
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "competencias"), (snapshot) => {
-      console.log("📌 Competencias en Firestore:");
-      snapshot.docs.forEach((doc) => {
-        console.log(doc.id, "=>", doc.data());
-      });
-    });
-    return () => unsub();
-  }, []);
-
   const handleChange = (field: keyof Competencia, value: any) => {
     setCompetencia({ ...competencia, [field]: value });
   };
@@ -112,7 +97,6 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
     }
   };
 
-  // 🔎 Buscar en Nominatim
   const handleSearch = async () => {
     if (!search.trim()) return;
 
@@ -145,70 +129,52 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
     }
 
     setCargando(true);
-    setProgreso(0);
+    setProgreso(30);
 
     try {
-      let fotoUrl = "";
+      const formData = new FormData();
+      formData.append("nombre", competencia.nombre);
+      formData.append("tipo", competencia.tipo);
+      formData.append("categoria", competencia.categoria);
+      formData.append("costo", competencia.costo.toString());
+      formData.append("ubicacion", competencia.ubicacion);
+      formData.append("lat", competencia.lat?.toString() || "");
+      formData.append("lng", competencia.lng?.toString() || "");
 
-      if (competencia.foto) {
-        const nombreUnico = `${Date.now()}_${competencia.foto.name}`;
-        const sRef = storageRef(storage, `competencias/${nombreUnico}`);
-        const uploadTask = uploadBytesResumable(sRef, competencia.foto);
+      if (competencia.fechaInicio)
+        formData.append("fecha_inicio", competencia.fechaInicio.toISOString());
+      if (competencia.fechaCierre)
+        formData.append("fecha_cierre", competencia.fechaCierre.toISOString());
+      if (competencia.fechaEvento)
+        formData.append("fecha_evento", competencia.fechaEvento.toISOString());
 
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            const porcentaje = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            setProgreso(porcentaje);
-          },
-          (error) => {
-            console.error("Error subiendo la foto:", error);
-            alert("Error subiendo la foto");
-            setCargando(false);
-          },
-          async () => {
-            fotoUrl = await getDownloadURL(uploadTask.snapshot.ref);
+      if (competencia.foto) formData.append("foto", competencia.foto);
 
-            await addDoc(collection(db, "competencias"), {
-              ...competencia,
-              foto: fotoUrl,
-              fechaInicio: competencia.fechaInicio ? Timestamp.fromDate(competencia.fechaInicio) : null,
-              fechaCierre: competencia.fechaCierre ? Timestamp.fromDate(competencia.fechaCierre) : null,
-              fechaEvento: competencia.fechaEvento ? Timestamp.fromDate(competencia.fechaEvento) : null,
-              fechaCreacion: Timestamp.now(),
-            });
+      const res = await fetch("http://localhost:3001/api/competenciasadmin", {
+        method: "POST",
+        body: formData,
+      });
 
-            setCargando(false);
-            alert("✅ Competencia creada correctamente");
-            onCrear();
-          }
-        );
-      } else {
-        await addDoc(collection(db, "competencias"), {
-          ...competencia,
-          foto: "",
-          fechaInicio: competencia.fechaInicio ? Timestamp.fromDate(competencia.fechaInicio) : null,
-          fechaCierre: competencia.fechaCierre ? Timestamp.fromDate(competencia.fechaCierre) : null,
-          fechaEvento: competencia.fechaEvento ? Timestamp.fromDate(competencia.fechaEvento) : null,
-          fechaCreacion: Timestamp.now(),
-        });
+      setProgreso(100);
 
-        setCargando(false);
+      if (res.ok) {
         alert("✅ Competencia creada correctamente");
-        onCrear();
+        if (onCrear) onCrear(); // 🔹 solo se llama si existe
+      } else {
+        alert("❌ Error al guardar la competencia");
       }
     } catch (error) {
-      console.error("Error creando competencia:", error);
-      alert("❌ Hubo un error al crear la competencia");
+      console.error("Error:", error);
+      alert("❌ Error al conectar con el servidor");
+    } finally {
       setCargando(false);
     }
   };
 
   return (
     <div className="crear-container">
-      <h2 className="crear-title"> Crear Nueva Competencia</h2>
+      <h2 className="crear-title">Crear Nueva Competencia</h2>
 
-      {/* Campos de formulario */}
       <div className="crear-grid">
         <div className="crear-card">
           <label>Nombre</label>
@@ -292,9 +258,8 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
         </div>
       </div>
 
-      {/* 🌍 Mapa con buscador */}
       <div className="crear-card">
-        <h3>📍 Selecciona Ubicación</h3>
+        <h3>Selecciona Ubicación</h3>
 
         <div className="search-box">
           <input
@@ -334,7 +299,6 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
         <button onClick={handleSubmit}>Crear Competencia</button>
       </div>
 
-      {/* Modal de carga */}
       {cargando && <ModalCarga progreso={progreso} />}
     </div>
   );

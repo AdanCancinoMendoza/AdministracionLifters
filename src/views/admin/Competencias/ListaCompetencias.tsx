@@ -1,38 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-} from "chart.js";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { collection, onSnapshot, Timestamp } from "firebase/firestore";
-import { db } from "../../../firebase";
 import "../../../styles/ListaCompetencias.css";
 
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
-
 export interface Competencia {
-  id?: string;
+  id_competencia: number;
   nombre: string;
   tipo: string;
-  foto: string;
-  fechaInicio: Date | null;
-  fechaCierre: Date | null;
-  fechaEvento: Date | null;
+  foto: string | null;
+  fecha_inicio: string | null;
+  fecha_cierre: string | null;
+  fecha_evento: string | null;
   categoria: string;
   costo: number;
-  ubicacion: string;
+  ubicacion: string | null;
   lat: number | null;
   lng: number | null;
-  estado: "Activa" | "Concluida";
-  participantes: number;
 }
 
 // Icono personalizado para Leaflet
@@ -44,120 +28,49 @@ const marcadorIcono = new L.Icon({
 const ListaCompetencias: React.FC = () => {
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
   const [busqueda, setBusqueda] = useState("");
-  const [filtro, setFiltro] = useState<"Todas" | "Activa" | "Concluida">("Todas");
 
-  // Escuchar cambios en tiempo real de Firestore
+  // Cargar datos desde MySQL
+  const cargarCompetencias = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/competenciasadmin");
+      const data = await res.json();
+      setCompetencias(data);
+    } catch (error) {
+      console.error("Error al cargar competencias:", error);
+    }
+  };
+
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "competencias"), (snapshot) => {
-      const lista: Competencia[] = snapshot.docs.map((doc) => {
-        const data = doc.data();
-
-        const fechaInicio =
-          data.fechaInicio instanceof Timestamp ? data.fechaInicio.toDate() : null;
-        const fechaCierre =
-          data.fechaCierre instanceof Timestamp ? data.fechaCierre.toDate() : null;
-        const fechaEvento =
-          data.fechaEvento instanceof Timestamp ? data.fechaEvento.toDate() : null;
-
-        let lat = data.lat;
-        let lng = data.lng;
-
-        // Si se almacenó en formato texto
-        if (!lat && typeof data.ubicacion === "string" && data.ubicacion.includes("Lat:")) {
-          const match = data.ubicacion.match(/Lat:\s*([-0-9.]+),\s*Lng:\s*([-0-9.]+)/);
-          if (match) {
-            lat = parseFloat(match[1]);
-            lng = parseFloat(match[2]);
-          }
-        }
-
-        let estado: "Activa" | "Concluida" = "Activa";
-        if (fechaEvento && fechaEvento.getTime() < Date.now()) {
-          estado = "Concluida";
-        }
-
-        const participantes = data.participantes ?? 0;
-
-        return {
-          id: doc.id,
-          nombre: data.nombre ?? "Sin nombre",
-          tipo: data.tipo ?? "Desconocido",
-          foto: data.foto ?? "",
-          fechaInicio,
-          fechaCierre,
-          fechaEvento,
-          categoria: data.categoria ?? "General",
-          costo: data.costo ?? 0,
-          ubicacion: data.ubicacion ?? "",
-          lat: lat ?? null,
-          lng: lng ?? null,
-          estado,
-          participantes,
-        };
-      });
-
-      setCompetencias(lista);
-    });
-
-    return () => unsub();
+    cargarCompetencias();
   }, []);
 
-  // Búsqueda + filtro
-  const competenciasFiltradas = competencias.filter((c) => {
-    const coincideBusqueda = c.nombre.toLowerCase().includes(busqueda.toLowerCase());
-    const coincideFiltro = filtro === "Todas" || c.estado === filtro;
-    return coincideBusqueda && coincideFiltro;
-  });
-
-  const totalParticipantes = competenciasFiltradas.reduce(
-    (sum, c) => sum + (c.participantes || 0),
-    0
-  );
-
-  // Datos para la gráfica (solo si hay registros)
-  const chartData =
-    competenciasFiltradas.length > 0
-      ? {
-          labels: competenciasFiltradas.map((c) => c.nombre),
-          datasets: [
-            {
-              label: "Participantes",
-              data: competenciasFiltradas.map((c) => c.participantes || 0),
-              backgroundColor: "#4e79a7",
-              borderRadius: 8,
-            },
-          ],
-        }
-      : {
-          labels: ["Sin datos"],
-          datasets: [
-            {
-              label: "Participantes",
-              data: [0],
-              backgroundColor: "#ccc",
-            },
-          ],
-        };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      title: {
-        display: true,
-        text:
-          totalParticipantes > 0
-            ? `Total de Participantes: ${totalParticipantes}`
-            : "Aún no hay competidores registrados",
-        color: "#333",
-        font: { size: 16, weight: "bold" },
-      },
-    },
-    scales: {
-      x: { ticks: { color: "#333" } },
-      y: { ticks: { color: "#333" } },
-    },
+  const handleEliminar = async (id: number) => {
+    if (!window.confirm("¿Estás seguro de eliminar esta competencia?")) return;
+    try {
+      const res = await fetch(
+        `http://localhost:3001/api/competenciasadmin/${id}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        alert("Competencia eliminada correctamente");
+        cargarCompetencias();
+      } else {
+        alert("Error al eliminar la competencia");
+      }
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+    }
   };
+
+  const handleEditar = (id: number) => {
+    // Aquí puedes abrir un modal o redirigir a otra vista para editar
+    alert(`Editar competencia con ID: ${id}`);
+  };
+
+  // Filtrar por búsqueda
+  const competenciasFiltradas = competencias.filter((c) =>
+    c.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   return (
     <div className="competencias-dashboard">
@@ -175,32 +88,21 @@ const ListaCompetencias: React.FC = () => {
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
-          <select
-            className="filtro-estado"
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value as any)}
-          >
-            <option value="Todas">Todas</option>
-            <option value="Activa">Activas</option>
-            <option value="Concluida">Concluidas</option>
-          </select>
         </div>
 
-        {/* Gráfica */}
-        <div className="competencias-grafica">
-          <Bar data={chartData} options={chartOptions} />
-        </div>
-
-        {/* 🏁 Lista */}
+        {/* Lista */}
         <div className="competencias-lista">
           {competenciasFiltradas.map((c) => (
-            <div className="competencia-card" key={c.id}>
+            <div className="competencia-card" key={c.id_competencia}>
+              {c.foto && (
               <img
-                src={c.foto}
+                src={c.foto ? `http://localhost:3001${c.foto}` : "/placeholder.jpg"}
                 alt={c.nombre}
                 className="competencia-card-img"
                 loading="lazy"
               />
+
+              )}
               <div className="competencia-card-body">
                 <h2 className="competencia-card-title">{c.nombre}</h2>
                 <p><strong>Tipo:</strong> {c.tipo}</p>
@@ -208,21 +110,11 @@ const ListaCompetencias: React.FC = () => {
                 <p><strong>Costo:</strong> ${c.costo}</p>
                 <p>
                   <strong>Evento:</strong>{" "}
-                  {c.fechaEvento?.toLocaleDateString() ?? "No definida"}
+                  {c.fecha_evento ? new Date(c.fecha_evento).toLocaleDateString() : "No definida"}
                 </p>
-                <p className="competencia-card-participantes">
-                  {c.participantes > 0
-                    ? `${c.participantes} participantes`
-                    : "Sin competidores registrados"}
-                </p>
-                <p><strong>Ubicación:</strong> {c.ubicacion}</p>
-                <span
-                  className={`competencia-estado competencia-estado-${c.estado.toLowerCase()}`}
-                >
-                  {c.estado}
-                </span>
+                <p><strong>Ubicación:</strong> {c.ubicacion ?? "No definida"}</p>
 
-                {/* Mapa con Leaflet */}
+                {/* Mapa */}
                 {c.lat && c.lng && (
                   <div className="competencia-map">
                     <MapContainer
@@ -241,6 +133,12 @@ const ListaCompetencias: React.FC = () => {
                     </MapContainer>
                   </div>
                 )}
+
+                {/* Botones de acción */}
+                <div className="competencia-actions">
+                  <button onClick={() => handleEditar(c.id_competencia)}>Editar</button>
+                  <button onClick={() => handleEliminar(c.id_competencia)}>Eliminar</button>
+                </div>
               </div>
             </div>
           ))}

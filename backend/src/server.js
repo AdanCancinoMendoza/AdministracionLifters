@@ -5,6 +5,8 @@ import inicioRouter from "./routes/inicioAdminRoutes.js";
 import categoriasRouter from "./routes/categoriasAdminRoutes.js";
 import posterRouter from "./routes/posterAdminRoutes.js";
 import videosAdminRoute from "./routes/videosAdminRoutes.js";
+import competenciasAdminRoutes from "./routes/competenciasAdminRoutes.js";
+
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -27,6 +29,7 @@ app.use("/api/inicio", inicioRouter);
 app.use("/api/categorias", categoriasRouter);
 app.use("/api/poster", posterRouter);
 app.use("/api/videos", videosAdminRoute);
+app.use("/api/competenciasadmin", competenciasAdminRoutes);
 
 
 
