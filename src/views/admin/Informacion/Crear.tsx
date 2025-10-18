@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { FaSave } from "react-icons/fa";
-import { collection, addDoc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../../../firebase";
 import "../../../styles/CrearInforme.css";
 
 type TipoContenido = "imagen" | "video" | "youtube";
@@ -33,10 +30,9 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
     fecha: "",
   });
 
-  // Guardar archivo seleccionado para subirlo a Firebase Storage
   const [contenidoFile, setContenidoFile] = useState<File | null>(null);
 
-  // Manejar cambios en inputs
+  // 🧩 Manejar cambios en inputs
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -56,34 +52,34 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
     }
   };
 
-  // Guardar publicación en Firestore y Storage
+  // 🧩 Enviar datos al backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      let contenidoURL = formData.contenido;
+      const formDataToSend = new FormData();
+      formDataToSend.append("Tipo", formData.tipo);
+      formDataToSend.append("Titulo", formData.titulo);
+      formDataToSend.append("Descripcion", formData.descripcion);
+      formDataToSend.append("Categoria", formData.categoria);
+      formDataToSend.append("Fecha", formData.fecha);
 
-      // Subir archivo si no es YouTube
       if (formData.tipo !== "youtube" && contenidoFile) {
-        const storageRef = ref(
-          storage,
-          `publicaciones/${Date.now()}_${contenidoFile.name}`
-        );
-        await uploadBytes(storageRef, contenidoFile);
-        contenidoURL = await getDownloadURL(storageRef);
+        formDataToSend.append("Contenido", contenidoFile);
+      } else {
+        formDataToSend.append("Contenido", formData.contenido);
       }
 
-      // Guardar en Firestore
-      await addDoc(collection(db, "publicaciones"), {
-        tipo: formData.tipo,
-        contenido: contenidoURL,
-        titulo: formData.titulo,
-        descripcion: formData.descripcion,
-        categoria: formData.categoria,
-        fecha: formData.fecha,
-        createdAt: new Date(),
+      const response = await fetch("http://localhost:3001/api/publicacion", {
+        method: "POST",
+        body: formDataToSend,
       });
 
+      if (!response.ok) {
+        throw new Error("Error al guardar la publicación");
+      }
+
+      const result = await response.json();
       alert("✅ Publicación guardada con éxito");
 
       // Reset formulario
@@ -98,6 +94,7 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
       });
       setContenidoFile(null);
 
+      onGuardar(result);
       onCerrar();
     } catch (error) {
       console.error("❌ Error al guardar:", error);

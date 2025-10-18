@@ -1,94 +1,100 @@
 import { useState, useEffect } from "react";
 import "../../../styles/VerInformes.css";
 import { FaNewspaper, FaTrophy, FaUsers } from "react-icons/fa";
-import { db, storage } from "../../../firebase";
-import {
-  collection,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 type TipoContenido = "imagen" | "video" | "youtube";
 
 interface Publicacion {
-  id: string; // ahora será el ID de Firestore
-  tipo: TipoContenido;
-  contenido: string;
-  titulo: string;
-  descripcion: string;
-  categoria: string;
-  fecha: string;
+  ID: number;
+  Tipo: TipoContenido;
+  Contenido: string;
+  Titulo: string;
+  Descripcion: string;
+  Categoria: string;
+  Fecha: string; // YYYY-MM-DD
+  FechaCreacion: string;
 }
 
 const VerInformes = () => {
   const [publicaciones, setPublicaciones] = useState<Publicacion[]>([]);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("todos");
 
   const [formData, setFormData] = useState<Publicacion>({
-    id: "",
-    tipo: "imagen",
-    contenido: "",
-    titulo: "",
-    descripcion: "",
-    categoria: "Noticia",
-    fecha: "",
+    ID: 0,
+    Tipo: "imagen",
+    Contenido: "",
+    Titulo: "",
+    Descripcion: "",
+    Categoria: "Noticia",
+    Fecha: "",
+    FechaCreacion: "",
   });
 
   const [contenidoFile, setContenidoFile] = useState<File | null>(null);
 
-  // Cargar publicaciones desde Firestore
+  // Función para formatear fecha a YYYY-MM-DD
+  const formatDate = (dateString: string) => dateString.split("T")[0];
+
+  // Función para convertir link de YouTube a embed
+  const getYouTubeEmbed = (url: string) => {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+    return match ? `https://www.youtube.com/embed/${match[1]}` : "";
+  };
+
+  // Cargar publicaciones desde MySQL
   useEffect(() => {
     const fetchData = async () => {
-      const snapshot = await getDocs(collection(db, "publicaciones"));
-      const data = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      })) as Publicacion[];
-      setPublicaciones(data);
+      try {
+        const res = await fetch("http://localhost:3001/api/publicacion");
+        const data: Publicacion[] = await res.json();
+        setPublicaciones(
+          data.map((pub) => ({
+            ...pub,
+            Fecha: formatDate(pub.Fecha),
+            FechaCreacion: formatDate(pub.FechaCreacion),
+          }))
+        );
+      } catch (err) {
+        console.error("❌ Error al cargar publicaciones:", err);
+      }
     };
-
     fetchData();
   }, []);
-
-  // Contadores dinámicos
-  const countNoticias = publicaciones.filter((p) => p.categoria === "Noticia").length;
-  const countLogros = publicaciones.filter((p) => p.categoria === "Logro").length;
-  const countTestimonios = publicaciones.filter((p) => p.categoria === "Testimonio").length;
 
   // Editar publicación
   const handleEdit = (pub: Publicacion) => {
     setFormData(pub);
-    setEditId(pub.id);
+    setEditId(pub.ID);
   };
 
   // Eliminar publicación
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
-      await deleteDoc(doc(db, "publicaciones", id));
-      setPublicaciones(publicaciones.filter((pub) => pub.id !== id));
+      const res = await fetch(`http://localhost:3001/api/publicacion/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Error al eliminar");
+      setPublicaciones(publicaciones.filter((pub) => pub.ID !== id));
       setDeleteId(null);
     } catch (err) {
       console.error("❌ Error eliminando publicación:", err);
     }
   };
 
-  // Cambios en formulario
+  // Manejar cambios en formulario
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, files } = e.target as any;
 
-    if (name === "contenido" && files && files.length > 0) {
+    if (name === "Contenido" && files && files.length > 0) {
       const file = files[0];
       setContenidoFile(file);
       const tipo: TipoContenido = file.type.includes("video") ? "video" : "imagen";
-      setFormData({ ...formData, contenido: URL.createObjectURL(file), tipo });
+      setFormData({ ...formData, Contenido: URL.createObjectURL(file), Tipo: tipo });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -98,26 +104,32 @@ const VerInformes = () => {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      let contenidoURL = formData.contenido;
+      const formDataToSend = new FormData();
+      formDataToSend.append("Tipo", formData.Tipo);
+      formDataToSend.append("Titulo", formData.Titulo);
+      formDataToSend.append("Descripcion", formData.Descripcion);
+      formDataToSend.append("Categoria", formData.Categoria);
+      formDataToSend.append("Fecha", formData.Fecha);
 
-      if (formData.tipo !== "youtube" && contenidoFile) {
-        const storageRef = ref(storage, `publicaciones/${Date.now()}_${contenidoFile.name}`);
-        await uploadBytes(storageRef, contenidoFile);
-        contenidoURL = await getDownloadURL(storageRef);
+      if (formData.Tipo !== "youtube" && contenidoFile) {
+        formDataToSend.append("Contenido", contenidoFile);
+      } else {
+        formDataToSend.append("Contenido", formData.Contenido);
       }
 
-      await updateDoc(doc(db, "publicaciones", formData.id), {
-        tipo: formData.tipo,
-        contenido: contenidoURL,
-        titulo: formData.titulo,
-        descripcion: formData.descripcion,
-        categoria: formData.categoria,
-        fecha: formData.fecha,
+      const res = await fetch(`http://localhost:3001/api/publicacion/${formData.ID}`, {
+        method: "PUT",
+        body: formDataToSend,
       });
 
+      if (!res.ok) throw new Error("Error al actualizar");
+
+      const updated = await res.json();
       setPublicaciones(
         publicaciones.map((pub) =>
-          pub.id === formData.id ? { ...formData, contenido: contenidoURL } : pub
+          pub.ID === updated.ID
+            ? { ...updated, Fecha: formatDate(updated.Fecha), FechaCreacion: formatDate(updated.FechaCreacion) }
+            : pub
         )
       );
 
@@ -132,17 +144,20 @@ const VerInformes = () => {
   const filteredPublicaciones = publicaciones
     .filter(
       (pub) =>
-        pub.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        pub.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+        pub.Titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        pub.Descripcion.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    .filter((pub) => selectedFilter === "todos" || selectedFilter === pub.categoria);
+    .filter((pub) => selectedFilter === "todos" || selectedFilter === pub.Categoria);
+
+  // Contadores dinámicos
+  const countNoticias = publicaciones.filter((p) => p.Categoria === "Noticia").length;
+  const countLogros = publicaciones.filter((p) => p.Categoria === "Logro").length;
+  const countTestimonios = publicaciones.filter((p) => p.Categoria === "Testimonio").length;
 
   return (
     <div className="verinformes-container">
       <h1 className="verinformes-title">Información sobre Competencias</h1>
-      <p className="verinformes-subtitle">
-        En esta sección podrás editar y eliminar publicaciones
-      </p>
+      <p className="verinformes-subtitle">Editar y eliminar publicaciones</p>
 
       {/* Filtros y buscador */}
       <div className="verinformes-filters">
@@ -153,7 +168,6 @@ const VerInformes = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="verinformes-search"
         />
-
         <select
           value={selectedFilter}
           onChange={(e) => setSelectedFilter(e.target.value)}
@@ -194,36 +208,28 @@ const VerInformes = () => {
       {/* Grid de publicaciones */}
       <div className="verinformes-grid">
         {filteredPublicaciones.map((pub) => (
-          <div key={pub.id} className="verinformes-card">
+          <div key={pub.ID} className="verinformes-card">
             <div className="verinformes-media-wrapper">
-              {pub.tipo === "imagen" && (
-                <img src={pub.contenido} alt={pub.titulo} className="verinformes-media" />
-              )}
-              {pub.tipo === "video" && (
-                <video src={pub.contenido} controls className="verinformes-media" />
-              )}
-              {pub.tipo === "youtube" && (
+              {pub.Tipo === "imagen" && <img src={pub.Contenido} alt={pub.Titulo} className="verinformes-media" />}
+              {pub.Tipo === "video" && <video src={pub.Contenido} controls className="verinformes-media" />}
+              {pub.Tipo === "youtube" && getYouTubeEmbed(pub.Contenido) && (
                 <iframe
-                  src={pub.contenido}
-                  title={pub.titulo}
+                  src={getYouTubeEmbed(pub.Contenido)}
+                  title={pub.Titulo}
                   frameBorder="0"
                   allowFullScreen
                   className="verinformes-media"
                 />
               )}
             </div>
-            <h2 className="verinformes-card-title">{pub.titulo}</h2>
-            <p className="verinformes-card-description">{pub.descripcion}</p>
+            <h2 className="verinformes-card-title">{pub.Titulo}</h2>
+            <p className="verinformes-card-description">{pub.Descripcion}</p>
             <span className="verinformes-card-meta">
-              {pub.categoria} · {pub.fecha}
+              {pub.Categoria} · {pub.Fecha}
             </span>
             <div className="verinformes-card-actions">
-              <button className="verinformes-btn-edit" onClick={() => handleEdit(pub)}>
-                Editar
-              </button>
-              <button className="verinformes-btn-delete" onClick={() => setDeleteId(pub.id)}>
-                Eliminar
-              </button>
+              <button className="verinformes-btn-edit" onClick={() => handleEdit(pub)}>Editar</button>
+              <button className="verinformes-btn-delete" onClick={() => setDeleteId(pub.ID)}>Eliminar</button>
             </div>
           </div>
         ))}
@@ -235,102 +241,53 @@ const VerInformes = () => {
           <div className="verinformes-modal">
             <h2 className="verinformes-modal-title">Editar Publicación</h2>
             <form onSubmit={handleUpdate} className="verinformes-form">
-              <select
-                name="tipo"
-                value={formData.tipo}
-                onChange={handleChange}
-                className="verinformes-input"
-              >
+              <select name="Tipo" value={formData.Tipo} onChange={handleChange} className="verinformes-input">
                 <option value="imagen">Foto</option>
                 <option value="video">Video local</option>
                 <option value="youtube">Video de YouTube</option>
               </select>
 
-              {formData.tipo === "youtube" ? (
+              {formData.Tipo === "youtube" ? (
                 <input
                   type="text"
-                  name="contenido"
+                  name="Contenido"
                   placeholder="URL de YouTube"
-                  value={formData.contenido}
+                  value={formData.Contenido}
                   onChange={handleChange}
                   className="verinformes-input"
                 />
               ) : (
                 <input
                   type="file"
-                  name="contenido"
+                  name="Contenido"
                   accept="image/*,video/*"
                   onChange={handleChange}
                   className="verinformes-input"
                 />
               )}
 
-              {formData.contenido && (
+              {formData.Contenido && (
                 <div className="verinformes-preview">
-                  {formData.tipo === "imagen" && (
-                    <img src={formData.contenido} alt="preview" />
-                  )}
-                  {formData.tipo === "video" && (
-                    <video src={formData.contenido} controls />
-                  )}
-                  {formData.tipo === "youtube" && (
-                    <iframe
-                      src={formData.contenido}
-                      title="youtube-preview"
-                      frameBorder="0"
-                      allowFullScreen
-                    />
+                  {formData.Tipo === "imagen" && <img src={formData.Contenido} alt="preview" />}
+                  {formData.Tipo === "video" && <video src={formData.Contenido} controls />}
+                  {formData.Tipo === "youtube" && getYouTubeEmbed(formData.Contenido) && (
+                    <iframe src={getYouTubeEmbed(formData.Contenido)} title="youtube-preview" frameBorder="0" allowFullScreen />
                   )}
                 </div>
               )}
 
-              <input
-                type="text"
-                name="titulo"
-                placeholder="Título"
-                value={formData.titulo}
-                onChange={handleChange}
-                required
-                className="verinformes-input"
-              />
-              <textarea
-                name="descripcion"
-                placeholder="Descripción"
-                value={formData.descripcion}
-                onChange={handleChange}
-                required
-                className="verinformes-input"
-              />
-              <select
-                name="categoria"
-                value={formData.categoria}
-                onChange={handleChange}
-                className="verinformes-input"
-              >
+              <input type="text" name="Titulo" value={formData.Titulo} onChange={handleChange} required className="verinformes-input" />
+              <textarea name="Descripcion" value={formData.Descripcion} onChange={handleChange} required className="verinformes-input" />
+              <select name="Categoria" value={formData.Categoria} onChange={handleChange} className="verinformes-input">
                 <option>Noticia</option>
                 <option>Testimonio</option>
                 <option>Logro</option>
               </select>
-              <input
-                type="date"
-                name="fecha"
-                value={formData.fecha}
-                onChange={handleChange}
-                required
-                className="verinformes-input"
-              />
+              <input type="date" name="Fecha" value={formData.Fecha} onChange={handleChange} required className="verinformes-input" />
 
               <div className="verinformes-modal-buttons">
-                <button
-                  type="button"
-                  className="verinformes-btn-cancel"
-                  onClick={() => setEditId(null)}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="verinformes-btn-confirm">
-                  Actualizar
-                </button>
+                <button type="button" className="verinformes-btn-cancel" onClick={() => setEditId(null)}>Cancelar</button>
+                <button type="submit" className="verinformes-btn-confirm">Actualizar</button>
               </div>
             </form>
           </div>
@@ -341,16 +298,10 @@ const VerInformes = () => {
       {deleteId !== null && (
         <div className="verinformes-modal-backdrop">
           <div className="verinformes-modal">
-            <h3 className="verinformes-modal-title">
-              ¿Estás seguro de eliminar esta publicación?
-            </h3>
+            <h3 className="verinformes-modal-title">¿Estás seguro de eliminar esta publicación?</h3>
             <div className="verinformes-modal-buttons">
-              <button className="verinformes-btn-cancel" onClick={() => setDeleteId(null)}>
-                Cancelar
-              </button>
-              <button className="verinformes-btn-confirm" onClick={() => handleDelete(deleteId!)}>
-                Eliminar
-              </button>
+              <button className="verinformes-btn-cancel" onClick={() => setDeleteId(null)}>Cancelar</button>
+              <button className="verinformes-btn-confirm" onClick={() => handleDelete(deleteId!)}>Eliminar</button>
             </div>
           </div>
         </div>
