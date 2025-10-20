@@ -7,6 +7,7 @@ import posterRouter from "./routes/posterAdminRoutes.js";
 import videosAdminRoute from "./routes/videosAdminRoutes.js";
 import competenciasAdminRoutes from "./routes/competenciasAdminRoutes.js";
 import publicacionAdminRoutes from "./routes/publicacionAdminRoutes.js"
+import competidorRoutes from "./routes/competidorRoutes.js"
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -32,6 +33,7 @@ app.use("/api/poster", posterRouter);
 app.use("/api/videos", videosAdminRoute);
 app.use("/api/competenciasadmin", competenciasAdminRoutes);
 app.use("/api/publicacion",publicacionAdminRoutes)
+app.use("/api/competidor", competidorRoutes)
 
 
 

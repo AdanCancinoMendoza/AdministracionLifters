@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../../../styles/RegistrarCompetidor.css";
-import { db } from "../../../firebase";
-import { collection, addDoc, getDocs, query, where, orderBy, Timestamp } from "firebase/firestore";
+import axios from "axios";
 
 interface Competidor {
   nombre: string;
@@ -12,16 +11,20 @@ interface Competidor {
   telefono: string;
   correo: string;
   pagado: string;
-  competenciaId?: string;
+  comprobante_pago?: File | null;
 }
 
 interface Competencia {
-  id: string;
+  id_competencia: number;
   nombre: string;
-  foto: string;
-  fechaInicio: Timestamp;
-  fechaCierre: Timestamp;
-  fechaEvento: Timestamp;
+  tipo: string;
+  foto: string | null;
+  fecha_inicio: string | null;
+  fecha_cierre: string | null;
+  fecha_evento: string | null;
+  categoria: string;
+  costo: string;
+  ubicacion: string | null;
 }
 
 const RegistrarCompetidor: React.FC = () => {
@@ -34,6 +37,7 @@ const RegistrarCompetidor: React.FC = () => {
     telefono: "",
     correo: "",
     pagado: "No",
+    comprobante_pago: null,
   });
 
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
@@ -43,25 +47,23 @@ const RegistrarCompetidor: React.FC = () => {
 
   useEffect(() => {
     const fetchCompetencias = async () => {
-      const now = Timestamp.now();
-      const q = query(
-        collection(db, "competencias"),
-        where("fechaCierre", ">", now), // Solo pendientes
-        orderBy("fechaCierre", "asc")
-      );
+      try {
+        const res = await axios.get("http://localhost:3001/api/competenciasadmin");
+        const data: Competencia[] = res.data;
 
-      const snapshot = await getDocs(q);
-      const compPendientes: Competencia[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Competencia));
+        setCompetencias(data);
 
-      setCompetencias(compPendientes);
+        // Seleccionar competencia más próxima
+        const ahora = new Date();
+        const proxima = data
+          .filter(c => c.fecha_evento)
+          .sort((a, b) => new Date(a.fecha_evento!).getTime() - new Date(b.fecha_evento!).getTime())[0];
 
-      // Seleccionar la competencia más cercana por defecto
-      if (compPendientes.length > 0) setCompetenciaSeleccionada(compPendientes[0]);
+        setCompetenciaSeleccionada(proxima || (data.length > 0 ? data[0] : null));
+      } catch (error) {
+        console.error("Error al obtener competencias:", error);
+      }
     };
-
     fetchCompetencias();
   }, []);
 
@@ -70,26 +72,47 @@ const RegistrarCompetidor: React.FC = () => {
     setCompetidor({ ...competidor, [name]: value });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setCompetidor({ ...competidor, comprobante_pago: e.target.files[0] });
+    }
+  };
+
   const handleCompetenciaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const competencia = competencias.find(c => c.id === e.target.value) || null;
+    const competencia = competencias.find(c => c.id_competencia === Number(e.target.value)) || null;
     setCompetenciaSeleccionada(competencia);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!competenciaSeleccionada) {
       alert("Selecciona una competencia");
       return;
     }
 
     try {
-      // Guardar competidor en subcolección de la competencia
-      await addDoc(collection(db, `competencias/${competenciaSeleccionada.id}/competidores`), {
-        ...competidor,
-        competenciaId: competenciaSeleccionada.id,
-        fechaRegistro: Timestamp.now(),
+      const formData = new FormData();
+      formData.append("nombre", competidor.nombre);
+      formData.append("apellidos", competidor.apellidos);
+      formData.append("peso", competidor.peso.toString());
+      formData.append("edad", competidor.edad.toString());
+      formData.append("categoria", competidor.categoria);
+      formData.append("telefono", competidor.telefono);
+      formData.append("correo", competidor.correo);
+      formData.append("pagado", competidor.pagado);
+      formData.append("id_competencia", competenciaSeleccionada.id_competencia.toString());
+      if (competidor.comprobante_pago) {
+        formData.append("comprobante_pago", competidor.comprobante_pago);
+      }
+
+      await axios.post("http://localhost:3001/api/competidor", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      alert("Competidor registrado con éxito!");
+
+      alert("✅ Competidor registrado con éxito!");
+
+      // Limpiar formulario
       setCompetidor({
         nombre: "",
         apellidos: "",
@@ -99,9 +122,10 @@ const RegistrarCompetidor: React.FC = () => {
         telefono: "",
         correo: "",
         pagado: "No",
+        comprobante_pago: null,
       });
     } catch (error) {
-      console.error("Error al registrar competidor:", error);
+      console.error("❌ Error al registrar competidor:", error);
       alert("Error al registrar competidor");
     }
   };
@@ -111,24 +135,28 @@ const RegistrarCompetidor: React.FC = () => {
       <div className="form-card-horizontal">
         <h2>Registro Competidor</h2>
 
-        <form onSubmit={handleSubmit} className="horizontal-form">
+        <form onSubmit={handleSubmit} className="horizontal-form" encType="multipart/form-data">
           {/* Campos del competidor */}
           <div className="form-group-horizontal">
             <label>Nombre</label>
             <input type="text" name="nombre" value={competidor.nombre} onChange={handleChange} required />
           </div>
+
           <div className="form-group-horizontal">
             <label>Apellidos</label>
             <input type="text" name="apellidos" value={competidor.apellidos} onChange={handleChange} required />
           </div>
+
           <div className="form-group-horizontal">
             <label>Peso (kg)</label>
             <input type="number" name="peso" value={competidor.peso} onChange={handleChange} required min={30} max={300} />
           </div>
+
           <div className="form-group-horizontal">
             <label>Edad</label>
             <input type="number" name="edad" value={competidor.edad} onChange={handleChange} required min={10} max={100} />
           </div>
+
           <div className="form-group-horizontal">
             <label>Categoría</label>
             <select name="categoria" value={competidor.categoria} onChange={handleChange} required>
@@ -136,14 +164,17 @@ const RegistrarCompetidor: React.FC = () => {
               {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
+
           <div className="form-group-horizontal">
             <label>Teléfono</label>
             <input type="tel" name="telefono" value={competidor.telefono} onChange={handleChange} required pattern="\d{10}" />
           </div>
+
           <div className="form-group-horizontal">
             <label>Correo</label>
             <input type="email" name="correo" value={competidor.correo} onChange={handleChange} required />
           </div>
+
           <div className="form-group-horizontal radio-group-horizontal">
             <span>Pagado:</span>
             <label>
@@ -156,12 +187,18 @@ const RegistrarCompetidor: React.FC = () => {
             </label>
           </div>
 
+          {/* Comprobante de pago */}
+          <div className="form-group-horizontal">
+            <label>Comprobante de pago (opcional)</label>
+            <input type="file" accept="image/*,application/pdf" onChange={handleFileChange} />
+          </div>
+
           {/* Selección de competencia */}
           <div className="form-group-horizontal">
             <label>Competencia</label>
-            <select value={competenciaSeleccionada?.id || ""} onChange={handleCompetenciaChange} required>
+            <select value={competenciaSeleccionada?.id_competencia || ""} onChange={handleCompetenciaChange} required>
               {competencias.map(c => (
-                <option key={c.id} value={c.id}>{c.nombre}</option>
+                <option key={c.id_competencia} value={c.id_competencia}>{c.nombre}</option>
               ))}
             </select>
           </div>
@@ -169,11 +206,14 @@ const RegistrarCompetidor: React.FC = () => {
           {/* Mostrar imagen de competencia */}
           {competenciaSeleccionada && (
             <div className="competencia-activa-card">
-              <img src={competenciaSeleccionada.foto} alt={competenciaSeleccionada.nombre} />
+              <img
+                src={competenciaSeleccionada.foto ? `http://localhost:3001${competenciaSeleccionada.foto}` : "/placeholder.png"}
+                alt={competenciaSeleccionada.nombre}
+              />
               <div className="competencia-info">
                 <h3>{competenciaSeleccionada.nombre}</h3>
-                <p>Inicio: {competenciaSeleccionada.fechaInicio.toDate().toLocaleDateString()}</p>
-                <p>Evento: {competenciaSeleccionada.fechaEvento.toDate().toLocaleDateString()}</p>
+                {competenciaSeleccionada.fecha_inicio && <p>Inicio: {new Date(competenciaSeleccionada.fecha_inicio).toLocaleDateString()}</p>}
+                {competenciaSeleccionada.fecha_evento && <p>Evento: {new Date(competenciaSeleccionada.fecha_evento).toLocaleDateString()}</p>}
               </div>
             </div>
           )}
