@@ -1,53 +1,64 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../styles/buscadorJuez.css";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
 import { FaSearch } from "react-icons/fa";
 
 type Ejercicio = {
   nombre: string;
-  resultados: string[];
+  resultados: string[]; // Aprobado / Reprobado / Faltante
   tiempos: number[]; // segundos por intento
 };
 
 type CompetidorDetalle = {
+  id_competidor: number;
   nombre: string;
+  apellidos: string;
   peso: string;
+  categoria: string;
   ejercicios: Ejercicio[];
 };
 
-const SAMPLE_COMPETIDORES: CompetidorDetalle[] = [
-  {
-    nombre: "Juan Pérez",
-    peso: "80kg",
-    ejercicios: [
-      { nombre: "Press Banca", resultados: ["Aprobado", "Mala", "Faltante"], tiempos: [50, 70, 65] },
-      { nombre: "Peso Muerto", resultados: ["Aprobado", "Aprobado", "Faltante"], tiempos: [55, 60, 75] },
-      { nombre: "Sentadilla", resultados: ["Aprobado", "Mala", "Faltante"], tiempos: [58, 62, 80] },
-    ],
-  },
-  {
-    nombre: "Ana López",
-    peso: "65kg",
-    ejercicios: [
-      { nombre: "Press Banca", resultados: ["Mala", "Aprobado", "Faltante"], tiempos: [70, 65, 80] },
-      { nombre: "Peso Muerto", resultados: ["Aprobado", "Aprobado", "Aprobado"], tiempos: [55, 59, 50] },
-      { nombre: "Sentadilla", resultados: ["Mala", "Mala", "Faltante"], tiempos: [62, 66, 75] },
-    ],
-  },
-  // puedes añadir más datos de ejemplo aquí
-];
+const CATEGORIAS = ["Todos", "Peso Pluma", "Ligero", "Medio", "Pesado", "Superpesado"];
+
+const NOMBRES_EJERCICIOS = ["Press Banca", "Peso Muerto", "Sentadilla"];
 
 const Buscador: React.FC = () => {
+  const [competidores, setCompetidores] = useState<CompetidorDetalle[]>([]);
   const [query, setQuery] = useState("");
+  const [filtroCategoria, setFiltroCategoria] = useState("Todos");
   const [selected, setSelected] = useState<CompetidorDetalle | null>(null);
 
-  const resultados = useMemo(
-    () =>
-      SAMPLE_COMPETIDORES.filter((c) =>
+  // ⚡ Cargar competidores desde la API
+  useEffect(() => {
+    fetch("http://localhost:3001/api/competidor")
+      .then((res) => res.json())
+      .then((data) => {
+        // Mapear los competidores agregando ejercicios por defecto
+        const mapped: CompetidorDetalle[] = data.map((c: any) => ({
+          id_competidor: c.id_competidor,
+          nombre: c.nombre,
+          apellidos: c.apellidos,
+          peso: c.peso + "kg",
+          categoria: c.categoria,
+          ejercicios: NOMBRES_EJERCICIOS.map((ej) => ({
+            nombre: ej,
+            resultados: ["Faltante", "Faltante", "Faltante"],
+            tiempos: [0, 0, 0],
+          })),
+        }));
+        setCompetidores(mapped);
+      })
+      .catch((err) => console.error("Error al obtener competidores:", err));
+  }, []);
+
+  // Filtrar por nombre y categoría
+  const resultados = useMemo(() => {
+    return competidores.filter(
+      (c) =>
+        (filtroCategoria === "Todos" || c.categoria === filtroCategoria) &&
         c.nombre.toLowerCase().includes(query.trim().toLowerCase())
-      ),
-    [query]
-  );
+    );
+  }, [competidores, query, filtroCategoria]);
 
   return (
     <div className="buscador-juez-root">
@@ -55,23 +66,33 @@ const Buscador: React.FC = () => {
         <header className="buscador-juez-header">
           <h1 className="buscador-juez-title">Buscador de Competidores</h1>
           <p className="buscador-juez-subtitle">
-            Busca por nombre al competidor y consulta sus resultados.
+            Busca por nombre al competidor y filtra por categoría.
           </p>
         </header>
 
         <section className="buscador-juez-search">
-          <label htmlFor="buscador-input" className="buscador-juez-label">
+          <div className="buscador-juez-search-input">
             <FaSearch className="buscador-juez-search-icon" />
             <input
-              id="buscador-input"
-              className="buscador-juez-input"
               type="search"
               placeholder="Buscar competidor por nombre"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Buscar competidor"
             />
-          </label>
+          </div>
+
+          <select
+            className="buscador-juez-filtro-categoria"
+            value={filtroCategoria}
+            onChange={(e) => setFiltroCategoria(e.target.value)}
+          >
+            {CATEGORIAS.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
         </section>
 
         <section className="buscador-juez-results">
@@ -80,7 +101,7 @@ const Buscador: React.FC = () => {
           ) : (
             resultados.map((c) => (
               <article
-                key={c.nombre}
+                key={c.id_competidor}
                 className="buscador-juez-item"
                 role="button"
                 tabIndex={0}
@@ -91,12 +112,21 @@ const Buscador: React.FC = () => {
               >
                 <div className="buscador-juez-item-left">
                   <div className="buscador-juez-avatar" aria-hidden>
-                    {c.nombre.split(" ").map((n) => n[0]).slice(0,2).join("").toUpperCase()}
+                    {c.nombre
+                      .split(" ")
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase()}
                   </div>
                 </div>
                 <div className="buscador-juez-item-body">
-                  <div className="buscador-juez-item-name">{c.nombre}</div>
-                  <div className="buscador-juez-item-meta">{c.peso}</div>
+                  <div className="buscador-juez-item-name">
+                    {c.nombre} {c.apellidos}
+                  </div>
+                  <div className="buscador-juez-item-meta">
+                    {c.peso} — {c.categoria}
+                  </div>
                 </div>
                 <div className="buscador-juez-item-action">Detalles →</div>
               </article>
@@ -120,7 +150,9 @@ const Buscador: React.FC = () => {
             role="document"
           >
             <header className="buscador-juez-modal-header">
-              <h2>{selected.nombre}</h2>
+              <h2>
+                {selected.nombre} {selected.apellidos}
+              </h2>
               <button
                 className="buscador-juez-modal-close"
                 onClick={() => setSelected(null)}
@@ -132,11 +164,13 @@ const Buscador: React.FC = () => {
 
             <div className="buscador-juez-modal-body">
               <div className="buscador-juez-modal-meta">
-                <span className="buscador-juez-modal-peso">Peso: {selected.peso}</span>
+                <span className="buscador-juez-modal-peso">
+                  Peso: {selected.peso} — {selected.categoria}
+                </span>
               </div>
 
               <div className="buscador-juez-ejercicios">
-                {selected.ejercicios.map((ej, idx) => (
+                {selected.ejercicios.map((ej) => (
                   <div key={ej.nombre} className="buscador-juez-ejercicio-card">
                     <div className="buscador-juez-ejercicio-title">{ej.nombre}</div>
                     <ul className="buscador-juez-ejercicio-list">
@@ -145,7 +179,8 @@ const Buscador: React.FC = () => {
                         const estado = tiempo > 60 ? "Reprobado (tiempo > 1 min)" : res;
                         return (
                           <li key={i} className="buscador-juez-ejercicio-item">
-                            <strong>R{i + 1}:</strong> {estado} — <span className="buscador-juez-ejercicio-tiempo">{tiempo}s</span>
+                            <strong>R{i + 1}:</strong> {estado} —{" "}
+                            <span className="buscador-juez-ejercicio-tiempo">{tiempo}s</span>
                           </li>
                         );
                       })}
@@ -156,10 +191,7 @@ const Buscador: React.FC = () => {
             </div>
 
             <footer className="buscador-juez-modal-footer">
-              <button
-                className="buscador-juez-btn cerrar"
-                onClick={() => setSelected(null)}
-              >
+              <button className="buscador-juez-btn cerrar" onClick={() => setSelected(null)}>
                 Cerrar
               </button>
             </footer>
@@ -167,7 +199,6 @@ const Buscador: React.FC = () => {
         </div>
       )}
 
-      {/* Menu inferior (reutiliza tu componente) */}
       <BottomNavigationMenuCentral selected="buscador" />
     </div>
   );

@@ -1,17 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import ReactDOM from "react-dom/client";
+import { useNavigate } from "react-router-dom";
 import "../../styles/loginJuez.css";
-import Logo from "../../assets/LOgo.png"
+import Logo from "../../assets/LOgo.png";
 
 interface Props {
-  onLoginSuccess?: (username: string) => void;
+  onLoginSuccess?: (juez: any) => void;
 }
 
 const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
-  const validUser = "a";
-  const validPassword = "a";
+  const navigate = useNavigate();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const circleCount = 6;
@@ -53,11 +52,34 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
     draw();
   }, []);
 
-  const handleLogin = () => {
-    if (usuario === validUser && password === validPassword) {
-      onLoginSuccess?.(usuario);
-    } else {
-      alert("Usuario o contraseña incorrectos");
+  const handleLogin = async () => {
+    try {
+      const res = await fetch("http://localhost:3001/api/juez");
+      const data = await res.json();
+
+      const juez = data.find(
+        (j: any) => j.usuario === usuario && j.password === password
+      );
+
+      if (juez) {
+        // Guardar en App.tsx
+        onLoginSuccess?.(juez);
+
+        // Guardar sesión en localStorage con expiración de 1 día
+        const expireTime = new Date().getTime() + 24 * 60 * 60 * 1000;
+        localStorage.setItem(
+          "userJuez",
+          JSON.stringify({ data: juez, expire: expireTime })
+        );
+
+        // Redirigir a inicio sin recargar
+        navigate("/jueces/inicio");
+      } else {
+        alert("Usuario o contraseña incorrectos");
+      }
+    } catch (error) {
+      console.error("Error al validar juez:", error);
+      alert("Error al conectar con el servidor");
     }
   };
 
@@ -66,7 +88,6 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
       <canvas ref={canvasRef} className="background-canvas" />
       <div className="login-box">
         <img src={Logo} alt="Logo" className="login-logo" />
-
         <h1 className="login-title">Bienvenido Juez</h1>
 
         <div className="input-group">
@@ -98,14 +119,3 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
 };
 
 export default LoginScreen;
-
-/*Esto monta el componente directamente en el DOM, sin pasar por App.tsx */
-const rootElement = document.getElementById("root");
-if (rootElement) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <LoginScreen />
-    </React.StrictMode>
-  );
-}

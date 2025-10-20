@@ -1,7 +1,8 @@
+import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import MenuAdmin from "./components/menu";
 
-// A D M I N I S T R A D O R
+// Admin
 import Dashboard from "./views/admin/Dashboard";
 import EditarInicio from "./views/admin/Inicio/Editar";
 import Ganadores from "./views/admin/Inicio/Ganadores";
@@ -16,7 +17,7 @@ import CrearInforme from "./views/admin/Informacion/Crear";
 import VerInformes from "./views/admin/Informacion/Ver";
 import Resultados from "./views/admin/Resultados";
 
-// J U E C E S
+// Jueces
 import LoginJueces from "./views/jueces/login";
 import InicioJueces from "./views/jueces/inicio";
 import Buscador from "./views/jueces/buscador";
@@ -24,21 +25,70 @@ import CalificarScreen from "./views/jueces/calificacion";
 import ResultadosScreen from "./views/jueces/resultados";
 import InformacionScreen from "./views/jueces/perfil";
 
+import PrivateRoute from "../backend/src/private/privateJuez.tsx";
+
 function App() {
+  // Inicializamos userJuez desde localStorage
+  const [userJuez, setUserJuez] = useState<any>(() => {
+    const stored = localStorage.getItem("userJuez");
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (new Date().getTime() < parsed.expire) {
+        return parsed.data;
+      } else {
+        localStorage.removeItem("userJuez");
+      }
+    }
+    return null;
+  });
+
   return (
     <Router>
       <Routes>
+        {/* Login */}
+        <Route path="/jueces/login" element={<LoginJueces onLoginSuccess={setUserJuez} />} />
 
-        {/* ✅ Ruta de Jueces */}
-        <Route path="/jueces/login" element={<LoginJueces />} />
-        <Route path="/jueces/inicio" element={<InicioJueces />} />
-        <Route path="/jueces/buscador" element={<Buscador />} />
-        <Route path="/jueces/calificar" element={<CalificarScreen />} />
-        <Route path="/jueces/resultados" element={<ResultadosScreen />} />
-        <Route path="/jueces/perfil" element={<InformacionScreen />} />
-
-
-        
+        {/* Rutas protegidas para jueces */}
+        <Route
+          path="/jueces/inicio"
+          element={
+            <PrivateRoute isAuthenticated={!!userJuez}>
+              <InicioJueces userJuez={userJuez} setUserJuez={setUserJuez} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/jueces/buscador"
+          element={
+            <PrivateRoute isAuthenticated={!!userJuez}>
+              <Buscador userJuez={userJuez} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/jueces/calificar"
+          element={
+            <PrivateRoute isAuthenticated={!!userJuez}>
+              <CalificarScreen userJuez={userJuez} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/jueces/resultados"
+          element={
+            <PrivateRoute isAuthenticated={!!userJuez}>
+              <ResultadosScreen userJuez={userJuez} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/jueces/perfil"
+          element={
+            <PrivateRoute isAuthenticated={!!userJuez}>
+              <InformacionScreen userJuez={userJuez} setUserJuez={setUserJuez} />
+            </PrivateRoute>
+          }
+        />
 
         {/* Rutas de administración */}
         <Route
@@ -48,7 +98,6 @@ function App() {
               <MenuAdmin />
               <main className="main-content">
                 <Routes>
-                  {/* Dashboard */}
                   <Route path="/dashboard" element={<Dashboard />} />
 
                   {/* Inicio */}
@@ -78,7 +127,7 @@ function App() {
                 </Routes>
               </main>
             </div>
-          }
+          }  
         />
       </Routes>
     </Router>
