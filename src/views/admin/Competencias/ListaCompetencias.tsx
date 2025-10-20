@@ -160,12 +160,19 @@ const ListaCompetencias: React.FC = () => {
       if (editar.fecha_inicio) formData.append("fecha_inicio", new Date(editar.fecha_inicio).toISOString());
       if (editar.fecha_cierre) formData.append("fecha_cierre", new Date(editar.fecha_cierre).toISOString());
       if (editar.fecha_evento) formData.append("fecha_evento", new Date(editar.fecha_evento).toISOString());
-      if (editar.foto instanceof File) formData.append("foto", editar.foto);
+
+      // 👇 Aquí está la clave
+      if (editar.foto instanceof File) {
+        formData.append("foto", editar.foto);
+      } else if (typeof editar.foto === "string" && editar.foto.trim() !== "") {
+        formData.append("foto", editar.foto); // Mantiene la foto anterior
+      }
 
       const res = await fetch(`http://localhost:3001/api/competenciasadmin/${editar.id_competencia}`, {
         method: "PUT",
         body: formData,
       });
+
       if (res.ok) {
         alert("✅ Competencia actualizada");
         handleCierreModal();
@@ -177,6 +184,7 @@ const ListaCompetencias: React.FC = () => {
       alert("❌ Error al conectar con el servidor");
     }
   };
+
 
   const competenciasFiltradas = competencias.filter((c) =>
     c.nombre.toLowerCase().includes(busqueda.toLowerCase())

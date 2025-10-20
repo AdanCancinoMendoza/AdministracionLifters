@@ -43,20 +43,38 @@ export const obtenerCompetenciaController = async (req, res) => {
   }
 };
 
-// Actualizar
+//  Actualizar competencia 
 export const actualizarCompetenciaController = async (req, res) => {
   try {
     const { id } = req.params;
-    const foto = req.file ? `/uploads/${req.file.filename}` : req.body.foto || null;
+
+    // Traer la competencia actual
+    const competenciaActual = await obtenerCompetenciaPorId(id);
+    if (!competenciaActual) {
+      return res.status(404).json({ error: "Competencia no encontrada" });
+    }
+
+    // Si hay nueva foto, úsala. Si no, conserva la anterior.
+    const foto = req.file
+      ? `/uploads/${req.file.filename}`
+      : competenciaActual.foto;
+
+    // Preparar datos actualizados
     const data = { ...req.body, foto };
+
     const filas = await editarCompetencia(id, data);
-    if (filas > 0) res.json({ message: "Competencia actualizada" });
-    else res.status(404).json({ error: "Competencia no encontrada" });
+
+    if (filas > 0) {
+      res.json({ message: "Competencia actualizada correctamente" });
+    } else {
+      res.status(400).json({ error: "No se pudo actualizar la competencia" });
+    }
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error al actualizar competencia:", error);
     res.status(500).json({ error: "Error al actualizar la competencia" });
   }
 };
+
 
 // Eliminar
 export const eliminarCompetenciaController = async (req, res) => {

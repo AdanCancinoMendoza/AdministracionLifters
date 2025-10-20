@@ -8,6 +8,7 @@ import videosAdminRoute from "./routes/videosAdminRoutes.js";
 import competenciasAdminRoutes from "./routes/competenciasAdminRoutes.js";
 import publicacionAdminRoutes from "./routes/publicacionAdminRoutes.js"
 import competidorRoutes from "./routes/competidorRoutes.js"
+import juezRoutes from "./routes/juezAdminRoutes.js"
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -34,7 +35,7 @@ app.use("/api/videos", videosAdminRoute);
 app.use("/api/competenciasadmin", competenciasAdminRoutes);
 app.use("/api/publicacion",publicacionAdminRoutes)
 app.use("/api/competidor", competidorRoutes)
-
+app.use("/api/juez", juezRoutes);
 
 
 // ✅ Servidor activo

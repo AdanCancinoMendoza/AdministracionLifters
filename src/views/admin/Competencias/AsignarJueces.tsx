@@ -2,275 +2,233 @@ import React, { useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../../../styles/AsignarJuez.css";
-import Logo from "../../../assets/LOgo.png"; 
-
-import { db } from "../../../firebase";
-import {
-  collection,
-  getDocs,
-  Timestamp,
-  addDoc,
-  deleteDoc,
-  doc,
-  updateDoc,
-} from "firebase/firestore";
+import Logo from "../../../assets/LOgo.png";
+import axios from "axios";
 
 interface Competencia {
-  id: string;
+  id_competencia: number;
   nombre: string;
-  foto: string;
-  fechaInicio: Date;
-  fechaCierre: Date;
-  fechaEvento: Date;
-  fechaCreacion: Date;
+  foto: string | null;
+  fecha_inicio: string | null;
+  fecha_cierre: string | null;
+  fecha_evento: string | null;
+  fecha_creacion: string;
 }
 
 interface Juez {
-  id: string;
+  id: number;
   nombre: string;
   apellidos: string;
   usuario: string;
   password: string;
 }
 
-
 const AsignarJueces: React.FC = () => {
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
-  const [competenciaSeleccionada, setCompetenciaSeleccionada] =
-    useState<Competencia | null>(null);
+  const [competenciaSeleccionada, setCompetenciaSeleccionada] = useState<Competencia | null>(null);
   const [jueces, setJueces] = useState<Juez[]>([]);
   const [modalAgregar, setModalAgregar] = useState(false);
   const [modalEditar, setModalEditar] = useState(false);
   const [modalEliminar, setModalEliminar] = useState(false);
-  const [form, setForm] = useState({ nombre: "", apellidos: "", usuario: "" });
+  const [form, setForm] = useState({ nombre: "", apellidos: "", usuario: "", password: "" });
   const [juezSeleccionado, setJuezSeleccionado] = useState<Juez | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 Cargar competencias desde Firestore
+  // Cargar competencias pendientes
   useEffect(() => {
     const cargarCompetencias = async () => {
-      const snapshot = await getDocs(collection(db, "competencias"));
-      const lista: Competencia[] = snapshot.docs.map((doc) => {
-        const data = doc.data();
+      try {
+        const { data } = await axios.get("/api/competenciasadmin");
+        const hoy = new Date();
+        const pendientes = data.filter(
+          (c: Competencia) => c.fecha_evento && new Date(c.fecha_evento) >= hoy
+        );
+        setCompetencias(pendientes);
 
-        return {
-          id: doc.id,
-          nombre: data.nombre ?? "Sin nombre",
-          foto:
-            data.foto ??
-            
-            "https://via.placeholder.com/300x200.png?text=Sin+Imagen",
-          fechaInicio:
-            data.fechaInicio instanceof Timestamp
-              ? data.fechaInicio.toDate()
-              : new Date(),
-          fechaCierre:
-            data.fechaCierre instanceof Timestamp
-              ? data.fechaCierre.toDate()
-              : new Date(),
-          fechaEvento:
-            data.fechaEvento instanceof Timestamp
-              ? data.fechaEvento.toDate()
-              : new Date(),
-          fechaCreacion:
-            data.fechaCreacion instanceof Timestamp
-              ? data.fechaCreacion.toDate()
-              : new Date(),
-        };
-      });
+        const seleccionada = pendientes[0] ?? null;
+        setCompetenciaSeleccionada(seleccionada);
 
-      // 🧠 Ordenar por fechaInicio más cercana a hoy
-      const ahora = new Date();
-      const proximas = lista
-        .filter((c) => c.fechaInicio >= ahora)
-        .sort((a, b) => a.fechaInicio.getTime() - b.fechaInicio.getTime());
-
-      setCompetencias(lista);
-      const seleccionada = proximas[0] ?? lista[0] ?? null;
-      setCompetenciaSeleccionada(seleccionada);
-
-      if (seleccionada) {
-        await cargarJueces(seleccionada.id);
+        if (seleccionada) await cargarJueces(seleccionada.id_competencia);
+      } catch (error) {
+        console.error("Error cargando competencias:", error);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
-
     cargarCompetencias();
   }, []);
 
-  // 🧾 Cargar jueces
-  const cargarJueces = async (competenciaId: string) => {
-    const juecesRef = collection(db, "competencias", competenciaId, "jueces");
-    const snapshot = await getDocs(juecesRef);
-    const lista = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Juez[];
-    setJueces(lista);
+  // Cambiar competencia seleccionada
+  const handleSeleccionarCompetencia = async (id: number) => {
+    const seleccionada = competencias.find(c => c.id_competencia === id) || null;
+    setCompetenciaSeleccionada(seleccionada);
+    if (seleccionada) await cargarJueces(seleccionada.id_competencia);
   };
 
-  // 🔐 Generar contraseña aleatoria
-  const generarPassword = () => {
-    const caracteres = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let pass = "";
-    for (let i = 0; i < 5; i++) {
-      pass += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+  // ✅ Cargar jueces de la competencia
+  const cargarJueces = async (competenciaId: number) => {
+    try {
+      const { data } = await axios.get("http://localhost:3001/api/juez");
+      const filtrados = data
+        .filter((j: any) => Number(j.id_competencia) === Number(competenciaId))
+        .map((j: any) => ({
+          id: j.id_juez,
+          nombre: j.nombre,
+          apellidos: j.apellidos,
+          usuario: j.usuario,
+          password: j.password,
+        }));
+      setJueces(filtrados);
+    } catch (error) {
+      console.error("Error cargando jueces:", error);
+      setJueces([]);
     }
-    return pass;
+  };
+
+  const generarPassword = () => {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ➕ AGREGAR JUEZ
+  // ✅ Agregar juez
   const handleAgregar = async () => {
     if (!competenciaSeleccionada) return;
 
-    const nuevoJuez: Omit<Juez, "id"> = {
-      nombre: form.nombre,
-      apellidos: form.apellidos,
-      usuario: form.usuario,
-      password: generarPassword(),
-    };
-
     try {
-      const juecesRef = collection(
-        db,
-        "competencias",
-        competenciaSeleccionada.id,
-        "jueces"
-      );
-      const docRef = await addDoc(juecesRef, nuevoJuez);
-      setJueces([...jueces, { id: docRef.id, ...nuevoJuez }]);
-      setForm({ nombre: "", apellidos: "", usuario: "" });
+      const nuevoJuez = {
+        id_competencia: competenciaSeleccionada.id_competencia,
+        nombre: form.nombre,
+        apellidos: form.apellidos,
+        usuario: form.usuario,
+        password: generarPassword(),
+      };
+
+      const { data } = await axios.post("http://localhost:3001/api/juez", nuevoJuez);
+
+      setJueces([
+        ...jueces,
+        {
+          id: data.id_juez,
+          nombre: data.nombre,
+          apellidos: data.apellidos,
+          usuario: data.usuario,
+          password: data.password,
+        },
+      ]);
+
+      setForm({ nombre: "", apellidos: "", usuario: "", password: "" });
       setModalAgregar(false);
+      alert("✅ Juez agregado correctamente");
     } catch (error) {
-      console.error("Error al agregar juez:", error);
+      console.error("❌ Error agregando juez:", error);
+      alert("Error al agregar juez");
     }
   };
 
-  // ✏️ EDITAR JUEZ
+  // ✅ Editar juez
   const handleEditar = async () => {
-    if (!juezSeleccionado || !competenciaSeleccionada) return;
-    const juezRef = doc(
-      db,
-      "competencias",
-      competenciaSeleccionada.id,
-      "jueces",
-      juezSeleccionado.id
-    );
-    await updateDoc(juezRef, form);
-    setJueces(
-      jueces.map((j) =>
-        j.id === juezSeleccionado.id ? { ...j, ...form } : j
-      )
-    );
-    setModalEditar(false);
-    setJuezSeleccionado(null);
+    if (!juezSeleccionado) return;
+    try {
+      await axios.put(`http://localhost:3001/api/juez/${juezSeleccionado.id}`, form);
+      setJueces(jueces.map(j => (j.id === juezSeleccionado.id ? { ...j, ...form } : j)));
+      setModalEditar(false);
+      setJuezSeleccionado(null);
+      alert("✅ Juez actualizado correctamente");
+    } catch (error) {
+      console.error("❌ Error editando juez:", error);
+      alert("Error al editar juez");
+    }
   };
 
-  // 🗑️ ELIMINAR JUEZ
+  // ✅ Eliminar juez
   const handleEliminar = async () => {
-    if (!juezSeleccionado || !competenciaSeleccionada) return;
-    await deleteDoc(
-      doc(
-        db,
-        "competencias",
-        competenciaSeleccionada.id,
-        "jueces",
-        juezSeleccionado.id
-      )
-    );
-    setJueces(jueces.filter((j) => j.id !== juezSeleccionado.id));
-    setModalEliminar(false);
-    setJuezSeleccionado(null);
+    if (!juezSeleccionado) return;
+    try {
+      await axios.delete(`http://localhost:3001/api/juez/${juezSeleccionado.id}`);
+      setJueces(jueces.filter(j => j.id !== juezSeleccionado.id));
+      setModalEliminar(false);
+      setJuezSeleccionado(null);
+      alert("🗑️ Juez eliminado correctamente");
+    } catch (error) {
+      console.error("❌ Error eliminando juez:", error);
+      alert("Error al eliminar juez");
+    }
   };
 
-  const seleccionarJuez = (juez: Juez, accion: "editar" | "eliminar") => {
-    setJuezSeleccionado(juez);
-    setForm({
-      nombre: juez.nombre,
-      apellidos: juez.apellidos,
-      usuario: juez.usuario,
-    });
+  const seleccionarJuez = (j: Juez, accion: "editar" | "eliminar") => {
+    setJuezSeleccionado(j);
+    setForm({ nombre: j.nombre, apellidos: j.apellidos, usuario: j.usuario, password: j.password });
     if (accion === "editar") setModalEditar(true);
     else setModalEliminar(true);
   };
 
-  
   if (loading)
     return (
       <div className="modal-carga">
         <div className="modal-caja">
-          <img
-            src ={Logo}
-            alt="Logo"
-            className="logo-modal"
-          />
-          <p>Cargando competencia más cercana...</p>
+          <img src={Logo} alt="Logo" className="logo-modal" />
+          <p>Cargando competencias pendientes...</p>
           <div className="spinner"></div>
         </div>
       </div>
     );
 
-  if (!competenciaSeleccionada)
-    return <p>No hay competencias disponibles.</p>;
-
-  const { fechaInicio, fechaCierre, fechaEvento, fechaCreacion } =
-    competenciaSeleccionada;
+  if (!competenciaSeleccionada) return <p>No hay competencias pendientes.</p>;
 
   return (
     <div className="asignar-container">
       <h1>Gestión de Jueces</h1>
-      <p>
-        Asocia, edita o elimina jueces de la competencia más cercana.
-      </p>
 
-      <h2 className="competencia-nombre">{competenciaSeleccionada.nombre}</h2>
+      {/* Select competencias */}
+      <div className="competencia-select">
+        <label>Seleccionar competencia:</label>
+        <select
+          value={competenciaSeleccionada.id_competencia}
+          onChange={(e) => handleSeleccionarCompetencia(Number(e.target.value))}
+        >
+          {competencias.map(c => (
+            <option key={c.id_competencia} value={c.id_competencia}>
+              {c.nombre} ({new Date(c.fecha_evento!).toLocaleDateString()})
+            </option>
+          ))}
+        </select>
+      </div>
 
+      {/* Imagen y calendario */}
       <div className="competencia-fila">
         <div className="competencia-imagen">
           <img
-            src={competenciaSeleccionada.foto}
+            src={
+              competenciaSeleccionada.foto
+                ? `http://localhost:3001${competenciaSeleccionada.foto}`
+                : "http://via.placeholder.com/300x200.png?text=Sin+Imagen"
+            }
             alt={competenciaSeleccionada.nombre}
+            style={{ width: "300px", height: "200px", objectFit: "cover" }}
           />
         </div>
-
         <div className="competencia-calendario">
           <Calendar
-            selectRange={true}
-            value={[fechaInicio, fechaEvento]}
-            tileClassName={({ date }) => {
-              if (date.toDateString() === fechaCreacion.toDateString())
-                return "fecha-creacion";
-              if (date.toDateString() === fechaCierre.toDateString())
-                return "fecha-cierre";
-              if (date >= fechaInicio && date <= fechaEvento)
-                return "rango-fechas";
-              return null;
-            }}
+            selectRange
+            value={[
+              competenciaSeleccionada.fecha_inicio ? new Date(competenciaSeleccionada.fecha_inicio) : new Date(),
+              competenciaSeleccionada.fecha_evento ? new Date(competenciaSeleccionada.fecha_evento) : new Date(),
+            ]}
           />
         </div>
       </div>
 
-      <div className="fechas-competencia">
-        <p><strong>Creación:</strong> {fechaCreacion.toLocaleDateString("es-ES")}</p>
-        <p><strong>Inicio:</strong> {fechaInicio.toLocaleDateString("es-ES")}</p>
-        <p><strong>Cierre:</strong> {fechaCierre.toLocaleDateString("es-ES")}</p>
-        <p><strong>Evento:</strong> {fechaEvento.toLocaleDateString("es-ES")}</p>
-      </div>
-
-      <button className="btn-registrar" onClick={() => setModalAgregar(true)}>
-        Agregar Juez
-      </button>
+      <button className="btn-registrar" onClick={() => setModalAgregar(true)}>Agregar Juez</button>
 
       {/* Tabla jueces */}
       <div className="lista-jueces">
         <h3>Jueces Registrados</h3>
         {jueces.length === 0 ? (
-          <p className="lista-vacia">No hay jueces registrados aún.</p>
+          <p>No hay jueces registrados.</p>
         ) : (
           <table className="tabla-jueces">
             <thead>
@@ -283,25 +241,15 @@ const AsignarJueces: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {jueces.map((juez) => (
-                <tr key={juez.id}>
-                  <td>{juez.nombre}</td>
-                  <td>{juez.apellidos}</td>
-                  <td>{juez.usuario}</td>
-                  <td>{juez.password}</td>
+              {jueces.map(j => (
+                <tr key={j.id}>
+                  <td>{j.nombre}</td>
+                  <td>{j.apellidos}</td>
+                  <td>{j.usuario}</td>
+                  <td>{j.password}</td>
                   <td>
-                    <button
-                      className="btn-editar"
-                      onClick={() => seleccionarJuez(juez, "editar")}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="btn-eliminar"
-                      onClick={() => seleccionarJuez(juez, "eliminar")}
-                    >
-                      Eliminar
-                    </button>
+                    <button className="btn-editar" onClick={() => seleccionarJuez(j, "editar")}>Editar</button>
+                    <button className="btn-eliminar" onClick={() => seleccionarJuez(j, "eliminar")}>Eliminar</button>
                   </td>
                 </tr>
               ))}
@@ -317,9 +265,9 @@ const AsignarJueces: React.FC = () => {
             {modalAgregar && (
               <>
                 <h3>Agregar Juez</h3>
-                <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={handleChange}/>
-                <input name="apellidos" placeholder="Apellidos" value={form.apellidos} onChange={handleChange}/>
-                <input name="usuario" placeholder="Usuario" value={form.usuario} onChange={handleChange}/>
+                <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={handleChange} />
+                <input name="apellidos" placeholder="Apellidos" value={form.apellidos} onChange={handleChange} />
+                <input name="usuario" placeholder="Usuario" value={form.usuario} onChange={handleChange} />
                 <button onClick={handleAgregar}>Guardar</button>
                 <button onClick={() => setModalAgregar(false)}>Cancelar</button>
               </>
@@ -328,9 +276,9 @@ const AsignarJueces: React.FC = () => {
             {modalEditar && (
               <>
                 <h3>Editar Juez</h3>
-                <input name="nombre" value={form.nombre} onChange={handleChange}/>
-                <input name="apellidos" value={form.apellidos} onChange={handleChange}/>
-                <input name="usuario" value={form.usuario} onChange={handleChange}/>
+                <input name="nombre" value={form.nombre} onChange={handleChange} />
+                <input name="apellidos" value={form.apellidos} onChange={handleChange} />
+                <input name="usuario" value={form.usuario} onChange={handleChange} />
                 <button onClick={handleEditar}>Guardar Cambios</button>
                 <button onClick={() => setModalEditar(false)}>Cancelar</button>
               </>
