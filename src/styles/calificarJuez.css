@@ -1,0 +1,156 @@
+.calificar-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f4f6f9;
+  justify-content: space-between;
+}
+
+.calificar-container {
+  padding: 20px;
+  flex: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.calificar-titulo {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1565c0;
+  margin-bottom: 8px;
+}
+
+.calificar-subtitulo {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #444;
+  margin-bottom: 16px;
+}
+
+.calificar-tiempo {
+  text-align: center;
+  background: #e3f2fd;
+  border-radius: 12px;
+  padding: 12px 0;
+  margin-bottom: 20px;
+}
+
+.calificar-tiempo p {
+  color: #555;
+  margin: 0;
+  font-weight: 500;
+}
+
+.calificar-tiempo span {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ff5722;
+}
+
+.calificar-lista-ejercicios {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calificar-ejercicio {
+  background: white;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: 0.3s;
+}
+
+.calificar-ejercicio.activo {
+  background: #e3f2fd;
+  transform: scale(1.02);
+  border: 1px solid #64b5f6;
+}
+
+.calificar-ejercicio h3 {
+  color: #1976d2;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.calificar-intentos {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.intento-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #bbb;
+}
+
+.intento-circle.bueno {
+  background: #4caf50;
+  border: none;
+}
+
+.intento-circle.malo {
+  background: #f44336;
+  border: none;
+}
+
+.texto-activo {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #1976d2;
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+.calificar-botones {
+  display: flex;
+  justify-content: space-around;
+  margin: 24px 0;
+}
+
+.btn-calificar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 30px;
+  font-weight: 600;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: 0.3s;
+}
+
+.btn-calificar.malo {
+  background-color: #f44336;
+}
+
+.btn-calificar.bueno {
+  background-color: #4caf50;
+}
+
+.btn-calificar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .calificar-container {
+    padding: 16px;
+  }
+
+  .btn-calificar {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+  }
+
+  .intento-circle {
+    width: 28px;
+    height: 28px;
+  }
+}

@@ -1,0 +1,226 @@
+/* ==============================
+   ESTILOS - PANTALLA INICIO JUEZ
+   ============================== */
+
+/* === RESET GLOBAL === */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  font-family: "Poppins", sans-serif;
+  background-color: #f4f6fa;
+  color: #222;
+}
+
+/* === CONTENEDOR PRINCIPAL === */
+.inicio-juez-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100%;
+  padding: 24px;
+  padding-bottom: 110px; /* espacio para el menú inferior */
+  box-sizing: border-box;
+}
+
+/* === TÍTULO PRINCIPAL === */
+.inicio-juez-bienvenida {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+  margin: 16px 0 24px;
+  letter-spacing: -0.5px;
+}
+
+/* === BANNER / HERO === */
+.inicio-juez-banner {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  height: 260px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  margin-bottom: 32px;
+}
+
+.inicio-juez-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.inicio-juez-banner .overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.75));
+  color: #fff;
+  padding: 18px;
+}
+
+.inicio-juez-banner .overlay h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.inicio-juez-banner .overlay p {
+  margin: 4px 0 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* === TARJETA TOTAL COMPETIDORES === */
+.inicio-juez-total-card {
+  background: linear-gradient(90deg, #e53935, #1976d2);
+  color: white;
+  border-radius: 14px;
+  padding: 18px 28px;
+  font-weight: 600;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 700px;
+  margin-bottom: 28px;
+  transition: transform 0.3s ease;
+}
+
+.inicio-juez-total-card:hover {
+  transform: scale(1.02);
+}
+
+/* === TARJETAS HOMBRES / MUJERES === */
+.inicio-juez-resumen {
+  display: flex;
+  width: 100%;
+  max-width: 700px;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.inicio-juez-card {
+  flex: 1;
+  text-align: center;
+  padding: 18px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: white;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.inicio-juez-card:hover {
+  transform: translateY(-3px);
+}
+
+.inicio-juez-card.hombres {
+  background: #1976d2;
+}
+
+.inicio-juez-card.mujeres {
+  background: #e53935;
+}
+
+/* === SUBTÍTULOS === */
+.inicio-juez-subtitulo {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.inicio-juez-descripcion {
+  text-align: center;
+  color: #555;
+  font-size: 0.95rem;
+  margin-bottom: 18px;
+}
+
+/* === SECCIÓN DE CATEGORÍAS === */
+.inicio-juez-categoria {
+  width: 100%;
+  max-width: 700px;
+  margin-bottom: 28px;
+}
+
+.inicio-juez-categoria h4 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 10px;
+  border-left: 5px solid #1976d2;
+  padding-left: 10px;
+}
+
+/* === TARJETA COMPETIDOR === */
+.inicio-juez-competidor {
+  display: flex;
+  justify-content: space-between;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  color: #333;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inicio-juez-competidor:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* === GRAFICA === */
+.inicio-juez-chart {
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 40px;
+  background: #fff;
+  padding: 18px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .inicio-juez-container {
+    padding: 14px;
+  }
+
+  .inicio-juez-banner {
+    height: 200px;
+  }
+
+  .inicio-juez-total-card {
+    font-size: 1rem;
+    padding: 16px 20px;
+  }
+
+  .inicio-juez-resumen {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .inicio-juez-card {
+    font-size: 1rem;
+  }
+
+  .inicio-juez-subtitulo {
+    font-size: 1.2rem;
+  }
+
+  .inicio-juez-categoria h4 {
+    font-size: 1.05rem;
+  }
+}

@@ -1,0 +1,130 @@
+.resultados-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #ffffff;
+  justify-content: space-between;
+}
+
+.resultados-container {
+  flex: 1;
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.resultados-titulo {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #0d47a1;
+}
+
+.resultados-descripcion {
+  text-align: center;
+  color: #757575;
+  margin-top: 8px;
+  font-size: 0.95rem;
+  margin-bottom: 16px;
+}
+
+.resultados-leyenda {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #424242;
+}
+
+.leyenda-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.leyenda-color.aprobado {
+  background-color: #4caf50;
+}
+
+.leyenda-color.reprobado {
+  background-color: #f44336;
+}
+
+.leyenda-color.pendiente {
+  background-color: #03a9f4;
+}
+
+/* Tabla */
+.resultados-tabla-container {
+  overflow-x: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.resultados-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.resultados-tabla th {
+  background: #e3f2fd;
+  color: #0d47a1;
+  font-weight: 600;
+  padding: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+  border-bottom: 2px solid #bbdefb;
+}
+
+.resultados-tabla td {
+  padding: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #212121;
+  border: 1px solid #eeeeee;
+}
+
+.resultados-tabla .celda-resultado {
+  color: white;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+.fila-par {
+  background-color: #ffffff;
+}
+
+.fila-impar {
+  background-color: #fdfdfd;
+}
+
+.sub-header th {
+  background: #bbdefb;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .resultados-container {
+    padding: 12px;
+  }
+
+  .resultados-tabla th,
+  .resultados-tabla td {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
+
+  .resultados-tabla {
+    min-width: 700px;
+  }
+}

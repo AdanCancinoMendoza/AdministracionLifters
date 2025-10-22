@@ -1,0 +1,149 @@
+/* ===== Estilos Generales ===== */
+.page-content {
+  font-family: "Inter", sans-serif;
+  padding: 30px;
+  background: #f8fafc;
+  color: #1e293b;
+  margin-right: 150px;
+}
+
+.titulo-panel {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.descripcion-panel {
+  font-size: 1rem;
+  color: #475569;
+  margin-bottom: 20px;
+}
+
+.borde-separacion {
+  border: none;
+  border-bottom: 2px solid #cbd5e1;
+  margin: 15px 0;
+}
+
+/* ===== Contenedor Principal ===== */
+.CambiarImagenTexto_Bienvenida {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  padding: 40px;
+}
+
+.CambiarImagenTexto_Bienvenida h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 20px;
+}
+
+/* ===== Layout en Dos Columnas ===== */
+.ContenedorImagenTexto {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  align-items: start;
+
+  /* 🔹 Centrar el bloque en la tarjeta */
+  justify-content: center;
+  width: 100%;
+  max-width: 900px; /* controla el ancho máximo */
+  margin: 0 auto;   /* centra el bloque dentro del padre */
+}
+
+
+/* ===== Imagen ===== */
+.IMagen_Bienvenida_Cambiar {
+  text-align: center;
+}
+
+.IMagen_Bienvenida_Cambiar img {
+  max-width: 100%;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 3px solid #1e3a8a;
+  margin-bottom: 15px;
+}
+
+/* ===== Texto ===== */
+.Texto_Bienvenida_Cambiar {
+  display: flex;
+  flex-direction: column;
+}
+
+.Texto_Bienvenida_Cambiar textarea {
+  width: 100%;
+  height: 280px;
+  resize: none;
+  padding: 15px;
+  font-size: 1rem;
+  border-radius: 12px;
+  border: 2px solid #1e3a8a;
+  outline: none;
+  transition: border-color 0.3s;
+  background: #f9fafb;
+}
+
+.Texto_Bienvenida_Cambiar textarea:focus {
+  border-color: #1e40af;
+  background: #fff;
+}
+
+/* ===== Botones ===== */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+/* Botón editar */
+.btn-editar {
+  background: #1e3a8a;
+  color: white;
+  box-shadow: 0 3px 8px rgba(30, 58, 138, 0.3);
+}
+.btn-editar:hover {
+  background: #1e40af;
+  transform: translateY(-2px);
+}
+
+/* Botón guardar */
+.btn-guardar {
+  background: #0d9488;
+  color: white;
+  align-self: flex-end;
+  box-shadow: 0 3px 8px rgba(13, 148, 136, 0.3);
+}
+.btn-guardar:hover {
+  background: #0f766e;
+  transform: translateY(-2px);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .ContenedorImagenTexto {
+    grid-template-columns: 1fr;
+  }
+
+  .Texto_Bienvenida_Cambiar textarea {
+    height: 200px;
+  }
+
+  .IMagen_Bienvenida_Cambiar img {
+    height: 200px;
+  }
+}
