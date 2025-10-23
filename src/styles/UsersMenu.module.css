@@ -1,118 +1,143 @@
-/* UsersMenu.module.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
 .mainHeader {
+  font-family: 'Poppins', sans-serif;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  padding: 32px 32px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e0e0e0;
-  gap: 40px;
-  position: relative;
-  min-height: 80px;
+  padding: 15px 30px;
+  background-color: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hide {
+  transform: translateY(-100%);
+  box-shadow: none;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 
 .logoImg {
-  height: 80px;
+  height: 70px;
   width: auto;
   object-fit: contain;
-  display: block;
-  position: relative;
-  left: 0;
-  margin-right: 40px;
 }
 
-.navLinks {
-  display: flex;
-  gap: 50px;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
-
-.navItem {
-  text-decoration: none;
-  color: #333;
-  font-weight: 600;
-  font-size: 1.35rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: color 0.3s ease;
-}
-
-.navItem svg {
-  width: 22px;
-  height: 22px;
-  color: #333;
-  transition: color 0.3s ease, transform 0.3s ease;
-}
-
-.navItem:hover,
-.navItem:focus {
-  background: linear-gradient(90deg, red, blue);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.navItem:hover svg,
-.navItem:focus svg {
-  color: red;
-  transform: scale(1.1);
-}
-
-.userMain {
-  padding: 20px;
-}
-
-.authButtons {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.btnPrimary {
-  background-color: #ff007a;
-  color: white;
+/* Botón hamburguesa móvil */
+.menuBtn {
+  display: none;
+  background: none;
   border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
   cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
 }
 
-.btnPrimary:hover,
-.btnPrimary:focus {
-  background-color: #e6006d;
-}
-
-.btnSecondary {
-  background-color: transparent;
-  border: 1px solid #ccc;
-  padding: 8px 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: border-color 0.3s ease;
-}
-
-.btnSecondary:hover,
-.btnSecondary:focus {
-  border-color: #ff007a;
+.menuBtn svg {
+  width: 30px;
+  height: 30px;
   color: #ff007a;
 }
 
+/* Navegación desktop */
+.navLinks {
+  display: flex;
+  gap: 30px;
+}
+
+.navLinks a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.navLinks a:hover svg {
+  transform: scale(1.2);
+}
+
+.activeNav {
+  color: #ff007a;
+  font-weight: 700;
+  position: relative;
+}
+
+.activeNav::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ff007a, #ff5733);
+}
+
+/* ===== Mobile lateral menu ===== */
+.mobileNav {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: -250px;
+  width: 240px;
+  height: 100%;
+  background: #fff;
+  box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+  flex-direction: column;
+  padding: 70px 25px;
+  gap: 25px;
+  transition: right 0.3s ease;
+  z-index: 1500;
+}
+
+.mobileNav.open {
+  right: 0;
+}
+
+.mobileNav a {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.mobileNav a:hover {
+  transform: translateX(5px);
+}
+
+.activeNavMobile {
+  color: #ff007a;
+}
+
+/* ===== Main content ===== */
+.userMain {
+  padding: 20px;
+  min-height: 80vh;
+  background: #f9f9f9;
+  transition: padding-top 0.3s ease;
+}
+
+/* ===== Mobile responsive ===== */
 @media (max-width: 768px) {
-  .mainHeader {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+  .navLinks {
+    display: none;
   }
 
-  .navLinks {
-    width: 100%;
-    justify-content: flex-start;
+  .menuBtn {
+    display: block;
   }
 }
