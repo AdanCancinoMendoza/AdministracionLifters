@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Edit, Trash2, FileText, Users } from "lucide-react";
-import "../../../styles/VerCompetidores.css";
+import styles from "../../../styles/VerCompetidores.module.css";
 import axios from "axios";
 
 interface Competidor {
@@ -35,7 +35,6 @@ export default function VerCompetidores() {
   const [competidorEliminar, setCompetidorEliminar] = useState<Competidor | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Cargar datos
   const fetchData = async () => {
     try {
       const [competidoresRes, competenciasRes] = await Promise.all([
@@ -55,11 +54,9 @@ export default function VerCompetidores() {
     fetchData();
   }, []);
 
-  // Actualizar competidor
   const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!competidorEditar) return;
-
     try {
       await axios.put(`http://localhost:3001/api/competidor/${competidorEditar.id_competidor}`, competidorEditar);
       alert("✅ Competidor actualizado correctamente");
@@ -71,11 +68,9 @@ export default function VerCompetidores() {
     }
   };
 
-  // Eliminar competidor
   const handleDelete = async () => {
     if (!competidorEliminar) return;
     if (!confirm("¿Seguro que deseas eliminar este competidor?")) return;
-
     try {
       await axios.delete(`http://localhost:3001/api/competidor/${competidorEliminar.id_competidor}`);
       alert("✅ Competidor eliminado correctamente");
@@ -87,9 +82,8 @@ export default function VerCompetidores() {
     }
   };
 
-  if (loading) return <p>Cargando competencias y competidores...</p>;
+  if (loading) return <p className={styles.loading}>Cargando competencias y competidores...</p>;
 
-  // Agrupar competidores por competencia
   const competidoresPorCompetencia = competidores.reduce(
     (acc: Record<number, Competidor[]>, comp) => {
       if (!acc[comp.id_competencia]) acc[comp.id_competencia] = [];
@@ -100,45 +94,39 @@ export default function VerCompetidores() {
   );
 
   return (
-    <div className="competidores-container">
-      <div className="competidores-header">
-        <h1 className="competidores-titulo">Gestión de Competidores</h1>
-        <p className="competidores-descripcion">
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Gestión de Competidores</h1>
+        <p className={styles.subtitle}>
           Aquí puedes visualizar los competidores registrados en cada competencia,
           acceder a su baucher de pago, y administrarlos mediante edición o eliminación.
         </p>
-      </div>
+      </header>
 
-      <div className="competidores-resumen">
+      <section className={styles.resumen}>
         <Users size={40} />
         <div>
-          <p className="competidores-resumen-texto">Competidores Registrados</p>
-          <p className="competidores-resumen-numero">{competidores.length}</p>
+          <p className={styles.resumenTexto}>Competidores Registrados</p>
+          <p className={styles.resumenNumero}>{competidores.length}</p>
         </div>
-      </div>
+      </section>
 
       {Object.entries(competidoresPorCompetencia).map(([idCompetencia, listaCompetidores]) => {
-        const competencia = competencias.find(
-          (c) => c.id_competencia === parseInt(idCompetencia)
-        );
+        const competencia = competencias.find(c => c.id_competencia === parseInt(idCompetencia));
         const nombreCompetencia = listaCompetidores[0]?.nombre_competencia || "Sin nombre";
 
         return (
-          <div key={idCompetencia} className="competencia-card">
-            <div className="competencia-info">
+          <div key={idCompetencia} className={styles.competenciaCard}>
+            <div className={styles.competenciaInfo}>
               <img
-                src={
-                  competencia?.foto
-                    ? `http://localhost:3001${competencia.foto}`
-                    : "/placeholder.png"
-                }
+                src={competencia?.foto ? `http://localhost:3001${competencia.foto}` : "/placeholder.png"}
                 alt={nombreCompetencia}
-                className="competencia-foto"
+                className={styles.competenciaFoto}
               />
               <div>
-                <h2 className="competencia-nombre">{nombreCompetencia}</h2>
+                <h2 className={styles.competenciaNombre}>{nombreCompetencia}</h2>
                 {competencia?.fecha_inicio && competencia?.fecha_cierre && (
-                  <p className="competencia-fechas">
+                  <p className={styles.competenciaFechas}>
                     {new Date(competencia.fecha_inicio).toLocaleDateString()} -{" "}
                     {new Date(competencia.fecha_cierre).toLocaleDateString()}
                   </p>
@@ -146,7 +134,7 @@ export default function VerCompetidores() {
               </div>
             </div>
 
-            <table className="competidores-tabla">
+            <table className={styles.tabla}>
               <thead>
                 <tr>
                   <th>Nombre</th>
@@ -160,7 +148,7 @@ export default function VerCompetidores() {
                 </tr>
               </thead>
               <tbody>
-                {listaCompetidores.map((c) => (
+                {listaCompetidores.map(c => (
                   <tr key={c.id_competidor}>
                     <td>{c.nombre}</td>
                     <td>{c.apellidos}</td>
@@ -169,21 +157,19 @@ export default function VerCompetidores() {
                     <td>{c.categoria}</td>
                     <td>{c.telefono}</td>
                     <td>{c.correo}</td>
-                    <td className="competidor-acciones">
+                    <td className={styles.acciones}>
                       {c.comprobante_pago && (
                         <button
-                          className="btn-ver-baucher"
-                          onClick={() =>
-                            setBaucherUrl(`http://localhost:3001${c.comprobante_pago}`)
-                          }
+                          className={styles.verBaucher}
+                          onClick={() => setBaucherUrl(`http://localhost:3001${c.comprobante_pago}`)}
                         >
                           <FileText size={16} />
                         </button>
                       )}
-                      <button className="btn-editar" onClick={() => setCompetidorEditar(c)}>
+                      <button className={styles.editar} onClick={() => setCompetidorEditar(c)}>
                         <Edit size={16} />
                       </button>
-                      <button className="btn-eliminar" onClick={() => setCompetidorEliminar(c)}>
+                      <button className={styles.eliminar} onClick={() => setCompetidorEliminar(c)}>
                         <Trash2 size={16} />
                       </button>
                     </td>
@@ -195,110 +181,46 @@ export default function VerCompetidores() {
         );
       })}
 
-      {/* Modal Baucher */}
+      {/* Modales */}
       {baucherUrl && (
-        <div className="modal-overlay" onClick={() => setBaucherUrl(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-titulo">Baucher de Pago</h3>
-            <img src={baucherUrl} alt="Baucher" className="modal-imagen" />
-            <button className="modal-cerrar" onClick={() => setBaucherUrl(null)}>
-              Cerrar
-            </button>
+        <div className={styles.modalOverlay} onClick={() => setBaucherUrl(null)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Baucher de Pago</h3>
+            <img src={baucherUrl} alt="Baucher" className={styles.modalImagen} />
+            <button className={styles.modalCerrar} onClick={() => setBaucherUrl(null)}>Cerrar</button>
           </div>
         </div>
       )}
 
-      {/* Modal Editar */}
       {competidorEditar && (
-        <div className="modal-overlay" onClick={() => setCompetidorEditar(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-titulo">Editar Competidor</h3>
-            <form onSubmit={handleUpdate} className="form-editar">
-              <input
-                type="text"
-                value={competidorEditar.nombre}
-                onChange={(e) =>
-                  setCompetidorEditar({ ...competidorEditar, nombre: e.target.value })
-                }
-              />
-              <input
-                type="text"
-                value={competidorEditar.apellidos}
-                onChange={(e) =>
-                  setCompetidorEditar({ ...competidorEditar, apellidos: e.target.value })
-                }
-              />
-              <input
-                type="number"
-                value={competidorEditar.peso}
-                onChange={(e) =>
-                  setCompetidorEditar({ ...competidorEditar, peso: e.target.value })
-                }
-              />
-              <input
-                type="number"
-                value={competidorEditar.edad}
-                onChange={(e) =>
-                  setCompetidorEditar({ ...competidorEditar, edad: parseInt(e.target.value) })
-                }
-              />
-              <input
-                type="text"
-                value={competidorEditar.categoria}
-                onChange={(e) =>
-                  setCompetidorEditar({ ...competidorEditar, categoria: e.target.value })
-                }
-              />
-              <input
-                type="tel"
-                value={competidorEditar.telefono}
-                onChange={(e) =>
-                  setCompetidorEditar({ ...competidorEditar, telefono: e.target.value })
-                }
-              />
-              <input
-                type="email"
-                value={competidorEditar.correo}
-                onChange={(e) =>
-                  setCompetidorEditar({ ...competidorEditar, correo: e.target.value })
-                }
-              />
-              <div className="form-botones">
-                <button type="submit" className="btn-guardar">
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  className="btn-cancelar"
-                  onClick={() => setCompetidorEditar(null)}
-                >
-                  Cancelar
-                </button>
+        <div className={styles.modalOverlay} onClick={() => setCompetidorEditar(null)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Editar Competidor</h3>
+            <form onSubmit={handleUpdate} className={styles.modalForm}>
+              <input type="text" value={competidorEditar.nombre} onChange={e => setCompetidorEditar({...competidorEditar, nombre: e.target.value})} />
+              <input type="text" value={competidorEditar.apellidos} onChange={e => setCompetidorEditar({...competidorEditar, apellidos: e.target.value})} />
+              <input type="number" value={competidorEditar.peso} onChange={e => setCompetidorEditar({...competidorEditar, peso: e.target.value})} />
+              <input type="number" value={competidorEditar.edad} onChange={e => setCompetidorEditar({...competidorEditar, edad: parseInt(e.target.value)})} />
+              <input type="text" value={competidorEditar.categoria} onChange={e => setCompetidorEditar({...competidorEditar, categoria: e.target.value})} />
+              <input type="tel" value={competidorEditar.telefono} onChange={e => setCompetidorEditar({...competidorEditar, telefono: e.target.value})} />
+              <input type="email" value={competidorEditar.correo} onChange={e => setCompetidorEditar({...competidorEditar, correo: e.target.value})} />
+              <div className={styles.modalButtons}>
+                <button type="submit" className={styles.guardar}>Guardar</button>
+                <button type="button" className={styles.cancelar} onClick={() => setCompetidorEditar(null)}>Cancelar</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal Eliminar */}
       {competidorEliminar && (
-        <div className="modal-overlay" onClick={() => setCompetidorEliminar(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-titulo">Eliminar Competidor</h3>
-            <p>
-              ¿Seguro que deseas eliminar a{" "}
-              <strong>
-                {competidorEliminar.nombre} {competidorEliminar.apellidos}
-              </strong>
-              ?
-            </p>
-            <div className="form-botones">
-              <button onClick={handleDelete} className="btn-eliminar-confirmar">
-                Eliminar
-              </button>
-              <button className="btn-cancelar" onClick={() => setCompetidorEliminar(null)}>
-                Cancelar
-              </button>
+        <div className={styles.modalOverlay} onClick={() => setCompetidorEliminar(null)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Eliminar Competidor</h3>
+            <p>¿Seguro que deseas eliminar a <strong>{competidorEliminar.nombre} {competidorEliminar.apellidos}</strong>?</p>
+            <div className={styles.modalButtons}>
+              <button onClick={handleDelete} className={styles.eliminarConfirmar}>Eliminar</button>
+              <button className={styles.cancelar} onClick={() => setCompetidorEliminar(null)}>Cancelar</button>
             </div>
           </div>
         </div>

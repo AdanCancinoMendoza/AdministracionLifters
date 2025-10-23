@@ -1,192 +1,77 @@
 import { useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
-} from "recharts";
-import { Dialog } from "@headlessui/react";
-import "../../../styles/Resultados.css";
-
-interface Ejercicios {
-  PesoMuerto: string[];
-  PressBanca: string[];
-  Sentadilla: string[];
-}
+import styles from "../../../styles/ResultadosVista.module.css";
 
 interface Resultado {
+  id: number;
   nombre: string;
   apellido: string;
   peso: number;
-  ejercicios: Ejercicios;
+  logros: string[];
 }
 
-interface Competencia {
-  id: number;
-  nombre: string;
-  participantes: number;
-  foto: string;
-  resultados: Resultado[];
-}
-
-const competencias: Competencia[] = [
-  {
-    id: 1,
-    nombre: "Power Classic 2025",
-    participantes: 12,
-    foto: "https://media.istockphoto.com/id/1135093085/es/foto/discovery-mexico-campeche.jpg?s=612x612&w=0&k=20&c=v6c4Lg2aFZHZP_OrXLmCcozJfp-MXiq_EyKydCpdMvU=",
-    resultados: [
-      {
-        nombre: "Juan",
-        apellido: "Perez",
-        peso: 82,
-        ejercicios: {
-          PesoMuerto: ["120kg ✓", "130kg ✗", "135kg ✓"],
-          PressBanca: ["80kg ✓", "90kg ✓", "95kg ✗"],
-          Sentadilla: ["100kg ✓", "110kg ✓", "115kg ✓"]
-        }
-      },
-      {
-        nombre: "Carlos",
-        apellido: "Lopez",
-        peso: 90,
-        ejercicios: {
-          PesoMuerto: ["140kg ✓", "150kg ✓", "160kg ✗"],
-          PressBanca: ["85kg ✓", "95kg ✓", "100kg ✓"],
-          Sentadilla: ["105kg ✓", "115kg ✗", "120kg ✓"]
-        }
-      }
-    ]
-  },
-  {
-    id: 2,
-    nombre: "Strongman League",
-    participantes: 8,
-    foto: "https://via.placeholder.com/400x200.png?text=Strongman+League",
-    resultados: []
-  }
+const resultadosIniciales: Resultado[] = [
+  { id: 1, nombre: "Juan", apellido: "Perez", peso: 82, logros: ["Peso Muerto 120kg", "Sentadilla 115kg"] },
+  { id: 2, nombre: "Carlos", apellido: "Lopez", peso: 90, logros: ["Press Banca 95kg", "Peso Muerto 150kg"] },
+  { id: 3, nombre: "Ana", apellido: "Martinez", peso: 70, logros: ["Sentadilla 100kg", "Press Banca 80kg"] },
 ];
 
-const COLORS = ["#ff00f2ff", "#f59e0b", "#ff0000ff", "#10b981"];
+export default function ResultadosVista() {
+  const [resultados, setResultados] = useState<Resultado[]>(resultadosIniciales);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [seleccionado, setSeleccionado] = useState<Resultado | null>(null);
 
-export default function ResultadosCompetencia() {
-  const [open, setOpen] = useState(false);
-  const [competenciaSeleccionada, setCompetenciaSeleccionada] = useState<Competencia | null>(null);
+  const abrirModal = (res: Resultado) => {
+    setSeleccionado(res);
+    setModalAbierto(true);
+  };
 
-  const abrirModal = (competencia: Competencia) => {
-    setCompetenciaSeleccionada(competencia);
-    setOpen(true);
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setSeleccionado(null);
   };
 
   return (
-    <div className="resultados-container">
-      <h1 className="resultados-titulo">Resultados Competencias 2025</h1>
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.titulo}>Resultados Competidores</h1>
+        <p className={styles.subtitulo}>Revisa el rendimiento de cada participante</p>
+      </header>
 
-      {/* Contenedor de gráficas en la misma fila */}
-      <div className="resultados-graficas-grid">
-        {/* Gráfica de barras */}
-        <div className="resultados-grafica-card">
-          <h2 className="resultados-subtitulo">Participantes por competencia</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={competencias}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="nombre" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="participantes" fill="#61e546ff" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Gráfica de pastel */}
-        <div className="resultados-grafica-card">
-          <h2 className="resultados-subtitulo">Distribución de participantes</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={competencias}
-                dataKey="participantes"
-                nameKey="nombre"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                label
-              >
-                {competencias.map((_, i) => (
-                  <Cell key={`cell-${i}`} fill={COLORS[i % COLORS.length]} />
+      <main className={styles.main}>
+        <section className={styles.cardsGrid}>
+          {resultados.map((res) => (
+            <div key={res.id} className={styles.card} onClick={() => abrirModal(res)}>
+              <h2 className={styles.cardTitulo}>{res.nombre} {res.apellido}</h2>
+              <p className={styles.cardPeso}>Peso: {res.peso}kg</p>
+              <ul className={styles.cardLogros}>
+                {res.logros.map((logro, i) => (
+                  <li key={i}>{logro}</li>
                 ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Tarjetas */}
-      <div className="resultados-cards-grid">
-        {competencias.map((comp) => (
-          <div key={comp.id} className="resultados-card" onClick={() => abrirModal(comp)}>
-            <h3 className="resultados-img-title">{comp.nombre}</h3>
-            <img src={comp.foto} alt={comp.nombre} className="resultados-card-img" />
-            <div className="resultados-card-body">
-              <p className="resultados-card-subtitle">Participantes: {comp.participantes}</p>
+              </ul>
             </div>
+          ))}
+        </section>
+      </main>
+
+      {modalAbierto && seleccionado && (
+        <div className={styles.modalFondo} onClick={cerrarModal}>
+          <div className={styles.modalContenido} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.modalTitulo}>{seleccionado.nombre} {seleccionado.apellido}</h2>
+            <p className={styles.modalPeso}>Peso: {seleccionado.peso}kg</p>
+            <h3 className={styles.modalSubtitulo}>Logros:</h3>
+            <ul className={styles.modalLogros}>
+              {seleccionado.logros.map((logro, i) => (
+                <li key={i}>{logro}</li>
+              ))}
+            </ul>
+            <button className={styles.modalCerrar} onClick={cerrarModal}>Cerrar</button>
           </div>
-        ))}
-      </div>
-
-      {/* Modal */}
-      <Dialog open={open} onClose={() => setOpen(false)} className="resultados-modal-overlay">
-        <div className="resultados-modal-backdrop" aria-hidden="true" />
-        <div className="resultados-modal-wrapper">
-          <Dialog.Panel className="resultados-modal-panel">
-            <Dialog.Title className="resultados-modal-title">
-              {competenciaSeleccionada?.nombre} - Resultados
-            </Dialog.Title>
-
-            <div className="resultados-modal-table-wrapper">
-              <table className="resultados-modal-table">
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Peso (kg)</th>
-                    <th>Peso Muerto</th>
-                    <th>Press Banca</th>
-                    <th>Sentadilla</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {competenciaSeleccionada?.resultados?.map((res, i) => (
-                    <tr key={i}>
-                      <td>{res.nombre}</td>
-                      <td>{res.apellido}</td>
-                      <td>{res.peso}</td>
-                      <td>{res.ejercicios.PesoMuerto.map((p, idx) => <div key={idx}>{p}</div>)}</td>
-                      <td>{res.ejercicios.PressBanca.map((p, idx) => <div key={idx}>{p}</div>)}</td>
-                      <td>{res.ejercicios.Sentadilla.map((p, idx) => <div key={idx}>{p}</div>)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="resultados-modal-footer">
-              <button onClick={() => setOpen(false)} className="resultados-btn-cerrar">
-                Cerrar
-              </button>
-            </div>
-          </Dialog.Panel>
         </div>
-      </Dialog>
+      )}
+
+      <footer className={styles.footer}>
+        <p>© 2025 ResultadosApp</p>
+      </footer>
     </div>
   );
 }

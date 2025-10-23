@@ -1,0 +1,213 @@
+/* UsersInicio.module.css */
+
+.dashboardMain {
+  padding: 20px;
+  background-color: #f9f9f9;
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* HERO */
+.heroSection {
+  background-size: cover;
+  background-position: center;
+  color: white;
+  padding: 60px 30px;
+  text-align: center;
+}
+
+.heroSection h1 {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* BOTÓN LINK */
+.linkButton {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* TITULOS DE SECCIÓN */
+.sectionTitle {
+  text-align: center;
+  margin: 40px auto 20px;
+  font-size: 20px;
+  width: fit-content;
+  padding-top: 10px;
+  border-top: 4px solid;
+  border-image: linear-gradient(to right, crimson, royalblue) 1;
+  border-image-slice: 1;
+}
+
+/* CARRUSEL */
+.carouselContainer {
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.carouselBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0,0,0,0.5);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 18px;
+  z-index: 2;
+}
+
+.carouselBtnLeft { left: 0; }
+.carouselBtnRight { right: 0; }
+
+.carouselSlide {
+  background-color: #1a1a1a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 30px 20px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.competitors {
+  flex: 1;
+  text-align: center;
+}
+
+.competitors h3 {
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.competitor {
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  font-weight: bold;
+  justify-content: center;
+  gap: 10px;
+}
+
+.medallaIcon {
+  width: 40px;
+  height: 40px;
+}
+
+.competenciaImg img {
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  max-height: 350px;
+}
+
+/* POWERLIFTING INFO */
+.powerliftingInfo {
+  text-align: center;
+  padding: 20px;
+}
+
+.descripcion {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.descripcion p {
+  font-size: 16px;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.movimientos {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 800px;
+  margin: 0 auto 20px;
+  gap: 40px;
+}
+
+.mov {
+  text-align: center;
+  flex: 1;
+}
+
+.mov img {
+  width: 80px;
+  height: 80px;
+}
+
+.mov p {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+/* COMPETENCIAS */
+.card {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: 20px;
+  max-width: 1000px;
+  margin: 20px auto;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.cardCompetencia img {
+  flex: 1;
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+  max-height: 300px;
+}
+
+.texto {
+  flex: 1;
+  min-width: 250px;
+}
+
+/* POSTER */
+.posterContainer {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.posterContainer img {
+  width: auto;
+  max-width: 90%;
+  max-height: 600px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+/* VIDEOS */
+.cardVideos {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.videosGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.videosGrid iframe {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}

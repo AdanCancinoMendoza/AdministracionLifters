@@ -1,0 +1,138 @@
+.container {
+  max-width: 1100px;
+  margin: 2rem auto;
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  color: #000;
+  min-height: 100vh; /* Ocupa toda la pantalla */
+  box-sizing: border-box;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #000;
+}
+
+.formSection {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: #fff;
+  padding: 22px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #000;
+}
+
+.card label {
+  font-weight: 600;
+  color: #000;
+}
+
+.card input,
+.card select {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  transition: border 0.2s;
+  color: #000;
+}
+
+.card input:focus,
+.card select:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+.uploadCard {
+  text-align: center;
+  border: 2px dashed #ccc;
+  padding: 25px;
+}
+
+.fileName {
+  font-size: 12px;
+  color: #000;
+  margin-top: 5px;
+}
+
+.searchBox {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.searchBox input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  color: #000;
+}
+
+.searchBox button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.searchBox button:hover {
+  background: #1e40af;
+}
+
+.map {
+  height: 300px; /* Ajustado para no generar scroll */
+  width: 100%;
+  border-radius: 12px;
+}
+
+.ubicacionText {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #000;
+  word-wrap: break-word;
+}
+
+.actions {
+  text-align: right;
+}
+
+.actions button {
+  padding: 12px 28px;
+  background: linear-gradient(90deg, #2563eb, #4f46e5);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.actions button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}

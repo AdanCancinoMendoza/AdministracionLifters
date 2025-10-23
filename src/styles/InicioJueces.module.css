@@ -1,32 +1,17 @@
-/* ==============================
-   ESTILOS - PANTALLA INICIO JUEZ
-   ============================== */
-
-/* === RESET GLOBAL === */
-html,
-body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
-  font-family: "Poppins", sans-serif;
-  background-color: #f4f6fa;
-  color: #222;
-}
-
-/* === CONTENEDOR PRINCIPAL === */
-.inicio-juez-container {
+.inicioJuezContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100%;
   padding: 24px;
-  padding-bottom: 110px; /* espacio para el menú inferior */
+  padding-bottom: 110px;
   box-sizing: border-box;
+  background-color: #f4f6fa;
+  color: #222;
+  font-family: "Poppins", sans-serif;
 }
 
-/* === TÍTULO PRINCIPAL === */
-.inicio-juez-bienvenida {
+.inicioJuezBienvenida {
   font-size: 2rem;
   font-weight: 700;
   color: #111827;
@@ -35,8 +20,7 @@ body {
   letter-spacing: -0.5px;
 }
 
-/* === BANNER / HERO === */
-.inicio-juez-banner {
+.inicioJuezBanner {
   position: relative;
   width: 100%;
   max-width: 900px;
@@ -47,13 +31,13 @@ body {
   margin-bottom: 32px;
 }
 
-.inicio-juez-banner img {
+.inicioJuezBanner img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.inicio-juez-banner .overlay {
+.overlay {
   position: absolute;
   bottom: 0;
   width: 100%;
@@ -62,20 +46,19 @@ body {
   padding: 18px;
 }
 
-.inicio-juez-banner .overlay h2 {
+.overlay h2 {
   margin: 0;
   font-size: 1.6rem;
   font-weight: 700;
 }
 
-.inicio-juez-banner .overlay p {
+.overlay p {
   margin: 4px 0 0;
   font-size: 1rem;
   opacity: 0.9;
 }
 
-/* === TARJETA TOTAL COMPETIDORES === */
-.inicio-juez-total-card {
+.inicioJuezTotalCard {
   background: linear-gradient(90deg, #e53935, #1976d2);
   color: white;
   border-radius: 14px;
@@ -92,12 +75,11 @@ body {
   transition: transform 0.3s ease;
 }
 
-.inicio-juez-total-card:hover {
+.inicioJuezTotalCard:hover {
   transform: scale(1.02);
 }
 
-/* === TARJETAS HOMBRES / MUJERES === */
-.inicio-juez-resumen {
+.inicioJuezResumen {
   display: flex;
   width: 100%;
   max-width: 700px;
@@ -106,7 +88,7 @@ body {
   margin-bottom: 40px;
 }
 
-.inicio-juez-card {
+.inicioJuezCard {
   flex: 1;
   text-align: center;
   padding: 18px;
@@ -118,20 +100,19 @@ body {
   transition: transform 0.2s ease;
 }
 
-.inicio-juez-card:hover {
+.inicioJuezCard:hover {
   transform: translateY(-3px);
 }
 
-.inicio-juez-card.hombres {
+.hombres {
   background: #1976d2;
 }
 
-.inicio-juez-card.mujeres {
+.mujeres {
   background: #e53935;
 }
 
-/* === SUBTÍTULOS === */
-.inicio-juez-subtitulo {
+.inicioJuezSubtitulo {
   font-size: 1.4rem;
   font-weight: 700;
   margin-bottom: 10px;
@@ -139,21 +120,13 @@ body {
   text-align: center;
 }
 
-.inicio-juez-descripcion {
-  text-align: center;
-  color: #555;
-  font-size: 0.95rem;
-  margin-bottom: 18px;
-}
-
-/* === SECCIÓN DE CATEGORÍAS === */
-.inicio-juez-categoria {
+.inicioJuezCategoria {
   width: 100%;
   max-width: 700px;
   margin-bottom: 28px;
 }
 
-.inicio-juez-categoria h4 {
+.inicioJuezCategoria h4 {
   font-size: 1.2rem;
   font-weight: 700;
   color: #111827;
@@ -162,8 +135,7 @@ body {
   padding-left: 10px;
 }
 
-/* === TARJETA COMPETIDOR === */
-.inicio-juez-competidor {
+.inicioJuezCompetidor {
   display: flex;
   justify-content: space-between;
   background: #ffffff;
@@ -176,51 +148,39 @@ body {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.inicio-juez-competidor:hover {
+.inicioJuezCompetidor:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* === GRAFICA === */
-.inicio-juez-chart {
-  width: 100%;
-  max-width: 600px;
-  margin-bottom: 40px;
-  background: #fff;
-  padding: 18px;
-  border-radius: 14px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-}
-
-/* === RESPONSIVE === */
 @media (max-width: 768px) {
-  .inicio-juez-container {
+  .inicioJuezContainer {
     padding: 14px;
   }
 
-  .inicio-juez-banner {
+  .inicioJuezBanner {
     height: 200px;
   }
 
-  .inicio-juez-total-card {
+  .inicioJuezTotalCard {
     font-size: 1rem;
     padding: 16px 20px;
   }
 
-  .inicio-juez-resumen {
+  .inicioJuezResumen {
     flex-direction: column;
     gap: 14px;
   }
 
-  .inicio-juez-card {
+  .inicioJuezCard {
     font-size: 1rem;
   }
 
-  .inicio-juez-subtitulo {
+  .inicioJuezSubtitulo {
     font-size: 1.2rem;
   }
 
-  .inicio-juez-categoria h4 {
+  .inicioJuezCategoria h4 {
     font-size: 1.05rem;
   }
 }

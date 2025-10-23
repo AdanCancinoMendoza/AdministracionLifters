@@ -1,12 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
-import "../../../styles/editarInicio.css";
 import { FaEdit, FaCheckCircle } from "react-icons/fa";
+import styles from "../../../styles/EditarInicio.module.css";
 
-export default function Editar() {
+export default function EditarInicio() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  const [texto, setTexto] = useState(""); // Texto de bienvenida
+  const [texto, setTexto] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -15,14 +15,13 @@ export default function Editar() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch("/api/inicio"); // Proxy Vite
+        const res = await fetch("/api/inicio");
         if (!res.ok) throw new Error(`Error ${res.status}`);
         const data = await res.json();
 
         setTexto(data.Descripcion || "");
 
         if (imgRef.current) {
-          // 🔹 Si la URL de la imagen es relativa, la convertimos en absoluta
           const url = data.Imagen?.startsWith("http")
             ? data.Imagen
             : data.Imagen
@@ -31,7 +30,7 @@ export default function Editar() {
           imgRef.current.src = url;
         }
       } catch (err) {
-        console.error("Error cargando datos desde backend:", err);
+        console.error("Error cargando datos:", err);
         alert("❌ Error cargando datos del servidor");
       } finally {
         setLoading(false);
@@ -41,12 +40,8 @@ export default function Editar() {
     load();
   }, []);
 
-  // Abrir selector de archivo
-  const handleEditImage = () => {
-    fileInputRef.current?.click();
-  };
+  const handleEditImage = () => fileInputRef.current?.click();
 
-  // Cambiar imagen localmente
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -55,7 +50,6 @@ export default function Editar() {
     if (imgRef.current) imgRef.current.src = url;
   };
 
-  // Guardar cambios en backend
   const handleGuardar = async () => {
     if (guardando) return;
     setGuardando(true);
@@ -71,22 +65,15 @@ export default function Editar() {
       });
 
       if (!res.ok) {
-        let data;
-        try {
-          data = await res.json();
-        } catch {
-          data = { message: res.statusText || "Error desconocido" };
-        }
+        const data = await res.json().catch(() => ({}));
         throw new Error(data.message || "Error al guardar");
       }
 
       const data = await res.json();
       alert("✅ Cambios guardados correctamente");
 
-      // Limpiar selección de archivo
       setSelectedFile(null);
 
-      // 🔹 Actualizar imagen si cambió y convertir URL si es relativa
       if (data.imagenUrl && imgRef.current) {
         const url = data.imagenUrl.startsWith("http")
           ? data.imagenUrl
@@ -104,41 +91,46 @@ export default function Editar() {
   if (loading) return <p>Cargando datos...</p>;
 
   return (
-    <div className="page-content">
-      <h1 className="titulo-panel">Panel de Inicio</h1>
-      <hr className="borde-separacion" />
-      <p className="descripcion-panel">
+    <main className={styles.pageContent}>
+      <h1 className={styles.tituloPanel}>Panel de Inicio</h1>
+      <hr className={styles.bordeSeparacion} />
+      <p className={styles.descripcionPanel}>
         En esta sección podrás editar parámetros del inicio
       </p>
 
-      <div className="CambiarImagenTexto_Bienvenida borde-separacion">
-        <h2>Cambiar imagen y texto de Inicio</h2>
+      <section className={`${styles.card} ${styles.bordeSeparacion}`}>
+        <h2 className={styles.subtitulo}>Cambiar imagen y texto de Inicio</h2>
 
-        <div className="ContenedorImagenTexto">
-          {/* Bloque imagen */}
-          <div className="IMagen_Bienvenida_Cambiar">
-            <img ref={imgRef} alt="Imagen de inicio" />
-            <button className="btn-editar" type="button" onClick={handleEditImage}>
+        <div className={styles.gridContainer}>
+          {/* Imagen */}
+          <div className={styles.imageSection}>
+            <img ref={imgRef} alt="Imagen de inicio" className={styles.previewImage} />
+            <button
+              className={styles.btnEditar}
+              type="button"
+              onClick={handleEditImage}
+            >
               <FaEdit /> Editar Imagen
             </button>
             <input
               type="file"
               ref={fileInputRef}
               accept="image/*"
-              style={{ display: "none" }}
               onChange={handleImageChange}
+              style={{ display: "none" }}
             />
           </div>
 
-          {/* Bloque texto */}
-          <div className="Texto_Bienvenida_Cambiar">
+          {/* Texto */}
+          <div className={styles.textSection}>
             <textarea
               value={texto}
               onChange={(e) => setTexto(e.target.value)}
               placeholder="Escribe el texto de bienvenida aquí..."
+              className={styles.textarea}
             />
             <button
-              className="btn-guardar"
+              className={styles.btnGuardar}
               type="button"
               onClick={handleGuardar}
               disabled={guardando}
@@ -147,7 +139,7 @@ export default function Editar() {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

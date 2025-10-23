@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import "../../../styles/AsignarJuez.css";
+import styles from "../../../styles/AsignarJueces.module.css";
 import Logo from "../../../assets/LOgo.png";
 import axios from "axios";
 
@@ -34,7 +34,6 @@ const AsignarJueces: React.FC = () => {
   const [juezSeleccionado, setJuezSeleccionado] = useState<Juez | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Cargar competencias pendientes
   useEffect(() => {
     const cargarCompetencias = async () => {
       try {
@@ -44,10 +43,8 @@ const AsignarJueces: React.FC = () => {
           (c: Competencia) => c.fecha_evento && new Date(c.fecha_evento) >= hoy
         );
         setCompetencias(pendientes);
-
         const seleccionada = pendientes[0] ?? null;
         setCompetenciaSeleccionada(seleccionada);
-
         if (seleccionada) await cargarJueces(seleccionada.id_competencia);
       } catch (error) {
         console.error("Error cargando competencias:", error);
@@ -58,14 +55,12 @@ const AsignarJueces: React.FC = () => {
     cargarCompetencias();
   }, []);
 
-  // Cambiar competencia seleccionada
   const handleSeleccionarCompetencia = async (id: number) => {
     const seleccionada = competencias.find(c => c.id_competencia === id) || null;
     setCompetenciaSeleccionada(seleccionada);
     if (seleccionada) await cargarJueces(seleccionada.id_competencia);
   };
 
-  // ✅ Cargar jueces de la competencia
   const cargarJueces = async (competenciaId: number) => {
     try {
       const { data } = await axios.get("http://localhost:3001/api/juez");
@@ -94,10 +89,8 @@ const AsignarJueces: React.FC = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // ✅ Agregar juez
   const handleAgregar = async () => {
     if (!competenciaSeleccionada) return;
-
     try {
       const nuevoJuez = {
         id_competencia: competenciaSeleccionada.id_competencia,
@@ -106,20 +99,8 @@ const AsignarJueces: React.FC = () => {
         usuario: form.usuario,
         password: generarPassword(),
       };
-
       const { data } = await axios.post("http://localhost:3001/api/juez", nuevoJuez);
-
-      setJueces([
-        ...jueces,
-        {
-          id: data.id_juez,
-          nombre: data.nombre,
-          apellidos: data.apellidos,
-          usuario: data.usuario,
-          password: data.password,
-        },
-      ]);
-
+      setJueces([...jueces, { id: data.id_juez, nombre: data.nombre, apellidos: data.apellidos, usuario: data.usuario, password: data.password }]);
       setForm({ nombre: "", apellidos: "", usuario: "", password: "" });
       setModalAgregar(false);
       alert("✅ Juez agregado correctamente");
@@ -129,7 +110,6 @@ const AsignarJueces: React.FC = () => {
     }
   };
 
-  // ✅ Editar juez
   const handleEditar = async () => {
     if (!juezSeleccionado) return;
     try {
@@ -144,7 +124,6 @@ const AsignarJueces: React.FC = () => {
     }
   };
 
-  // ✅ Eliminar juez
   const handleEliminar = async () => {
     if (!juezSeleccionado) return;
     try {
@@ -162,29 +141,28 @@ const AsignarJueces: React.FC = () => {
   const seleccionarJuez = (j: Juez, accion: "editar" | "eliminar") => {
     setJuezSeleccionado(j);
     setForm({ nombre: j.nombre, apellidos: j.apellidos, usuario: j.usuario, password: j.password });
-    if (accion === "editar") setModalEditar(true);
-    else setModalEliminar(true);
+    accion === "editar" ? setModalEditar(true) : setModalEliminar(true);
   };
 
-  if (loading)
-    return (
-      <div className="modal-carga">
-        <div className="modal-caja">
-          <img src={Logo} alt="Logo" className="logo-modal" />
-          <p>Cargando competencias pendientes...</p>
-          <div className="spinner"></div>
-        </div>
+  if (loading) return (
+    <div className={styles.modalCarga}>
+      <div className={styles.modalCaja}>
+        <img src={Logo} alt="Logo" className={styles.logoModal} />
+        <p>Cargando competencias pendientes...</p>
+        <div className={styles.spinner}></div>
       </div>
-    );
+    </div>
+  );
 
   if (!competenciaSeleccionada) return <p>No hay competencias pendientes.</p>;
 
   return (
-    <div className="asignar-container">
-      <h1>Gestión de Jueces</h1>
+    <div className={styles.container}>
+      <header>
+        <h1 className={styles.titulo}>Gestión de Jueces</h1>
+      </header>
 
-      {/* Select competencias */}
-      <div className="competencia-select">
+      <section className={styles.competenciaSelect}>
         <label>Seleccionar competencia:</label>
         <select
           value={competenciaSeleccionada.id_competencia}
@@ -196,22 +174,16 @@ const AsignarJueces: React.FC = () => {
             </option>
           ))}
         </select>
-      </div>
+      </section>
 
-      {/* Imagen y calendario */}
-      <div className="competencia-fila">
-        <div className="competencia-imagen">
+      <section className={styles.competenciaFila}>
+        <div className={styles.competenciaImagen}>
           <img
-            src={
-              competenciaSeleccionada.foto
-                ? `http://localhost:3001${competenciaSeleccionada.foto}`
-                : "http://via.placeholder.com/300x200.png?text=Sin+Imagen"
-            }
+            src={competenciaSeleccionada.foto ? `http://localhost:3001${competenciaSeleccionada.foto}` : "http://via.placeholder.com/300x200.png?text=Sin+Imagen"}
             alt={competenciaSeleccionada.nombre}
-            style={{ width: "300px", height: "200px", objectFit: "cover" }}
           />
         </div>
-        <div className="competencia-calendario">
+        <div className={styles.competenciaCalendario}>
           <Calendar
             selectRange
             value={[
@@ -220,17 +192,14 @@ const AsignarJueces: React.FC = () => {
             ]}
           />
         </div>
-      </div>
+      </section>
 
-      <button className="btn-registrar" onClick={() => setModalAgregar(true)}>Agregar Juez</button>
+      <button className={styles.btnRegistrar} onClick={() => setModalAgregar(true)}>Agregar Juez</button>
 
-      {/* Tabla jueces */}
-      <div className="lista-jueces">
+      <section className={styles.listaJueces}>
         <h3>Jueces Registrados</h3>
-        {jueces.length === 0 ? (
-          <p>No hay jueces registrados.</p>
-        ) : (
-          <table className="tabla-jueces">
+        {jueces.length === 0 ? <p>No hay jueces registrados.</p> :
+          <table className={styles.tablaJueces}>
             <thead>
               <tr>
                 <th>Nombre</th>
@@ -248,20 +217,19 @@ const AsignarJueces: React.FC = () => {
                   <td>{j.usuario}</td>
                   <td>{j.password}</td>
                   <td>
-                    <button className="btn-editar" onClick={() => seleccionarJuez(j, "editar")}>Editar</button>
-                    <button className="btn-eliminar" onClick={() => seleccionarJuez(j, "eliminar")}>Eliminar</button>
+                    <button className={styles.btnEditar} onClick={() => seleccionarJuez(j, "editar")}>Editar</button>
+                    <button className={styles.btnEliminar} onClick={() => seleccionarJuez(j, "eliminar")}>Eliminar</button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
-      </div>
+        }
+      </section>
 
-      {/* MODALES */}
       {(modalAgregar || modalEditar || modalEliminar) && (
-        <div className="modal-fondo">
-          <div className="modal-contenido">
+        <div className={styles.modalFondo}>
+          <div className={styles.modalContenido}>
             {modalAgregar && (
               <>
                 <h3>Agregar Juez</h3>

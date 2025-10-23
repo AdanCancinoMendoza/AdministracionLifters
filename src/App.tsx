@@ -1,6 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import MenuAdmin from "./components/menu";
+import MenuUsuario from "./components/users/menu.tsx"; // 
+
+// Usuario
+import InicioUsuarios from "./views/users/inicio.tsx";
+import StoriesSection from "./views/users/StoriesSection.tsx";
+import LiveResultsSection from "./views/users/resultadosLive.tsx";
+import SinCompetencias from "./views/users/sinCompetencias.tsx";
+import RegistroCompetidor from "./views/users/inscripciones.tsx";
 
 // Admin
 import Dashboard from "./views/admin/Dashboard";
@@ -25,10 +33,11 @@ import CalificarScreen from "./views/jueces/calificacion";
 import ResultadosScreen from "./views/jueces/resultados";
 import InformacionScreen from "./views/jueces/perfil";
 
+// Componentes extra
 import PrivateRoute from "../backend/src/private/privateJuez.tsx";
+import NotFound from "./views/NotFound";
 
 function App() {
-  // Inicializamos userJuez desde localStorage
   const [userJuez, setUserJuez] = useState<any>(() => {
     const stored = localStorage.getItem("userJuez");
     if (stored) {
@@ -45,10 +54,23 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Login */}
+        {/* Rutas Usuarios con menuUsuario */}
+        <Route path="/usuario" element={<MenuUsuario />}>
+          <Route path="inicio" element={<InicioUsuarios />} />
+          <Route path="secciones" element={<StoriesSection />} />
+          <Route path="resultados" element={<LiveResultsSection />} />
+          <Route path="nocompetencia" element={<SinCompetencias />} />
+          <Route path="inscripciones" element={<RegistroCompetidor />} />
+
+          {/* Redirección por defecto */}
+          <Route path="" element={<Navigate to="inicio" replace />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+
+        {/* Login Jueces */}
         <Route path="/jueces/login" element={<LoginJueces onLoginSuccess={setUserJuez} />} />
 
-        {/* Rutas protegidas para jueces */}
+        {/* Rutas protegidas Jueces */}
         <Route
           path="/jueces/inicio"
           element={
@@ -90,7 +112,7 @@ function App() {
           }
         />
 
-        {/* Rutas de administración */}
+        {/* Rutas Administración */}
         <Route
           path="/*"
           element={
@@ -99,36 +121,32 @@ function App() {
               <main className="main-content">
                 <Routes>
                   <Route path="/dashboard" element={<Dashboard />} />
-
-                  {/* Inicio */}
                   <Route path="/inicio/editar" element={<EditarInicio />} />
                   <Route path="/inicio/ganadores" element={<Ganadores />} />
                   <Route path="/inicio/poster" element={<Poster />} />
                   <Route path="/inicio/videos" element={<Videos />} />
-
-                  {/* Competidores */}
                   <Route path="/competidores/registrar" element={<RegistrarCompetidor />} />
                   <Route path="/competidores/ver" element={<VerCompetidores />} />
-
-                  {/* Competencias */}
                   <Route path="/competencias/crearcompetencia" element={<CrearCompetencia />} />
                   <Route path="/competencias/listacompetencias" element={<ListaCompetencias />} />
                   <Route path="/competencias/asignarjueces" element={<AsignarJueces />} />
-
-                  {/* Información */}
                   <Route path="/informacion/crear" element={<CrearInforme />} />
                   <Route path="/informacion/ver" element={<VerInformes />} />
-
-                  {/* Resultados */}
                   <Route path="/resultados" element={<Resultados />} />
 
                   {/* Redirección por defecto */}
                   <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+                  {/* ❌ Error 404 dentro del panel admin */}
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
             </div>
-          }  
+          }
         />
+
+        {/* ❌ Error 404 global */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

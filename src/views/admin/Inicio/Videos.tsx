@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaPlus, FaSyncAlt, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
-import "../../../styles/VideoCompetencia.css";
+import styles from "../../../styles/VideoCompetencia.module.css";
 
 type TipoVideo = "youtube" | "local";
 
@@ -61,8 +61,7 @@ const Videos: React.FC = () => {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       setVideoTipo("local");
-      const localUrl = URL.createObjectURL(selectedFile);
-      setUrlVideo(localUrl); // vista previa
+      setUrlVideo(URL.createObjectURL(selectedFile));
     }
   };
 
@@ -79,11 +78,9 @@ const Videos: React.FC = () => {
 
   const guardarModal = async () => {
     if (!urlVideo.trim() && !file) return;
-
     setLoading(true);
     try {
-      let formData = new FormData();
-
+      const formData = new FormData();
       if (videoTipo === "local" && file) {
         formData.append("videoLocal", file);
         formData.append("tipo", "local");
@@ -92,7 +89,6 @@ const Videos: React.FC = () => {
         formData.append("src", convertirYouTubeEmbed(urlVideo));
       }
 
-      // Agregar
       if (modal.tipo === "agregar") {
         const res = await fetch("http://localhost:3001/api/videos", {
           method: "POST",
@@ -107,9 +103,7 @@ const Videos: React.FC = () => {
             src: data.linkVideo ?? data.videoLocal,
           },
         ]);
-      }
-      // Reemplazar
-      else if (modal.tipo === "reemplazar" && modal.index !== undefined) {
+      } else if (modal.tipo === "reemplazar" && modal.index !== undefined) {
         const videoId = videos[modal.index].id!;
         await fetch(`http://localhost:3001/api/videos/${videoId}`, {
           method: "PUT",
@@ -145,27 +139,27 @@ const Videos: React.FC = () => {
   };
 
   return (
-    <div className="agregar-video">
+    <div className={styles.agregarVideo}>
       <h1>Administrar Videos de Competencia</h1>
       <p>Agrega, reemplaza o elimina los videos que formarán parte de la competencia.</p>
 
-      <button className="agregar-btn" onClick={() => abrirModal("agregar")}>
+      <button className={styles.agregarBtn} onClick={() => abrirModal("agregar")}>
         <FaPlus /> Agregar nuevo video
       </button>
 
-      <div className="video-grid">
+      <div className={styles.videoGrid}>
         {videos.map((video, index) => (
-          <div className="video-card" key={index}>
+          <div className={styles.videoCard} key={index}>
             {video.tipo === "youtube" ? (
               <iframe src={video.src} title={`video-${index}`} frameBorder="0" allowFullScreen></iframe>
             ) : (
               <video src={video.src} controls />
             )}
-            <div className="video-actions">
-              <button className="reemplazar-btn" onClick={() => abrirModal("reemplazar", index)}>
+            <div className={styles.videoActions}>
+              <button className={styles.reemplazarBtn} onClick={() => abrirModal("reemplazar", index)}>
                 <FaSyncAlt /> Reemplazar
               </button>
-              <button className="eliminar-btn" onClick={() => abrirModal("eliminar", index)}>
+              <button className={styles.eliminarBtn} onClick={() => abrirModal("eliminar", index)}>
                 <FaTrash /> Eliminar
               </button>
             </div>
@@ -173,11 +167,10 @@ const Videos: React.FC = () => {
         ))}
       </div>
 
-      {/* Modal */}
       {modal.tipo && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <button className="modal-close" onClick={cerrarModal}>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <button className={styles.modalClose} onClick={cerrarModal}>
               <FaTimes />
             </button>
 
@@ -185,11 +178,11 @@ const Videos: React.FC = () => {
               <>
                 <h2>¿Eliminar este video?</h2>
                 <p>Esta acción no se puede deshacer.</p>
-                <div className="modal-actions">
-                  <button className="eliminar-btn" onClick={() => eliminarVideo(modal.index!)}>
+                <div className={styles.modalActions}>
+                  <button className={styles.eliminarBtn} onClick={() => eliminarVideo(modal.index!)}>
                     <FaTrash /> Eliminar
                   </button>
-                  <button className="cancelar-btn" onClick={cerrarModal}>
+                  <button className={styles.cancelarBtn} onClick={cerrarModal}>
                     <FaTimes /> Cancelar
                   </button>
                 </div>
@@ -215,7 +208,7 @@ const Videos: React.FC = () => {
                 )}
 
                 {urlVideo && (
-                  <div className="preview">
+                  <div className={styles.preview}>
                     {videoTipo === "youtube" ? (
                       <iframe src={convertirYouTubeEmbed(urlVideo)} title="preview" frameBorder="0" allowFullScreen />
                     ) : (
@@ -224,11 +217,11 @@ const Videos: React.FC = () => {
                   </div>
                 )}
 
-                <div className="modal-actions">
-                  <button className="guardar-btn" onClick={guardarModal} disabled={loading}>
+                <div className={styles.modalActions}>
+                  <button className={styles.guardarBtn} onClick={guardarModal} disabled={loading}>
                     <FaCheck /> {loading ? "Guardando..." : "Guardar"}
                   </button>
-                  <button className="cancelar-btn" onClick={cerrarModal}>
+                  <button className={styles.cancelarBtn} onClick={cerrarModal}>
                     <FaTimes /> Cancelar
                   </button>
                 </div>

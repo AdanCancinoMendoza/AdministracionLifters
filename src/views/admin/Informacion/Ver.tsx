@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import "../../../styles/VerInformes.css";
+import styles from "../../../styles/VerInformes.module.css";
 import {
   FaNewspaper,
   FaTrophy,
@@ -133,13 +133,10 @@ const VerInformes = () => {
         formDataToSend.append("Contenido", formData.Contenido);
       }
 
-      const res = await fetch(
-        `${SERVER_URL}/api/publicacion/${formData.ID}`,
-        {
-          method: "PUT",
-          body: formDataToSend,
-        }
-      );
+      const res = await fetch(`${SERVER_URL}/api/publicacion/${formData.ID}`, {
+        method: "PUT",
+        body: formDataToSend,
+      });
 
       if (!res.ok) throw new Error("Error al actualizar");
 
@@ -174,34 +171,31 @@ const VerInformes = () => {
       (pub) => selectedFilter === "todos" || selectedFilter === pub.Categoria
     );
 
-  const countNoticias = publicaciones.filter(
-    (p) => p.Categoria === "Noticia"
-  ).length;
-  const countLogros = publicaciones.filter(
-    (p) => p.Categoria === "Logro"
-  ).length;
+  const countNoticias = publicaciones.filter((p) => p.Categoria === "Noticia")
+    .length;
+  const countLogros = publicaciones.filter((p) => p.Categoria === "Logro").length;
   const countTestimonios = publicaciones.filter(
     (p) => p.Categoria === "Testimonio"
   ).length;
 
   return (
-    <div className="verinfo-container">
-      <h1 className="verinfo-title"> Panel de Informes</h1>
-      <p className="verinfo-subtitle">Gestiona tus publicaciones fácilmente</p>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Panel de Informes</h1>
+      <p className={styles.subtitle}>Gestiona tus publicaciones fácilmente</p>
 
       {/* Buscador y filtro */}
-      <div className="verinfo-filters">
+      <div className={styles.filters}>
         <input
           type="text"
           placeholder="Buscar publicación..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="verinfo-input-search"
+          className={styles.inputSearch}
         />
         <select
           value={selectedFilter}
           onChange={(e) => setSelectedFilter(e.target.value)}
-          className="verinfo-select"
+          className={styles.selectFilter}
         >
           <option value="todos">Todos</option>
           <option value="Noticia">Noticias</option>
@@ -211,40 +205,32 @@ const VerInformes = () => {
       </div>
 
       {/* Contadores */}
-      <div className="verinfo-stats">
-        <div className="verinfo-stat noticias">
+      <div className={styles.stats}>
+        <div className={`${styles.stat} ${styles.noticias}`}>
           <FaNewspaper />
           <span>{countNoticias} Noticias</span>
         </div>
-        <div className="verinfo-stat logros">
+        <div className={`${styles.stat} ${styles.logros}`}>
           <FaTrophy />
           <span>{countLogros} Logros</span>
         </div>
-        <div className="verinfo-stat testimonios">
+        <div className={`${styles.stat} ${styles.testimonios}`}>
           <FaUsers />
           <span>{countTestimonios} Testimonios</span>
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="verinfo-grid">
+      {/* Grid de publicaciones */}
+      <div className={styles.grid}>
         {filteredPublicaciones.map((pub) => {
           const embedUrl = getYouTubeEmbed(pub.Contenido);
           return (
-            <div key={pub.ID} className="verinfo-card">
-              <div className="verinfo-media">
-                {pub.Tipo === "imagen" && (
-                  <img src={pub.Contenido} alt={pub.Titulo} />
-                )}
-                {pub.Tipo === "video" && (
-                  <video src={pub.Contenido} controls />
-                )}
+            <div key={pub.ID} className={styles.card}>
+              <div className={styles.media}>
+                {pub.Tipo === "imagen" && <img src={pub.Contenido} alt={pub.Titulo} />}
+                {pub.Tipo === "video" && <video src={pub.Contenido} controls />}
                 {pub.Tipo === "youtube" && embedUrl && (
-                  <iframe
-                    src={embedUrl}
-                    title={pub.Titulo}
-                    allowFullScreen
-                  ></iframe>
+                  <iframe src={embedUrl} title={pub.Titulo} allowFullScreen />
                 )}
               </div>
               <h2>{pub.Titulo}</h2>
@@ -252,40 +238,40 @@ const VerInformes = () => {
               <span>
                 {pub.Categoria} · {pub.Fecha}
               </span>
-              <div className="verinfo-actions">
-                <button onClick={() => handleEdit(pub)}> Editar</button>
-                <button onClick={() => setDeleteId(pub.ID)}> Eliminar</button>
+              <div className={styles.actions}>
+                <button onClick={() => handleEdit(pub)}>Editar</button>
+                <button onClick={() => setDeleteId(pub.ID)}>Eliminar</button>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Modal editar */}
+      {/* Modal Editar */}
       {editId !== null && (
-        <div className="verinfo-modal-bg">
-          <div className="verinfo-modal">
+        <div className={styles.modalBg}>
+          <div className={styles.modal}>
             <h2>Editar Publicación</h2>
             <form onSubmit={handleUpdate}>
-              <div className="verinfo-type-selector">
+              <div className={styles.typeSelector}>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, Tipo: "imagen" })}
-                  className={formData.Tipo === "imagen" ? "activo" : ""}
+                  className={formData.Tipo === "imagen" ? styles.activo : ""}
                 >
                   <FaImage /> Imagen
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, Tipo: "video" })}
-                  className={formData.Tipo === "video" ? "activo" : ""}
+                  className={formData.Tipo === "video" ? styles.activo : ""}
                 >
                   <FaVideo /> Video
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, Tipo: "youtube" })}
-                  className={formData.Tipo === "youtube" ? "activo" : ""}
+                  className={formData.Tipo === "youtube" ? styles.activo : ""}
                 >
                   <FaYoutube /> YouTube
                 </button>
@@ -309,13 +295,9 @@ const VerInformes = () => {
               )}
 
               {formData.Contenido && (
-                <div className="verinfo-preview">
-                  {formData.Tipo === "imagen" && (
-                    <img src={formData.Contenido} alt="preview" />
-                  )}
-                  {formData.Tipo === "video" && (
-                    <video src={formData.Contenido} controls />
-                  )}
+                <div className={styles.preview}>
+                  {formData.Tipo === "imagen" && <img src={formData.Contenido} alt="preview" />}
+                  {formData.Tipo === "video" && <video src={formData.Contenido} controls />}
                   {formData.Tipo === "youtube" &&
                     getYouTubeEmbed(formData.Contenido) && (
                       <iframe
@@ -340,11 +322,7 @@ const VerInformes = () => {
                 value={formData.Descripcion}
                 onChange={handleChange}
               />
-              <select
-                name="Categoria"
-                value={formData.Categoria}
-                onChange={handleChange}
-              >
+              <select name="Categoria" value={formData.Categoria} onChange={handleChange}>
                 <option>Noticia</option>
                 <option>Logro</option>
                 <option>Testimonio</option>
@@ -355,10 +333,9 @@ const VerInformes = () => {
                 value={formData.Fecha}
                 onChange={handleChange}
               />
-              <div className="verinfo-modal-actions">
-                <button type="button" onClick={() => setEditId(null)}>
-                  Cancelar
-                </button>
+
+              <div className={styles.modalActions}>
+                <button type="button" onClick={() => setEditId(null)}>Cancelar</button>
                 <button type="submit">Actualizar</button>
               </div>
             </form>
@@ -366,12 +343,12 @@ const VerInformes = () => {
         </div>
       )}
 
-      {/* Modal eliminar */}
+      {/* Modal Eliminar */}
       {deleteId !== null && (
-        <div className="verinfo-modal-bg">
-          <div className="verinfo-modal">
+        <div className={styles.modalBg}>
+          <div className={styles.modal}>
             <h3>¿Eliminar esta publicación?</h3>
-            <div className="verinfo-modal-actions">
+            <div className={styles.modalActions}>
               <button onClick={() => setDeleteId(null)}>Cancelar</button>
               <button onClick={() => handleDelete(deleteId)}>Eliminar</button>
             </div>

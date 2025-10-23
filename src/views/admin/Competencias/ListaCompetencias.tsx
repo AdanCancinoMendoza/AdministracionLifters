@@ -229,7 +229,8 @@ const ListaCompetencias: React.FC = () => {
                     <Marker position={[c.lat, c.lng]} icon={marcadorIcono}>
                       <Popup>
                         <FaMapMarkerAlt /> {c.nombre} <br />
-                        Lat: {c.lat.toFixed(5)}, Lng: {c.lng.toFixed(5)}
+                        {/* 🟢 CORRECCIÓN: Usar Number() para asegurar que .toFixed() se llama sobre un número */}
+                        Lat: {c.lat !== null ? Number(c.lat).toFixed(5) : 'N/A'}, Lng: {c.lng !== null ? Number(c.lng).toFixed(5) : 'N/A'}
                       </Popup>
                     </Marker>
                   </MapContainer>

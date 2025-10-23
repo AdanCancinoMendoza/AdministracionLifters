@@ -1,10 +1,9 @@
 /* ==============================
-   VerInformes.css
-   Estilo moderno y administrativo
+   VerInformes.module.css
+   Estilo moderno y administrativo (modular)
    ============================== */
 
-/* Contenedor principal */
-.verinfo-container {
+.container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
@@ -13,29 +12,27 @@
   background-color: #f9f9f9;
 }
 
-/* Títulos y subtítulos */
-.verinfo-title {
+.title {
   font-size: 2rem;
   font-weight: 700;
   color: #2c3e50;
   margin-bottom: 0.5rem;
 }
 
-.verinfo-subtitle {
+.subtitle {
   font-size: 1rem;
   color: #7f8c8d;
   margin-bottom: 1.5rem;
 }
 
-/* Filtros y buscador */
-.verinfo-filters {
+.filters {
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
-.verinfo-input-search,
-.verinfo-select {
+.inputSearch,
+.selectFilter {
   padding: 0.6rem 1rem;
   border-radius: 8px;
   border: 1px solid #ccc;
@@ -44,22 +41,21 @@
   transition: 0.3s;
 }
 
-.verinfo-input-search:focus,
-.verinfo-select:focus {
+.inputSearch:focus,
+.selectFilter:focus {
   border-color: #3498db;
   box-shadow: 0 0 5px rgba(52, 152, 219, 0.4);
 }
 
-/* Contadores */
-.verinfo-stats {
+.stats {
   display: flex;
   gap: 1rem;
   margin-bottom: 2rem;
 }
 
-.verinfo-stat {
+.stat {
   flex: 1;
-  background-color: #ffffff;
+  background-color: #fff;
   padding: 1rem;
   border-radius: 10px;
   display: flex;
@@ -70,39 +66,36 @@
   transition: transform 0.2s;
 }
 
-.verinfo-stat:hover {
+.stat:hover {
   transform: translateY(-3px);
 }
 
-.verinfo-stat.noticias { color: #e67e22; }
-.verinfo-stat.logros { color: #27ae60; }
-.verinfo-stat.testimonios { color: #2980b9; }
+.noticias { color: #e67e22; }
+.logros { color: #27ae60; }
+.testimonios { color: #2980b9; }
 
-/* Grid de publicaciones */
-.verinfo-grid {
+.grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
 }
 
-/* Card de publicación */
-.verinfo-card {
-  background-color: #ffffff;
+.card {
+  background-color: #fff;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
   transition: transform 0.2s, box-shadow 0.3s;
 }
 
-.verinfo-card:hover {
+.card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
-/* Contenedor multimedia */
-.verinfo-media {
+.media {
   width: 100%;
-  height: 220px; /* Tamaño fijo */
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,44 +103,41 @@
   overflow: hidden;
 }
 
-.verinfo-media img,
-.verinfo-media video,
-.verinfo-media iframe {
+.media img,
+.media video,
+.media iframe {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 0; /* opcional */
 }
 
-/* Títulos y descripción */
-.verinfo-card h2 {
+.card h2 {
   font-size: 1.1rem;
   margin: 0.8rem 1rem 0.3rem;
   color: #2c3e50;
 }
 
-.verinfo-card p {
+.card p {
   font-size: 0.95rem;
   margin: 0 1rem 0.5rem;
   color: #7f8c8d;
 }
 
-.verinfo-card span {
+.card span {
   display: block;
   font-size: 0.8rem;
   color: #95a5a6;
   margin: 0 1rem 1rem;
 }
 
-/* Acciones */
-.verinfo-actions {
+.actions {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 0 1rem 1rem;
 }
 
-.verinfo-actions button {
+.actions button {
   border: none;
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
@@ -156,12 +146,10 @@
   transition: 0.3s;
 }
 
-.verinfo-actions button:hover { opacity: 0.85; }
-.verinfo-actions button:first-child { background-color: #3498db; color: #fff; }
-.verinfo-actions button:last-child { background-color: #e74c3c; color: #fff; }
+.actions button:first-child { background-color: #3498db; color: #fff; }
+.actions button:last-child { background-color: #e74c3c; color: #fff; }
 
-/* Modal fondo */
-.verinfo-modal-bg {
+.modalBg {
   position: fixed;
   top: 0;
   left: 0;
@@ -174,8 +162,7 @@
   z-index: 1000;
 }
 
-/* Modal contenido */
-.verinfo-modal {
+.modal {
   background-color: #fff;
   border-radius: 10px;
   width: 90%;
@@ -190,38 +177,29 @@
   to {opacity:1; transform: translateY(0);}
 }
 
-.verinfo-modal h2,
-.verinfo-modal h3 {
+.modal h2,
+.modal h3 {
   margin-bottom: 1rem;
   color: #2c3e50;
 }
 
-.verinfo-modal-actions {
+.modalActions {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
   margin-top: 1rem;
 }
 
-.verinfo-modal-actions button {
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-}
+.modalActions button:first-child { background-color: #95a5a6; color: #fff; }
+.modalActions button:last-child { background-color: #27ae60; color: #fff; }
 
-.verinfo-modal-actions button:first-child { background-color: #95a5a6; color: #fff; }
-.verinfo-modal-actions button:last-child { background-color: #27ae60; color: #fff; }
-
-/* Selector tipo contenido */
-.verinfo-type-selector {
+.typeSelector {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
-.verinfo-type-selector button {
+.typeSelector button {
   flex: 1;
   padding: 0.5rem;
   border: 1px solid #ccc;
@@ -235,31 +213,28 @@
   transition: 0.3s;
 }
 
-.verinfo-type-selector button.activo {
+.typeSelector button.activo {
   background-color: #3498db;
   color: #fff;
   border-color: #2980b9;
 }
 
-/* Preview media */
-.verinfo-preview {
+.preview {
   margin-bottom: 1rem;
 }
 
-.verinfo-preview img,
-.verinfo-preview video,
-.verinfo-preview iframe {
+.preview img,
+.preview video,
+.preview iframe {
   width: 100%;
-  max-width: 100%;
-  height: 220px; /* Fijo */
+  height: 220px;
   object-fit: cover;
   border-radius: 8px;
 }
 
-/* Inputs modal */
-.verinfo-modal input,
-.verinfo-modal textarea,
-.verinfo-modal select {
+.modal input,
+.modal textarea,
+.modal select {
   width: 100%;
   padding: 0.5rem 0.8rem;
   margin-bottom: 0.8rem;
@@ -269,15 +244,14 @@
   font-size: 0.95rem;
 }
 
-.verinfo-modal input:focus,
-.verinfo-modal textarea:focus,
-.verinfo-modal select:focus {
+.modal input:focus,
+.modal textarea:focus,
+.modal select:focus {
   border-color: #3498db;
   box-shadow: 0 0 5px rgba(52,152,219,0.3);
 }
 
-/* Botón Agregar nuevo informe */
-.verinfo-add-btn {
+.addBtn {
   display: inline-block;
   margin-bottom: 1.5rem;
   padding: 0.6rem 1.2rem;
@@ -290,6 +264,6 @@
   transition: 0.3s;
 }
 
-.verinfo-add-btn:hover {
+.addBtn:hover {
   background-color: #2ecc71;
 }

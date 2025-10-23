@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "../../../styles/Ganadores.css";
+import styles from "../../../styles/SeccionLogros.module.css";
 import MenuAdmin from "../../../components/menu";
 import { FaMedal } from "react-icons/fa";
 
@@ -12,9 +12,9 @@ interface Ganador {
 interface Categoria {
   id?: number;
   nombre: string;
-  imagen: string; // Ruta del servidor
+  imagen: string;
   ganadores: Ganador[];
-  file?: File; // Archivo para subir
+  file?: File;
 }
 
 const medallas: Record<string, string> = {
@@ -59,13 +59,11 @@ const SeccionLogros: React.FC = () => {
   const [categorias, setCategorias] = useState<Categoria[]>(initialCategorias);
   const [loading, setLoading] = useState(false);
 
-  // 🔹 Cargar categorías desde el backend
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
         const res = await fetch(`${SERVER_BASE_URL}/api/categorias`);
         if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) setCategorias(data);
       } catch (error) {
@@ -75,7 +73,6 @@ const SeccionLogros: React.FC = () => {
     fetchCategorias();
   }, []);
 
-  // 🔹 Cambiar datos de ganadores
   const handleGanadorChange = (
     catIndex: number,
     ganIndex: number,
@@ -87,30 +84,25 @@ const SeccionLogros: React.FC = () => {
     setCategorias(newCategorias);
   };
 
-  // 🔹 Cambiar imagen (previsualización + guardar archivo)
   const handleImagenChange = (catIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     const newCategorias = [...categorias];
     newCategorias[catIndex].imagen = URL.createObjectURL(file);
     newCategorias[catIndex].file = file;
     setCategorias(newCategorias);
   };
 
-  // 🔹 Guardar categorías y ganadores
   const handleGuardar = async () => {
     setLoading(true);
     try {
       const formData = new FormData();
-
       const categoriasToSubmit = categorias.map((cat) => ({
         id: cat.id,
         nombre: cat.nombre,
         ganadores: cat.ganadores,
       }));
       formData.append("categorias", JSON.stringify(categoriasToSubmit));
-
       categorias.forEach((cat, i) => {
         if (cat.file) formData.append(`imagen-${cat.id || `new-${i}`}`, cat.file);
       });
@@ -124,7 +116,6 @@ const SeccionLogros: React.FC = () => {
       const data = await res.json();
       alert(data.message || "Cambios guardados correctamente");
 
-      // 🔁 Recargar datos actualizados
       const res2 = await fetch(`${SERVER_BASE_URL}/api/categorias`);
       const updated = await res2.json();
       setCategorias(updated);
@@ -139,50 +130,54 @@ const SeccionLogros: React.FC = () => {
   return (
     <>
       <MenuAdmin />
-      <div className="seccion-logros">
-        <h1 className="titulo-logros">Sección de Logros</h1>
-        <p className="descripcion-logros">
+      <div className={styles.seccionLogros}>
+        <h1 className={styles.tituloLogros}>Sección de Logros</h1>
+        <p className={styles.descripcionLogros}>
           Aquí puedes ver y editar los logros de cada categoría, incluyendo los
           ganadores y sus resultados.
         </p>
 
         {categorias.map((cat, catIndex) => (
-          <div className="bloque-categoria" key={catIndex}>
-            <div className="lista-ganadores">
+          <div className={styles.bloqueCategoria} key={catIndex}>
+            <div className={styles.listaGanadores}>
               <h2>{cat.nombre}</h2>
-              <ul>
+              <ul className={styles.lista}>
                 {cat.ganadores.map((g, i) => (
-                  <li key={i} className="ganador-item">
-                    <FaMedal size={24} color={medallas[g.medalla]} className="icono-medalla" />
+                  <li key={i} className={styles.ganadorItem}>
+                    <FaMedal
+                      size={24}
+                      color={medallas[g.medalla]}
+                      className={styles.iconoMedalla}
+                    />
                     <input
                       type="text"
                       placeholder="Nombre"
                       value={g.nombre}
                       onChange={(e) => handleGanadorChange(catIndex, i, "nombre", e.target.value)}
-                      className="input-ganador"
+                      className={styles.inputGanador}
                     />
-                    <span className="separador">-</span>
+                    <span className={styles.separador}>-</span>
                     <input
                       type="text"
                       placeholder="Peso"
                       value={g.peso}
                       onChange={(e) => handleGanadorChange(catIndex, i, "peso", e.target.value)}
-                      className="input-ganador"
+                      className={styles.inputGanador}
                     />
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="imagen-categoria">
+            <div className={styles.imagenCategoria}>
               {cat.imagen && (
                 <img
                   src={cat.file ? cat.imagen : `${SERVER_BASE_URL}${cat.imagen}`}
                   alt={cat.nombre}
-                  className="imagen-preview"
+                  className={styles.imagenPreview}
                 />
               )}
-              <label htmlFor={`file-${catIndex}`} className="btn-subir">
+              <label htmlFor={`file-${catIndex}`} className={styles.btnSubir}>
                 Reemplazar imagen
               </label>
               <input
@@ -196,7 +191,11 @@ const SeccionLogros: React.FC = () => {
           </div>
         ))}
 
-        <button className="guardar-btn" onClick={handleGuardar} disabled={loading}>
+        <button
+          className={styles.guardarBtn}
+          onClick={handleGuardar}
+          disabled={loading}
+        >
           {loading ? "Guardando..." : "Guardar Cambios"}
         </button>
       </div>

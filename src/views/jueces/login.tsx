@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../styles/loginJuez.css";
+import styles from "../../styles/LoginScreen.module.css";
 import Logo from "../../assets/LOgo.png";
 
 interface Props {
@@ -43,7 +43,7 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
         if (c.y < 0 || c.y > height) c.dy *= -1;
         ctx.beginPath();
         ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `${c.color}40`; // 25% opacidad
+        ctx.fillStyle = `${c.color}40`;
         ctx.fill();
       });
       requestAnimationFrame(draw);
@@ -62,17 +62,12 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
       );
 
       if (juez) {
-        // Guardar en App.tsx
         onLoginSuccess?.(juez);
-
-        // Guardar sesión en localStorage con expiración de 1 día
         const expireTime = new Date().getTime() + 24 * 60 * 60 * 1000;
         localStorage.setItem(
           "userJuez",
           JSON.stringify({ data: juez, expire: expireTime })
         );
-
-        // Redirigir a inicio sin recargar
         navigate("/jueces/inicio");
       } else {
         alert("Usuario o contraseña incorrectos");
@@ -84,36 +79,36 @@ const LoginScreen: React.FC<Props> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="login-container">
-      <canvas ref={canvasRef} className="background-canvas" />
-      <div className="login-box">
-        <img src={Logo} alt="Logo" className="login-logo" />
-        <h1 className="login-title">Bienvenido Juez</h1>
+    <div className={styles.loginContainer}>
+      <canvas ref={canvasRef} className={styles.backgroundCanvas} />
+      <main className={styles.loginBox}>
+        <img src={Logo} alt="Logo" className={styles.loginLogo} />
+        <h1 className={styles.loginTitle}>Bienvenido Juez</h1>
 
-        <div className="input-group">
-          <label>Usuario</label>
+        <section className={styles.inputGroup}>
+          <label className={styles.inputLabel}>Usuario</label>
           <input
             type="text"
             value={usuario}
             onChange={(e) => setUsuario(e.target.value)}
-            className="gradient-input"
+            className={styles.gradientInput}
           />
-        </div>
+        </section>
 
-        <div className="input-group">
-          <label>Contraseña</label>
+        <section className={styles.inputGroup}>
+          <label className={styles.inputLabel}>Contraseña</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="gradient-input"
+            className={styles.gradientInput}
           />
-        </div>
+        </section>
 
-        <button onClick={handleLogin} className="login-button">
+        <button onClick={handleLogin} className={styles.loginButton}>
           Iniciar Sesión
         </button>
-      </div>
+      </main>
     </div>
   );
 };

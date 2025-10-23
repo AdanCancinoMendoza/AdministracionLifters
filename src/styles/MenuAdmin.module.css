@@ -1,18 +1,11 @@
-body {
-  margin: 0;
-  font-family: "Poppins", sans-serif;
-  background: #f8fafc;
-}
-
-/* Panel lateral */
-.menu-admin {
+.menuAdmin {
   width: 260px;
   height: 100vh;
   background: #1e293b;
   position: fixed;
   top: 0;
   left: 0;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.25);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   padding-top: 20px;
@@ -21,31 +14,29 @@ body {
   color: #f1f5f9;
 }
 
-.menu-admin.closed {
+.closed {
   transform: translateX(-100%);
 }
 
-/* Logo */
-.menu-logo {
+.menuLogo {
   text-align: center;
   margin-bottom: 40px;
 }
 
-.menu-logo h2 {
+.menuLogo h2 {
   color: #38bdf8;
   font-size: 1.4rem;
   font-weight: 700;
 }
 
-/* Toggle */
-.menu-toggle {
+.menuToggle {
   position: absolute;
   top: 20px;
   right: -45px;
   background: #1e293b;
   color: #f1f5f9;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   width: 38px;
   height: 38px;
@@ -56,20 +47,12 @@ body {
   transition: background 0.3s ease;
 }
 
-.menu-toggle:hover {
+.menuToggle:hover {
   background: #334155;
 }
 
-/* Items principales */
-.menu-admin ul {
-  list-style: none;
-  width: 100%;
-  padding: 0;
-  margin: 0;
-}
-
-.menu-item,
-.menu-admin a {
+.menuItem,
+.menuAdmin a {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -82,38 +65,23 @@ body {
   cursor: pointer;
 }
 
-.menu-item:hover,
-.menu-admin a:hover {
+.menuItem:hover,
+.menuAdmin a:hover {
   background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;
 }
 
-.menu-admin a.active {
+.active {
   background: rgba(56, 189, 248, 0.2);
   color: #38bdf8;
 }
 
-/* Contenedor de icono + texto para submenús */
-.menu-label {
+.menuLabel {
   display: flex;
   align-items: center;
-  gap: 12px; /* Separación icono - texto */
+  gap: 12px;
 }
 
-/* Iconos */
-.menu-admin svg,
-.menu-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-/* Mejor separación entre items */
-.menu-admin li {
-  margin-bottom: 6px;
-}
-
-/* Submenús */
 .submenu {
   max-height: 0;
   overflow: hidden;
@@ -121,8 +89,8 @@ body {
   background: #334155;
 }
 
-.submenu.open {
-  max-height: 500px; /* suficiente para expandir */
+.open {
+  max-height: 500px;
 }
 
 .submenu li a {
@@ -137,33 +105,31 @@ body {
   color: #38bdf8;
 }
 
-/* Overlay */
-.menu-overlay {
+.menuOverlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
   z-index: 1000;
 }
 
-.menu-overlay.active {
+.menuOverlay.active {
   opacity: 1;
   pointer-events: auto;
 }
 
-
-.menu-footer {
-  margin-top: auto; /* Empuja el logo hacia abajo */
+.menuFooter {
+  margin-top: auto;
   padding: 20px;
   text-align: center;
 }
 
-.menu-footer img {
+.menuFooter img {
   max-width: 200px;
   height: auto;
   object-fit: contain;
@@ -171,6 +137,25 @@ body {
   transition: opacity 0.3s ease;
 }
 
-.menu-footer img:hover {
+.menuFooter img:hover {
   opacity: 1;
+}
+
+
+.menuOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+.active {
+  opacity: 1;
+  pointer-events: auto;
 }

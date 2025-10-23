@@ -1,0 +1,114 @@
+/* UsersStoriesSection.module.css */
+
+.storiesSection {
+  padding: 2rem;
+  text-align: center;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.filterButtons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.filterButtons button {
+  padding: 0.5rem 1rem;
+  border: 2px solid #1976d2;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.filterButtons button.active {
+  background-color: #1976d2;
+  color: white;
+}
+
+.storyGrid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modalContent {
+  background: white;
+  padding: 24px;
+  border-radius: 20px;
+  max-width: 500px;
+  width: 90%;
+  text-align: left;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.modalContent img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.modalContent h3 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.modalContent .category {
+  color: #6366f1;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.modalContent p {
+  font-size: 1rem;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+.modalContent small {
+  color: #9ca3af;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.modalContent button {
+  background-color: #6366f1;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.modalContent button:hover {
+  background-color: #4f46e5;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

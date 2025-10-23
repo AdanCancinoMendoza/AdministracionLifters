@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import "../../../styles/RegistrarCompetidor.css";
 import axios from "axios";
+import styles from "../../../styles/RegistrarCompetidor.module.css";
 
 interface Competidor {
   nombre: string;
@@ -42,6 +42,7 @@ const RegistrarCompetidor: React.FC = () => {
 
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
   const [competenciaSeleccionada, setCompetenciaSeleccionada] = useState<Competencia | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const categorias = ["Peso Pluma", "Ligero", "Medio", "Pesado", "Superpesado"];
 
@@ -53,8 +54,7 @@ const RegistrarCompetidor: React.FC = () => {
 
         setCompetencias(data);
 
-        // Seleccionar competencia más próxima
-        const ahora = new Date();
+        // Selecciona competencia más próxima
         const proxima = data
           .filter(c => c.fecha_evento)
           .sort((a, b) => new Date(a.fecha_evento!).getTime() - new Date(b.fecha_evento!).getTime())[0];
@@ -85,12 +85,11 @@ const RegistrarCompetidor: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!competenciaSeleccionada) {
       alert("Selecciona una competencia");
       return;
     }
-
+    setSubmitting(true);
     try {
       const formData = new FormData();
       formData.append("nombre", competidor.nombre);
@@ -112,7 +111,6 @@ const RegistrarCompetidor: React.FC = () => {
 
       alert("✅ Competidor registrado con éxito!");
 
-      // Limpiar formulario
       setCompetidor({
         nombre: "",
         apellidos: "",
@@ -125,58 +123,64 @@ const RegistrarCompetidor: React.FC = () => {
         comprobante_pago: null,
       });
     } catch (error) {
-      console.error("❌ Error al registrar competidor:", error);
-      alert("Error al registrar competidor");
+      console.error("Error al registrar competidor:", error);
+      alert("❌ Error al registrar competidor");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="horizontal-container">
-      <div className="form-card-horizontal">
-        <h2>Registro Competidor</h2>
+    <main className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Registro de Competidor</h1>
+        <p className={styles.subtitle}>Llena todos los campos para registrar un competidor en la competencia</p>
+      </header>
 
-        <form onSubmit={handleSubmit} className="horizontal-form" encType="multipart/form-data">
-          {/* Campos del competidor */}
-          <div className="form-group-horizontal">
-            <label>Nombre</label>
-            <input type="text" name="nombre" value={competidor.nombre} onChange={handleChange} required />
+      <section className={styles.formSection}>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.inputGroup}>
+            <label htmlFor="nombre">Nombre</label>
+            <input id="nombre" type="text" name="nombre" value={competidor.nombre} onChange={handleChange} required />
           </div>
 
-          <div className="form-group-horizontal">
-            <label>Apellidos</label>
-            <input type="text" name="apellidos" value={competidor.apellidos} onChange={handleChange} required />
+          <div className={styles.inputGroup}>
+            <label htmlFor="apellidos">Apellidos</label>
+            <input id="apellidos" type="text" name="apellidos" value={competidor.apellidos} onChange={handleChange} required />
           </div>
 
-          <div className="form-group-horizontal">
-            <label>Peso (kg)</label>
-            <input type="number" name="peso" value={competidor.peso} onChange={handleChange} required min={30} max={300} />
+          <div className={styles.inputGroup}>
+            <label htmlFor="peso">Peso (kg)</label>
+            <input id="peso" type="number" name="peso" value={competidor.peso} onChange={handleChange} required min={30} max={300} />
           </div>
 
-          <div className="form-group-horizontal">
-            <label>Edad</label>
-            <input type="number" name="edad" value={competidor.edad} onChange={handleChange} required min={10} max={100} />
+          <div className={styles.inputGroup}>
+            <label htmlFor="edad">Edad</label>
+            <input id="edad" type="number" name="edad" value={competidor.edad} onChange={handleChange} required min={10} max={100} />
           </div>
 
-          <div className="form-group-horizontal">
-            <label>Categoría</label>
-            <select name="categoria" value={competidor.categoria} onChange={handleChange} required>
+          <div className={styles.inputGroup}>
+            <label htmlFor="categoria">Categoría</label>
+            <select id="categoria" name="categoria" value={competidor.categoria} onChange={handleChange} required>
               <option value="">Selecciona</option>
-              {categorias.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              {categorias.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
 
-          <div className="form-group-horizontal">
-            <label>Teléfono</label>
-            <input type="tel" name="telefono" value={competidor.telefono} onChange={handleChange} required pattern="\d{10}" />
+          <div className={styles.inputGroup}>
+            <label htmlFor="telefono">Teléfono</label>
+            <input id="telefono" type="tel" name="telefono" value={competidor.telefono} onChange={handleChange} required pattern="\d{10}" title="Ingresa un teléfono válido de 10 dígitos" />
           </div>
 
-          <div className="form-group-horizontal">
-            <label>Correo</label>
-            <input type="email" name="correo" value={competidor.correo} onChange={handleChange} required />
+          <div className={styles.inputGroup}>
+            <label htmlFor="correo">Correo</label>
+            <input id="correo" type="email" name="correo" value={competidor.correo} onChange={handleChange} required />
           </div>
 
-          <div className="form-group-horizontal radio-group-horizontal">
-            <span>Pagado:</span>
+          <fieldset className={styles.radioGroup}>
+            <legend>Pagado:</legend>
             <label>
               <input type="radio" name="pagado" value="Si" checked={competidor.pagado === "Si"} onChange={handleChange} />
               Sí
@@ -185,32 +189,30 @@ const RegistrarCompetidor: React.FC = () => {
               <input type="radio" name="pagado" value="No" checked={competidor.pagado === "No"} onChange={handleChange} />
               No
             </label>
+          </fieldset>
+
+          <div className={styles.inputGroup}>
+            <label htmlFor="comprobante_pago">Comprobante de pago (opcional)</label>
+            <input id="comprobante_pago" type="file" accept="image/*,application/pdf" onChange={handleFileChange} />
+            {competidor.comprobante_pago && <p className={styles.fileName}>Archivo: {competidor.comprobante_pago.name}</p>}
           </div>
 
-          {/* Comprobante de pago */}
-          <div className="form-group-horizontal">
-            <label>Comprobante de pago (opcional)</label>
-            <input type="file" accept="image/*,application/pdf" onChange={handleFileChange} />
-          </div>
-
-          {/* Selección de competencia */}
-          <div className="form-group-horizontal">
-            <label>Competencia</label>
-            <select value={competenciaSeleccionada?.id_competencia || ""} onChange={handleCompetenciaChange} required>
+          <div className={styles.inputGroup}>
+            <label htmlFor="competencia">Competencia</label>
+            <select id="competencia" value={competenciaSeleccionada?.id_competencia || ""} onChange={handleCompetenciaChange} required>
               {competencias.map(c => (
                 <option key={c.id_competencia} value={c.id_competencia}>{c.nombre}</option>
               ))}
             </select>
           </div>
 
-          {/* Mostrar imagen de competencia */}
           {competenciaSeleccionada && (
-            <div className="competencia-activa-card">
+            <div className={styles.competenciaCard}>
               <img
                 src={competenciaSeleccionada.foto ? `http://localhost:3001${competenciaSeleccionada.foto}` : "/placeholder.png"}
                 alt={competenciaSeleccionada.nombre}
               />
-              <div className="competencia-info">
+              <div className={styles.competenciaInfo}>
                 <h3>{competenciaSeleccionada.nombre}</h3>
                 {competenciaSeleccionada.fecha_inicio && <p>Inicio: {new Date(competenciaSeleccionada.fecha_inicio).toLocaleDateString()}</p>}
                 {competenciaSeleccionada.fecha_evento && <p>Evento: {new Date(competenciaSeleccionada.fecha_evento).toLocaleDateString()}</p>}
@@ -218,10 +220,12 @@ const RegistrarCompetidor: React.FC = () => {
             </div>
           )}
 
-          <button type="submit" className="submit-btn-horizontal">Registrar</button>
+          <button type="submit" className={styles.submitButton} disabled={submitting}>
+            {submitting ? "Registrando..." : "Registrar"}
+          </button>
         </form>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 

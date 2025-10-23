@@ -1,4 +1,4 @@
-.crear-informe-overlay {
+.overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
@@ -9,7 +9,7 @@
   backdrop-filter: blur(4px);
 }
 
-.crear-informe-modal {
+.modal {
   background: #ffffff;
   width: 90%;
   max-width: 600px;
@@ -19,7 +19,7 @@
   animation: fadeIn 0.4s ease;
 }
 
-.crear-informe-header {
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -28,7 +28,7 @@
   margin-bottom: 20px;
 }
 
-.crear-informe-header h2 {
+.header h2 {
   font-size: 1.5rem;
   display: flex;
   align-items: center;
@@ -36,7 +36,7 @@
   color: #2a2a2a;
 }
 
-.crear-informe-header button {
+.header button {
   background: none;
   border: none;
   font-size: 1.3rem;
@@ -45,24 +45,24 @@
   transition: 0.2s;
 }
 
-.crear-informe-header button:hover {
+.header button:hover {
   color: #e74c3c;
 }
 
-.crear-informe-form {
+.form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.form-group label {
+.formGroup label {
   font-weight: 600;
   color: #333;
 }
 
-.select-tipo,
-.input-file,
-.input-text,
+.selectTipo,
+.inputFile,
+.inputText,
 textarea,
 input[type="text"],
 input[type="date"],
@@ -83,13 +83,13 @@ select:focus {
   outline: none;
 }
 
-.tipo-selector {
+.tipoSelector {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.icono-tipo {
+.iconoTipo {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -100,12 +100,12 @@ select:focus {
   border: 1px solid #d8dee9;
 }
 
-.tipo-icon {
+.tipoIcon {
   font-size: 1.3rem;
   color: #444;
 }
 
-.tipo-icon.youtube {
+.youtube {
   color: #e74c3c;
 }
 
@@ -133,7 +133,7 @@ select:focus {
   margin-top: 1rem;
 }
 
-.btn-cancelar {
+.btnCancelar {
   background: #eee;
   color: #333;
   padding: 10px 16px;
@@ -143,11 +143,11 @@ select:focus {
   transition: 0.3s;
 }
 
-.btn-cancelar:hover {
+.btnCancelar:hover {
   background: #ddd;
 }
 
-.btn-guardar {
+.btnGuardar {
   background: linear-gradient(90deg, #007bff, #00b4d8);
   color: white;
   padding: 10px 18px;
@@ -161,7 +161,7 @@ select:focus {
   transition: 0.3s;
 }
 
-.btn-guardar:hover {
+.btnGuardar:hover {
   background: linear-gradient(90deg, #0056b3, #0096c7);
 }
 

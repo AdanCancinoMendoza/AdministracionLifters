@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "../../styles/inicioJuez.css";
+import styles from "../../styles/InicioJueces.module.css";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral.tsx";
 import { useNavigate } from "react-router-dom";
 
@@ -38,20 +38,25 @@ const CATEGORIAS_TABLA = [
   "Superpesado"
 ];
 
-const nombresHombre = ["adan","adrian","agustin","alberto","alejandro","alex","alonso","andres","angel",
-"antonio","armando","arturo","benjamin","bruno","carlos","cesar","cristian","daniel","david","diego",
-"eduardo","emilio","enrique","ernesto","esteban","fernando","francisco","gabriel","gerardo","guillermo",
-"hector","hugo","ignacio","isaac","ivan","jaime","javier","jesus","jorge","jose","juan","julio","kevin",
-"leonardo","luis","manuel","marco","mario","miguel","nicolas","omar","oscar","pablo","pedro","rafael",
-"ramiro","raul","ricardo","roberto","rodrigo","ruben","salvador","samuel","santiago","sergio","tomas",
-"vicente","victor","alan","emmanuel"];
+const nombresHombre = [
+  "adan","adrian","agustin","alberto","alejandro","alex","alonso","andres","angel",
+  "antonio","armando","arturo","benjamin","bruno","carlos","cesar","cristian","daniel",
+  "david","diego","eduardo","emilio","enrique","ernesto","esteban","fernando","francisco",
+  "gabriel","gerardo","guillermo","hector","hugo","ignacio","isaac","ivan","jaime","javier",
+  "jesus","jorge","jose","juan","julio","kevin","leonardo","luis","manuel","marco","mario",
+  "miguel","nicolas","omar","oscar","pablo","pedro","rafael","ramiro","raul","ricardo",
+  "roberto","rodrigo","ruben","salvador","samuel","santiago","sergio","tomas","vicente",
+  "victor","alan","emmanuel"
+];
 
-const nombresMujer = ["abril","adriana","alejandra","alicia","alma","amanda","ana","andrea","angela","araceli",
-"beatriz","brenda","camila","carla","carmen","carolina","cecilia","claudia","cristina","daniela","diana",
-"elena","elizabeth","erika","fernanda","gabriela","guadalupe","isabel","jessica","jimena","karina","laura",
-"liliana","lorena","lucia","maria","martha","melissa","monserrat","natalia","patricia","paola","rebeca",
-"rocio","sandra","sara","sofia","susana","teresa","valentina","valeria","veronica","victoria","yesenia",
-"yolanda"];
+const nombresMujer = [
+  "abril","adriana","alejandra","alicia","alma","amanda","ana","andrea","angela","araceli",
+  "beatriz","brenda","camila","carla","carmen","carolina","cecilia","claudia","cristina",
+  "daniela","diana","elena","elizabeth","erika","fernanda","gabriela","guadalupe","isabel",
+  "jessica","jimena","karina","laura","liliana","lorena","lucia","maria","martha","melissa",
+  "monserrat","natalia","patricia","paola","rebeca","rocio","sandra","sara","sofia","susana",
+  "teresa","valentina","valeria","veronica","victoria","yesenia","yolanda"
+];
 
 const detectarGenero = (nombre: string): string => {
   const nombreLimpio = nombre.toLowerCase().split(" ")[0].trim();
@@ -99,7 +104,6 @@ const InicioJueces: React.FC<{ userJuez: Juez | null; setUserJuez: (j: Juez | nu
   const totalHombres = hombres.length;
   const totalMujeres = mujeres.length;
 
-  // Agrupar por categoría de tabla
   const categorias: Record<string, Competidor[]> = {};
   CATEGORIAS_TABLA.forEach(cat => categorias[cat] = []);
   competidores.forEach(c => {
@@ -113,15 +117,14 @@ const InicioJueces: React.FC<{ userJuez: Juez | null; setUserJuez: (j: Juez | nu
     : competencia.foto;
 
   return (
-    <div className="inicio-juez-container">
-      <h1 className="inicio-juez-bienvenida">
+    <div className={styles.inicioJuezContainer}>
+      <h1 className={styles.inicioJuezBienvenida}>
         Bienvenido, {juez.nombre} {juez.apellidos}
       </h1>
 
-      {/* Banner */}
-      <div className="inicio-juez-banner">
+      <div className={styles.inicioJuezBanner}>
         <img src={imagenCompetencia} alt={competencia.nombre} />
-        <div className="overlay">
+        <div className={styles.overlay}>
           <h2>{competencia.nombre}</h2>
           <p>
             {new Date(competencia.fecha_inicio).toLocaleDateString()} -{" "}
@@ -130,22 +133,20 @@ const InicioJueces: React.FC<{ userJuez: Juez | null; setUserJuez: (j: Juez | nu
         </div>
       </div>
 
-      {/* Totales */}
-      <div className="inicio-juez-total-card">Total competidores: {totalCompetidores}</div>
+      <div className={styles.inicioJuezTotalCard}>Total competidores: {totalCompetidores}</div>
 
-      <div className="inicio-juez-resumen">
-        <div className="inicio-juez-card hombres">♂ Hombres: {totalHombres}</div>
-        <div className="inicio-juez-card mujeres">♀ Mujeres: {totalMujeres}</div>
+      <div className={styles.inicioJuezResumen}>
+        <div className={`${styles.inicioJuezCard} ${styles.hombres}`}>♂ Hombres: {totalHombres}</div>
+        <div className={`${styles.inicioJuezCard} ${styles.mujeres}`}>♀ Mujeres: {totalMujeres}</div>
       </div>
 
-      {/* Clasificación por categoría */}
-      <h3 className="inicio-juez-subtitulo">Categorías de Peso</h3>
+      <h3 className={styles.inicioJuezSubtitulo}>Categorías de Peso</h3>
       {CATEGORIAS_TABLA.map((categoria) => (
-        <div key={categoria} className="inicio-juez-categoria">
+        <div key={categoria} className={styles.inicioJuezCategoria}>
           <h4>{categoria}</h4>
           {categorias[categoria].length > 0 ? (
             categorias[categoria].map((c) => (
-              <div key={c.id_competidor} className="inicio-juez-competidor">
+              <div key={c.id_competidor} className={styles.inicioJuezCompetidor}>
                 <span>{c.nombre} {c.apellidos}</span>
                 <span>{detectarGenero(c.nombre)}</span>
                 <span>{c.peso} kg</span>

@@ -19,8 +19,8 @@ import {
   Newspaper,
   Flag,
 } from "lucide-react";
-import "../styles/menu.css";
-import Logo from "../assets/LOgo.png"
+import styles from "../styles/MenuAdmin.module.css";
+import Logo from "../assets/LOgo.png";
 
 interface SubmenuItem {
   path: string;
@@ -44,6 +44,8 @@ const MenuAdmin = () => {
     setSubmenuOpen(submenuOpen === menu ? null : menu);
   };
 
+  const closeMenu = () => setMenuOpen(false);
+
   const menuItems: MenuItem[] = [
     {
       label: "Dashboard",
@@ -54,104 +56,53 @@ const MenuAdmin = () => {
       label: "Inicio",
       icon: <Home size={20} />,
       children: [
-        {
-          path: "/inicio/editar",
-          label: "Editar Texto e Imagen",
-          icon: <Edit size={16} />,
-        },
-        {
-          path: "/inicio/ganadores",
-          label: "Ganadores de Competencias",
-          icon: <Medal size={16} />,
-        },
-        {
-          path: "/inicio/poster",
-          label: "Poster de Competencia",
-          icon: <Presentation size={16} />,
-        },
-        {
-          path: "/inicio/videos",
-          label: "Videos de Competencias",
-          icon: <Video size={16} />,
-        },
+        { path: "/inicio/editar", label: "Editar Texto e Imagen", icon: <Edit size={16} /> },
+        { path: "/inicio/ganadores", label: "Ganadores de Competencias", icon: <Medal size={16} /> },
+        { path: "/inicio/poster", label: "Poster de Competencia", icon: <Presentation size={16} /> },
+        { path: "/inicio/videos", label: "Videos de Competencias", icon: <Video size={16} /> },
       ],
     },
     {
       label: "Competidores",
       icon: <UsersRound size={20} />,
       children: [
-        {
-          path: "/competidores/registrar",
-          label: "Registrar Competidor",
-          icon: <UserPlus size={16} />,
-        },
-        {
-          path: "/competidores/ver",
-          label: "Ver Competidores",
-          icon: <Eye size={16} />,
-        },
+        { path: "/competidores/registrar", label: "Registrar Competidor", icon: <UserPlus size={16} /> },
+        { path: "/competidores/ver", label: "Ver Competidores", icon: <Eye size={16} /> },
       ],
     },
     {
       label: "Competencias",
       icon: <Flag size={20} />,
       children: [
-        {
-          path: "/competencias/crearcompetencia",
-          label: "Registrar Competencia",
-          icon: <PlusCircle size={16} />,
-        },
-        {
-          path: "/competencias/listacompetencias",
-          label: "Ver Competencias",
-          icon: <ClipboardList size={16} />,
-        },
-        {
-          path: "/competencias/asignarjueces",
-          label: "Asignar Jueces",
-          icon: <UserPlus size={16} />,
-        }
+        { path: "/competencias/crearcompetencia", label: "Registrar Competencia", icon: <PlusCircle size={16} /> },
+        { path: "/competencias/listacompetencias", label: "Ver Competencias", icon: <ClipboardList size={16} /> },
+        { path: "/competencias/asignarjueces", label: "Asignar Jueces", icon: <UserPlus size={16} /> },
       ],
     },
     {
       label: "Difusión de Información",
       icon: <Newspaper size={20} />,
       children: [
-        {
-          path: "/informacion/crear",
-          label: "Crear Informe",
-          icon: <FileText size={16} />,
-        },
-        {
-          path: "/informacion/ver",
-          label: "Ver Informes",
-          icon: <Eye size={16} />,
-        },
+        { path: "/informacion/crear", label: "Crear Informe", icon: <FileText size={16} /> },
+        { path: "/informacion/ver", label: "Ver Informes", icon: <Eye size={16} /> },
       ],
     },
-    {
-      label: "Resultados",
-      path: "/resultados",
-      icon: <Trophy size={20} />,
-    },
+    { label: "Resultados", path: "/resultados", icon: <Trophy size={20} /> },
   ];
 
   return (
     <>
-      {/* Overlay */}
+      {/* ✅ Overlay funcional */}
       {menuOpen && (
-        <div
-          className="menu-overlay active"
-          onClick={() => setMenuOpen(false)}
-        ></div>
+        <div className={`${styles.menuOverlay} ${styles.active}`} onClick={closeMenu}></div>
       )}
 
-      <nav className={`menu-admin ${menuOpen ? "" : "closed"}`}>
-        <div className="menu-logo">
+      <nav className={`${styles.menuAdmin} ${menuOpen ? "" : styles.closed}`}>
+        <div className={styles.menuLogo}>
           <h2>LIFTERS</h2>
         </div>
 
-        <div className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)}>
+        <div className={styles.menuToggle} onClick={() => setMenuOpen(!menuOpen)}>
           ☰
         </div>
 
@@ -161,22 +112,22 @@ const MenuAdmin = () => {
               {item.children ? (
                 <>
                   <div
-                    className="menu-item"
+                    className={styles.menuItem}
                     onClick={() => toggleSubmenu(item.label)}
                   >
-                    <div className="menu-label">
+                    <div className={styles.menuLabel}>
                       {item.icon}
                       <span>{item.label}</span>
                     </div>
                     {submenuOpen === item.label ? (
-                      <ChevronDown size={16} className="arrow" />
+                      <ChevronDown size={16} />
                     ) : (
-                      <ChevronRight size={16} className="arrow" />
+                      <ChevronRight size={16} />
                     )}
                   </div>
                   <ul
-                    className={`submenu ${
-                      submenuOpen === item.label ? "open" : ""
+                    className={`${styles.submenu} ${
+                      submenuOpen === item.label ? styles.open : ""
                     }`}
                   >
                     {item.children.map((child) => (
@@ -184,9 +135,9 @@ const MenuAdmin = () => {
                         <Link
                           to={child.path}
                           className={
-                            location.pathname === child.path ? "active" : ""
+                            location.pathname === child.path ? styles.active : ""
                           }
-                          onClick={() => setMenuOpen(false)}
+                          onClick={closeMenu}
                         >
                           {child.icon}
                           <span>{child.label}</span>
@@ -198,12 +149,10 @@ const MenuAdmin = () => {
               ) : (
                 <Link
                   to={item.path!}
-                  className={
-                    location.pathname === item.path
-                      ? "menu-item active"
-                      : "menu-item"
-                  }
-                  onClick={() => setMenuOpen(false)}
+                  className={`${styles.menuItem} ${
+                    location.pathname === item.path ? styles.active : ""
+                  }`}
+                  onClick={closeMenu}
                 >
                   {item.icon}
                   <span>{item.label}</span>
@@ -212,8 +161,8 @@ const MenuAdmin = () => {
             </li>
           ))}
         </ul>
-        {/* Logo al final */}
-        <div className="menu-footer">
+
+        <div className={styles.menuFooter}>
           <img src={Logo} alt="Logo LIFTERS" />
         </div>
       </nav>

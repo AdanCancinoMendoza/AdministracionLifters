@@ -6,7 +6,7 @@ import {
   FaYoutube,
   FaTimes,
 } from "react-icons/fa";
-import "../../../styles/CrearInforme.css";
+import styles from "../../../styles/CrearInforme.module.css";
 
 type TipoContenido = "imagen" | "video" | "youtube";
 
@@ -38,7 +38,6 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
 
   const [contenidoFile, setContenidoFile] = useState<File | null>(null);
 
-  // 🔧 Manejar cambios
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -60,7 +59,6 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
         const embedUrl = `https://www.youtube.com/embed/${videoId}`;
         setFormData({ ...formData, contenido: embedUrl });
       } else {
-        // No mostrar error, solo limpiar el contenido
         setFormData({ ...formData, contenido: "" });
       }
     } else {
@@ -68,14 +66,12 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
     }
   };
 
-  // 🎥 Obtener el ID del video de YouTube
   const extractYouTubeId = (url: string): string | null => {
     const match =
       url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
     return match ? match[1] : null;
   };
 
-  // 💾 Enviar datos
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -98,7 +94,6 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
       });
 
       if (!response.ok) throw new Error("Error al guardar publicación");
-
       const result = await response.json();
       alert("✅ Publicación guardada con éxito");
 
@@ -122,46 +117,44 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
   };
 
   return (
-    <div className="crear-informe-overlay">
-      <div className="crear-informe-modal">
-        <div className="crear-informe-header">
+    <div className={styles.overlay}>
+      <div className={styles.modal}>
+        <div className={styles.header}>
           <h2><FaSave /> Nueva Publicación</h2>
           <button onClick={onCerrar}><FaTimes /></button>
         </div>
 
-        <form className="crear-informe-form" onSubmit={handleSubmit}>
-          {/* Tipo de contenido */}
-          <div className="form-group">
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.formGroup}>
             <label>Tipo de contenido</label>
-            <div className="tipo-selector">
+            <div className={styles.tipoSelector}>
               <select
                 name="tipo"
                 value={formData.tipo}
                 onChange={handleChange}
-                className="select-tipo"
+                className={styles.selectTipo}
               >
                 <option value="imagen">Imagen</option>
                 <option value="video">Video local</option>
                 <option value="youtube">YouTube</option>
               </select>
 
-              <div className="icono-tipo">
-                {formData.tipo === "imagen" && <FaImage className="tipo-icon" />}
-                {formData.tipo === "video" && <FaVideo className="tipo-icon" />}
-                {formData.tipo === "youtube" && <FaYoutube className="tipo-icon youtube" />}
+              <div className={styles.iconoTipo}>
+                {formData.tipo === "imagen" && <FaImage className={styles.tipoIcon} />}
+                {formData.tipo === "video" && <FaVideo className={styles.tipoIcon} />}
+                {formData.tipo === "youtube" && <FaYoutube className={`${styles.tipoIcon} ${styles.youtube}`} />}
               </div>
             </div>
           </div>
 
-          {/* Archivo o YouTube */}
-          <div className="form-group">
+          <div className={styles.formGroup}>
             {formData.tipo !== "youtube" ? (
               <input
                 type="file"
                 name="contenido"
                 accept="image/*,video/*"
                 onChange={handleChange}
-                className="input-file"
+                className={styles.inputFile}
               />
             ) : (
               <input
@@ -169,14 +162,13 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
                 name="contenido"
                 placeholder="URL de YouTube (https://youtu.be/...)"
                 onChange={handleChange}
-                className="input-text"
+                className={styles.inputText}
               />
             )}
           </div>
 
-          {/* Vista previa */}
           {formData.contenido && (
-            <div className="preview">
+            <div className={styles.preview}>
               {formData.tipo === "imagen" && <img src={formData.contenido} alt="preview" />}
               {formData.tipo === "video" && <video src={formData.contenido} controls />}
               {formData.tipo === "youtube" && (
@@ -189,7 +181,6 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
             </div>
           )}
 
-          {/* Campos restantes */}
           <input
             type="text"
             name="titulo"
@@ -222,11 +213,11 @@ const CrearInforme: React.FC<CrearInformeProps> = ({ onGuardar, onCerrar }) => {
             required
           />
 
-          <div className="acciones">
-            <button type="button" className="btn-cancelar" onClick={onCerrar}>
+          <div className={styles.acciones}>
+            <button type="button" className={styles.btnCancelar} onClick={onCerrar}>
               Cancelar
             </button>
-            <button type="submit" className="btn-guardar">
+            <button type="submit" className={styles.btnGuardar}>
               <FaSave /> Guardar
             </button>
           </div>
