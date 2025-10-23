@@ -1,0 +1,161 @@
+.resultadosScreen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f9f9f9;
+  justify-content: space-between;
+  font-family: "Inter", sans-serif;
+}
+
+.resultadosContainer {
+  flex: 1;
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.resultadosTitulo {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0d47a1;
+  margin-bottom: 6px;
+}
+
+.resultadosDescripcion {
+  text-align: center;
+  color: #616161;
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+.resultadosLeyenda {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.leyendaItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #424242;
+}
+
+.leyendaColor {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.aprobado {
+  background-color: #4caf50;
+}
+
+.reprobado {
+  background-color: #f44336;
+}
+
+.pendiente {
+  background-color: #03a9f4;
+}
+
+.resultadosTablaContainer {
+  overflow-x: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  padding: 8px;
+}
+
+.resultadosTabla {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.resultadosTabla th {
+  background: linear-gradient(120deg, #e3f2fd, #bbdefb);
+  color: #0d47a1;
+  font-weight: 600;
+  padding: 10px;
+  font-size: 0.95rem;
+  text-align: center;
+  border-bottom: 2px solid #bbdefb;
+}
+
+.resultadosTabla td {
+  padding: 10px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #212121;
+  border: 1px solid #eeeeee;
+  transition: transform 0.2s;
+}
+
+.resultadosTabla td:hover {
+  transform: scale(1.05);
+}
+
+.celdaResultado {
+  color: white;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.filaPar {
+  background-color: #fafafa;
+}
+
+.filaImpar {
+  background-color: #ffffff;
+}
+
+.subHeader th {
+  background: #bbdefb;
+  font-weight: 500;
+}
+
+@media (max-width: 1024px) {
+  .resultadosTabla {
+    min-width: 700px;
+  }
+}
+
+@media (max-width: 768px) {
+  .resultadosContainer {
+    padding: 16px;
+  }
+
+  .resultadosTabla th,
+  .resultadosTabla td {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
+
+  .resultadosTabla {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 480px) {
+  .resultadosTabla {
+    min-width: 500px;
+  }
+
+  .resultadosTitulo {
+    font-size: 1.5rem;
+  }
+
+  .resultadosDescripcion {
+    font-size: 0.85rem;
+  }
+
+  .celdaResultado {
+    font-size: 0.8rem;
+    padding: 6px;
+  }
+}

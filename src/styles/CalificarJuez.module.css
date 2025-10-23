@@ -1,19 +1,20 @@
-.calificar-screen {
+.calificarScreen {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background-color: #f4f6f9;
   justify-content: space-between;
+  font-family: 'Poppins', sans-serif;
 }
 
-.calificar-container {
+.calificarContainer {
   padding: 20px;
   flex: 1;
   max-width: 800px;
   margin: 0 auto;
 }
 
-.calificar-titulo {
+.calificarTitulo {
   text-align: center;
   font-size: 1.8rem;
   font-weight: 700;
@@ -21,14 +22,14 @@
   margin-bottom: 8px;
 }
 
-.calificar-subtitulo {
+.calificarSubtitulo {
   text-align: center;
   font-size: 1.1rem;
   color: #444;
   margin-bottom: 16px;
 }
 
-.calificar-tiempo {
+.calificarTiempo {
   text-align: center;
   background: #e3f2fd;
   border-radius: 12px;
@@ -36,25 +37,25 @@
   margin-bottom: 20px;
 }
 
-.calificar-tiempo p {
+.calificarTiempo p {
   color: #555;
   margin: 0;
   font-weight: 500;
 }
 
-.calificar-tiempo span {
+.calificarTiempo span {
   font-size: 2rem;
   font-weight: 800;
   color: #ff5722;
 }
 
-.calificar-lista-ejercicios {
+.calificarListaEjercicios {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.calificar-ejercicio {
+.calificarEjercicio {
   background: white;
   border-radius: 14px;
   padding: 14px;
@@ -62,43 +63,47 @@
   transition: 0.3s;
 }
 
-.calificar-ejercicio.activo {
+.activo {
   background: #e3f2fd;
   transform: scale(1.02);
   border: 1px solid #64b5f6;
 }
 
-.calificar-ejercicio h3 {
+.calificarEjercicio h3 {
   color: #1976d2;
   font-weight: 600;
   margin-bottom: 8px;
 }
 
-.calificar-intentos {
+.calificarIntentos {
   display: flex;
   justify-content: center;
   gap: 12px;
   margin-top: 6px;
 }
 
-.intento-circle {
+.intentoCircle {
   width: 32px;
   height: 32px;
   border-radius: 50%;
   border: 2px solid #bbb;
 }
 
-.intento-circle.bueno {
+.bueno {
   background: #4caf50;
   border: none;
 }
 
-.intento-circle.malo {
+.malo {
   background: #f44336;
   border: none;
 }
 
-.texto-activo {
+.pendiente {
+  background: white;
+}
+
+.textoActivo {
   text-align: center;
   font-size: 0.9rem;
   color: #1976d2;
@@ -106,13 +111,13 @@
   margin-top: 6px;
 }
 
-.calificar-botones {
+.calificarBotones {
   display: flex;
   justify-content: space-around;
   margin: 24px 0;
 }
 
-.btn-calificar {
+.btnCalificar {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -126,30 +131,22 @@
   transition: 0.3s;
 }
 
-.btn-calificar.malo {
-  background-color: #f44336;
-}
-
-.btn-calificar.bueno {
-  background-color: #4caf50;
-}
-
-.btn-calificar:disabled {
+.btnCalificar:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
-  .calificar-container {
+  .calificarContainer {
     padding: 16px;
   }
 
-  .btn-calificar {
+  .btnCalificar {
     padding: 8px 14px;
     font-size: 0.9rem;
   }
 
-  .intento-circle {
+  .intentoCircle {
     width: 28px;
     height: 28px;
   }

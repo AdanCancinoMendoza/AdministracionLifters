@@ -184,3 +184,13 @@
     font-size: 1.05rem;
   }
 }
+
+
+.screenContainer {
+  padding-top: 72px; /* altura del menú de escritorio */
+}
+@media (min-width: 768px) {
+  .screenContainer {
+    padding-top: calc(var(--height-desktop) + 12px); /* modular y ajustable */
+  }
+}

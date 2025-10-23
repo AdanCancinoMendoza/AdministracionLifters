@@ -1,0 +1,185 @@
+.informacionScreen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f5f5f5;
+  justify-content: space-between;
+  font-family: "Inter", sans-serif;
+}
+
+.informacionContainer {
+  flex: 1;
+  padding: 24px;
+  max-width: 650px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.informacionTitulo {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0d47a1;
+  text-align: center;
+}
+
+/* ===== Imagen ===== */
+.infoImagenContainer {
+  margin-top: 10px;
+}
+
+.infoImagen {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Tarjetas ===== */
+.infoCard {
+  border-radius: 20px;
+  color: white;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.infoCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Tarjeta usuario */
+.cardUsuario {
+  background: linear-gradient(135deg, #2196f3, #1976d2);
+  flex-direction: row;
+  align-items: center;
+}
+
+.cardIcon {
+  font-size: 2rem;
+  margin-right: 14px;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.cardLabel {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.cardText {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Tarjeta jueces */
+.cardJueces {
+  background: linear-gradient(135deg, #5c6bc0, #3f51b5);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cardHeaderIcon {
+  font-size: 1.5rem;
+}
+
+.cardHeaderTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.juecesLista {
+  margin-top: 10px;
+  list-style: none;
+  padding: 0;
+}
+
+.juezItem {
+  font-size: 1rem;
+  padding: 5px 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Tarjeta competencia */
+.cardCompetencia {
+  background: linear-gradient(135deg, #ef5350, #d32f2f);
+}
+
+.cardFecha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 1rem;
+}
+
+/* ===== Responsivo ===== */
+@media (max-width: 768px) {
+  .informacionContainer {
+    padding: 16px;
+  }
+
+  .informacionTitulo {
+    font-size: 1.6rem;
+  }
+
+  .infoCard {
+    padding: 14px;
+  }
+
+  .cardText {
+    font-size: 1rem;
+  }
+
+  .cardHeaderTitle {
+    font-size: 1rem;
+  }
+
+  .juezItem {
+    font-size: 0.9rem;
+  }
+
+  .cardFecha {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .informacionTitulo {
+    font-size: 1.4rem;
+  }
+
+  .infoImagen {
+    height: 160px;
+  }
+
+  .cardText {
+    font-size: 0.95rem;
+  }
+
+  .cardHeaderTitle {
+    font-size: 0.95rem;
+  }
+
+  .juezItem {
+    font-size: 0.85rem;
+  }
+
+  .cardFecha {
+    font-size: 0.85rem;
+  }
+}

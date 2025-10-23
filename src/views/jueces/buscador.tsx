@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import "../../styles/buscadorJuez.css";
+import styles from "../../styles/BuscadorJuez.module.css";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
 import { FaSearch } from "react-icons/fa";
 
 type Ejercicio = {
   nombre: string;
-  resultados: string[]; // Aprobado / Reprobado / Faltante
-  tiempos: number[]; // segundos por intento
+  resultados: string[];
+  tiempos: number[];
 };
 
 type CompetidorDetalle = {
@@ -19,7 +19,6 @@ type CompetidorDetalle = {
 };
 
 const CATEGORIAS = ["Todos", "Peso Pluma", "Ligero", "Medio", "Pesado", "Superpesado"];
-
 const NOMBRES_EJERCICIOS = ["Press Banca", "Peso Muerto", "Sentadilla"];
 
 const Buscador: React.FC = () => {
@@ -28,12 +27,10 @@ const Buscador: React.FC = () => {
   const [filtroCategoria, setFiltroCategoria] = useState("Todos");
   const [selected, setSelected] = useState<CompetidorDetalle | null>(null);
 
-  // ⚡ Cargar competidores desde la API
   useEffect(() => {
     fetch("http://localhost:3001/api/competidor")
       .then((res) => res.json())
       .then((data) => {
-        // Mapear los competidores agregando ejercicios por defecto
         const mapped: CompetidorDetalle[] = data.map((c: any) => ({
           id_competidor: c.id_competidor,
           nombre: c.nombre,
@@ -48,10 +45,9 @@ const Buscador: React.FC = () => {
         }));
         setCompetidores(mapped);
       })
-      .catch((err) => console.error("Error al obtener competidores:", err));
+      .catch((err) => console.error(err));
   }, []);
 
-  // Filtrar por nombre y categoría
   const resultados = useMemo(() => {
     return competidores.filter(
       (c) =>
@@ -61,18 +57,18 @@ const Buscador: React.FC = () => {
   }, [competidores, query, filtroCategoria]);
 
   return (
-    <div className="buscador-juez-root">
-      <main className="buscador-juez-main">
-        <header className="buscador-juez-header">
-          <h1 className="buscador-juez-title">Buscador de Competidores</h1>
-          <p className="buscador-juez-subtitle">
+    <div className={styles.root}>
+      <main className={styles.main}>
+        <header className={styles.header}>
+          <h1 className={styles.title}>Buscador de Competidores</h1>
+          <p className={styles.subtitle}>
             Busca por nombre al competidor y filtra por categoría.
           </p>
         </header>
 
-        <section className="buscador-juez-search">
-          <div className="buscador-juez-search-input">
-            <FaSearch className="buscador-juez-search-icon" />
+        <section className={styles.search}>
+          <div className={styles.searchInput}>
+            <FaSearch className={styles.searchIcon} />
             <input
               type="search"
               placeholder="Buscar competidor por nombre"
@@ -83,7 +79,7 @@ const Buscador: React.FC = () => {
           </div>
 
           <select
-            className="buscador-juez-filtro-categoria"
+            className={styles.selectCategoria}
             value={filtroCategoria}
             onChange={(e) => setFiltroCategoria(e.target.value)}
           >
@@ -95,14 +91,14 @@ const Buscador: React.FC = () => {
           </select>
         </section>
 
-        <section className="buscador-juez-results">
+        <section className={styles.results}>
           {resultados.length === 0 ? (
-            <div className="buscador-juez-empty">No se encontraron competidores</div>
+            <div className={styles.empty}>No se encontraron competidores</div>
           ) : (
             resultados.map((c) => (
               <article
                 key={c.id_competidor}
-                className="buscador-juez-item"
+                className={styles.item}
                 role="button"
                 tabIndex={0}
                 onClick={() => setSelected(c)}
@@ -110,8 +106,8 @@ const Buscador: React.FC = () => {
                   if (e.key === "Enter" || e.key === " ") setSelected(c);
                 }}
               >
-                <div className="buscador-juez-item-left">
-                  <div className="buscador-juez-avatar" aria-hidden>
+                <div className={styles.itemLeft}>
+                  <div className={styles.avatar}>
                     {c.nombre
                       .split(" ")
                       .map((n) => n[0])
@@ -120,67 +116,54 @@ const Buscador: React.FC = () => {
                       .toUpperCase()}
                   </div>
                 </div>
-                <div className="buscador-juez-item-body">
-                  <div className="buscador-juez-item-name">
+                <div className={styles.itemBody}>
+                  <div className={styles.itemName}>
                     {c.nombre} {c.apellidos}
                   </div>
-                  <div className="buscador-juez-item-meta">
+                  <div className={styles.itemMeta}>
                     {c.peso} — {c.categoria}
                   </div>
                 </div>
-                <div className="buscador-juez-item-action">Detalles →</div>
+                <div className={styles.itemAction}>Detalles →</div>
               </article>
             ))
           )}
         </section>
       </main>
 
-      {/* Modal de detalles */}
       {selected && (
         <div
-          className="buscador-juez-modal-overlay"
+          className={styles.modalOverlay}
           role="dialog"
           aria-modal="true"
           aria-label={`Detalles de ${selected.nombre}`}
           onClick={() => setSelected(null)}
         >
-          <div
-            className="buscador-juez-modal"
-            onClick={(e) => e.stopPropagation()}
-            role="document"
-          >
-            <header className="buscador-juez-modal-header">
-              <h2>
-                {selected.nombre} {selected.apellidos}
-              </h2>
-              <button
-                className="buscador-juez-modal-close"
-                onClick={() => setSelected(null)}
-                aria-label="Cerrar"
-              >
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="document">
+            <header className={styles.modalHeader}>
+              <h2>{selected.nombre} {selected.apellidos}</h2>
+              <button className={styles.modalClose} onClick={() => setSelected(null)} aria-label="Cerrar">
                 ✕
               </button>
             </header>
-
-            <div className="buscador-juez-modal-body">
-              <div className="buscador-juez-modal-meta">
-                <span className="buscador-juez-modal-peso">
+            <div className={styles.modalBody}>
+              <div className={styles.modalMeta}>
+                <span className={styles.modalPeso}>
                   Peso: {selected.peso} — {selected.categoria}
                 </span>
               </div>
-
-              <div className="buscador-juez-ejercicios">
+              <div className={styles.ejercicios}>
                 {selected.ejercicios.map((ej) => (
-                  <div key={ej.nombre} className="buscador-juez-ejercicio-card">
-                    <div className="buscador-juez-ejercicio-title">{ej.nombre}</div>
-                    <ul className="buscador-juez-ejercicio-list">
+                  <div key={ej.nombre} className={styles.ejercicioCard}>
+                    <div className={styles.ejercicioTitle}>{ej.nombre}</div>
+                    <ul className={styles.ejercicioList}>
                       {ej.resultados.map((res, i) => {
                         const tiempo = ej.tiempos[i];
                         const estado = tiempo > 60 ? "Reprobado (tiempo > 1 min)" : res;
                         return (
-                          <li key={i} className="buscador-juez-ejercicio-item">
+                          <li key={i} className={styles.ejercicioItem}>
                             <strong>R{i + 1}:</strong> {estado} —{" "}
-                            <span className="buscador-juez-ejercicio-tiempo">{tiempo}s</span>
+                            <span className={styles.ejercicioTiempo}>{tiempo}s</span>
                           </li>
                         );
                       })}
@@ -189,11 +172,8 @@ const Buscador: React.FC = () => {
                 ))}
               </div>
             </div>
-
-            <footer className="buscador-juez-modal-footer">
-              <button className="buscador-juez-btn cerrar" onClick={() => setSelected(null)}>
-                Cerrar
-              </button>
+            <footer className={styles.modalFooter}>
+              <button className={styles.btnCerrar} onClick={() => setSelected(null)}>Cerrar</button>
             </footer>
           </div>
         </div>

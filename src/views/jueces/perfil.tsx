@@ -1,12 +1,7 @@
 import React from "react";
-import {
-  FaUser,
-  FaUsers,
-  FaCalendarAlt,
-  FaTrophy,
-} from "react-icons/fa";
+import { FaUser, FaUsers, FaCalendarAlt, FaTrophy } from "react-icons/fa";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
-import "../../styles/perfilJuez.css";
+import styles from "../../styles/InformacionScreen.module.css";
 
 const InformacionScreen: React.FC = () => {
   const usuario = "Adán";
@@ -15,38 +10,39 @@ const InformacionScreen: React.FC = () => {
   const fechaInicio = "15 Octubre 2025";
 
   return (
-    <div className="informacion-screen">
-      <div className="informacion-container">
-        <h1 className="informacion-titulo">Información del Evento</h1>
-                {/* Imagen */}
-        <div className="info-imagen-container">
+    <div className={styles.informacionScreen}>
+      <div className={styles.informacionContainer}>
+        <h1 className={styles.informacionTitulo}>Información del Evento</h1>
+
+        {/* Imagen */}
+        <div className={styles.infoImagenContainer}>
           <img
             src="https://a.travel-assets.com/findyours-php/viewfinder/images/res70/228000/228103-Puebla-Province.jpg"
             alt="Imagen del evento"
-            className="info-imagen"
+            className={styles.infoImagen}
           />
         </div>
 
         {/* Usuario */}
-        <div className="info-card card-usuario">
-          <div className="card-icon">
+        <div className={`${styles.infoCard} ${styles.cardUsuario}`}>
+          <div className={styles.cardIcon}>
             <FaUser />
           </div>
-          <div className="card-content">
-            <p className="card-label">Usuario</p>
-            <p className="card-text">{usuario}</p>
+          <div className={styles.cardContent}>
+            <p className={styles.cardLabel}>Usuario</p>
+            <p className={styles.cardText}>{usuario}</p>
           </div>
         </div>
 
         {/* Jueces activos */}
-        <div className="info-card card-jueces">
-          <div className="card-header">
-            <FaUsers className="card-header-icon" />
-            <p className="card-header-title">Jueces Activos</p>
+        <div className={`${styles.infoCard} ${styles.cardJueces}`}>
+          <div className={styles.cardHeader}>
+            <FaUsers className={styles.cardHeaderIcon} />
+            <p className={styles.cardHeaderTitle}>Jueces Activos</p>
           </div>
-          <ul className="jueces-lista">
+          <ul className={styles.juecesLista}>
             {juecesActivos.map((juez, i) => (
-              <li key={i} className="juez-item">
+              <li key={i} className={styles.juezItem}>
                 ✮ {juez}
               </li>
             ))}
@@ -54,18 +50,16 @@ const InformacionScreen: React.FC = () => {
         </div>
 
         {/* Competencia */}
-        <div className="info-card card-competencia">
-          <div className="card-header">
-            <FaTrophy className="card-header-icon" />
-            <p className="card-header-title">{competencia}</p>
+        <div className={`${styles.infoCard} ${styles.cardCompetencia}`}>
+          <div className={styles.cardHeader}>
+            <FaTrophy className={styles.cardHeaderIcon} />
+            <p className={styles.cardHeaderTitle}>{competencia}</p>
           </div>
-          <div className="card-fecha">
+          <div className={styles.cardFecha}>
             <FaCalendarAlt />
             <span>Fecha de inicio: {fechaInicio}</span>
           </div>
         </div>
-
-
       </div>
 
       <BottomNavigationMenuCentral selected="informacion" />

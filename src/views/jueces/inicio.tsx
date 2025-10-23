@@ -117,6 +117,8 @@ const InicioJueces: React.FC<{ userJuez: Juez | null; setUserJuez: (j: Juez | nu
     : competencia.foto;
 
   return (
+    
+    
     <div className={styles.inicioJuezContainer}>
       <h1 className={styles.inicioJuezBienvenida}>
         Bienvenido, {juez.nombre} {juez.apellidos}

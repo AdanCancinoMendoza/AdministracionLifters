@@ -1,6 +1,6 @@
 import React from "react";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
-import "../../styles/resultadosJuez.css";
+import styles from "../../styles/ResultadosScreen.module.css";
 
 interface Repeticion {
   valor: string;
@@ -71,32 +71,33 @@ const ResultadosScreen: React.FC = () => {
   };
 
   return (
-    <div className="resultados-screen">
-      <div className="resultados-container">
-        <h1 className="resultados-titulo">Resultados de Competidores</h1>
+    <div className={styles.resultadosScreen}>
+      <div className={styles.resultadosContainer}>
+        <h1 className={styles.resultadosTitulo}>Resultados de Competidores</h1>
 
-        <p className="resultados-descripcion">
-          La siguiente tabla muestra los resultados de cada competidor por
-          ejercicio y repetición. Desplázate horizontal y verticalmente para
-          visualizar todos los datos.
+        <p className={styles.resultadosDescripcion}>
+          Visualiza los resultados de cada competidor por ejercicio y repetición.
         </p>
 
         {/* Leyenda */}
-        <div className="resultados-leyenda">
-          <div className="leyenda-item">
-            <span className="leyenda-color aprobado"></span> Aprobado
+        <div className={styles.resultadosLeyenda}>
+          <div className={styles.leyendaItem}>
+            <span className={`${styles.leyendaColor} ${styles.aprobado}`}></span>
+            Aprobado
           </div>
-          <div className="leyenda-item">
-            <span className="leyenda-color reprobado"></span> Reprobado
+          <div className={styles.leyendaItem}>
+            <span className={`${styles.leyendaColor} ${styles.reprobado}`}></span>
+            Reprobado
           </div>
-          <div className="leyenda-item">
-            <span className="leyenda-color pendiente"></span> Pendiente
+          <div className={styles.leyendaItem}>
+            <span className={`${styles.leyendaColor} ${styles.pendiente}`}></span>
+            Pendiente
           </div>
         </div>
 
         {/* Tabla */}
-        <div className="resultados-tabla-container">
-          <table className="resultados-tabla">
+        <div className={styles.resultadosTablaContainer}>
+          <table className={styles.resultadosTabla}>
             <thead>
               <tr>
                 <th>Nombre</th>
@@ -105,7 +106,7 @@ const ResultadosScreen: React.FC = () => {
                 <th colSpan={3}>Peso Muerto</th>
                 <th colSpan={3}>Sentadilla</th>
               </tr>
-              <tr className="sub-header">
+              <tr className={styles.subHeader}>
                 {["PB R1", "PB R2", "PB R3", "PM R1", "PM R2", "PM R3", "S R1", "S R2", "S R3"].map(
                   (t, i) => (
                     <th key={i}>{t}</th>
@@ -115,21 +116,19 @@ const ResultadosScreen: React.FC = () => {
             </thead>
             <tbody>
               {competidores.map((c, i) => (
-                <tr key={i} className={i % 2 === 0 ? "fila-par" : "fila-impar"}>
+                <tr key={i} className={i % 2 === 0 ? styles.filaPar : styles.filaImpar}>
                   <td>{c.nombre}</td>
                   <td>{c.categoriaPeso}</td>
-
-                  {[...c.pressBanca, ...c.pesoMuerto, ...c.sentadilla].map(
-                    (rep, idx) => (
-                      <td
-                        key={idx}
-                        style={{ backgroundColor: getColor(rep.estado) }}
-                        className="celda-resultado"
-                      >
-                        {rep.valor}
-                      </td>
-                    )
-                  )}
+                  {[...c.pressBanca, ...c.pesoMuerto, ...c.sentadilla].map((rep, idx) => (
+                    <td
+                      key={idx}
+                      className={styles.celdaResultado}
+                      style={{ backgroundColor: getColor(rep.estado) }}
+                      data-label={`R${idx + 1}`}
+                    >
+                      {rep.valor}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>

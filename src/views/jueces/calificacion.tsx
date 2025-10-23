@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaFlag, FaFlagCheckered } from "react-icons/fa";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
-import "../../styles/calificarJuez.css";
+import styles from "../../styles/CalificarJuez.module.css";
 
 interface EjercicioCalificar {
   nombre: string;
@@ -43,7 +43,7 @@ const CalificarScreen: React.FC = () => {
 
   const currentCompetidor = competidores[currentIndex];
 
-  // --- Temporizador ---
+  // Temporizador
   useEffect(() => {
     setTimeLeft(60);
     setCanCalificar(true);
@@ -61,84 +61,79 @@ const CalificarScreen: React.FC = () => {
     return () => clearInterval(timer);
   }, [currentIndex, currentEjercicioIndex]);
 
-  // --- Avanzar ---
   const avanzarSiguiente = () => {
     setCanCalificar(true);
     if (currentEjercicioIndex < currentCompetidor.ejercicios.length - 1) {
       setCurrentEjercicioIndex((prev) => prev + 1);
+    } else if (currentIndex < competidores.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setCurrentEjercicioIndex(0);
     } else {
-      if (currentIndex < competidores.length - 1) {
-        setCurrentIndex((prev) => prev + 1);
-        setCurrentEjercicioIndex(0);
-      } else {
-        setCurrentIndex(0);
-        setCurrentEjercicioIndex(0);
-      }
+      setCurrentIndex(0);
+      setCurrentEjercicioIndex(0);
     }
   };
 
-  // --- Calificar ---
   const calificar = (tipo: "Bueno" | "Malo") => {
     if (!canCalificar) return;
 
     const nuevosCompetidores = [...competidores];
-    const actual = nuevosCompetidores[currentIndex];
-    actual.ejercicios[currentEjercicioIndex].calificaciones = actual.ejercicios[
-      currentEjercicioIndex
-    ].calificaciones.map(() => tipo);
+    nuevosCompetidores[currentIndex].ejercicios[currentEjercicioIndex].calificaciones =
+      nuevosCompetidores[currentIndex].ejercicios[currentEjercicioIndex].calificaciones.map(
+        () => tipo
+      );
+
     setCompetidores(nuevosCompetidores);
     setCanCalificar(false);
   };
 
   return (
-    <div className="calificar-screen">
-      <div className="calificar-container">
-        <h1 className="calificar-titulo">Calificación de Competidores</h1>
+    <div className={styles.calificarScreen}>
+      <div className={styles.calificarContainer}>
+        <h1 className={styles.calificarTitulo}>Calificación de Competidores</h1>
 
-        <h2 className="calificar-subtitulo">
+        <h2 className={styles.calificarSubtitulo}>
           {currentCompetidor.categoria} | {currentCompetidor.nombre}
         </h2>
 
-        <div className="calificar-tiempo">
+        <div className={styles.calificarTiempo}>
           <p>Tiempo restante</p>
           <span>{timeLeft}s</span>
         </div>
 
-        <div className="calificar-lista-ejercicios">
+        <div className={styles.calificarListaEjercicios}>
           {currentCompetidor.ejercicios.map((ejercicio, i) => (
             <div
               key={i}
-              className={`calificar-ejercicio ${
-                i === currentEjercicioIndex ? "activo" : ""
+              className={`${styles.calificarEjercicio} ${
+                i === currentEjercicioIndex ? styles.activo : ""
               }`}
             >
               <h3>{ejercicio.nombre}</h3>
-              <div className="calificar-intentos">
+              <div className={styles.calificarIntentos}>
                 {ejercicio.calificaciones.map((cal, idx) => (
                   <div
                     key={idx}
-                    className={`intento-circle ${
+                    className={`${styles.intentoCircle} ${
                       cal === "Bueno"
-                        ? "bueno"
+                        ? styles.bueno
                         : cal === "Malo"
-                        ? "malo"
-                        : "pendiente"
+                        ? styles.malo
+                        : styles.pendiente
                     }`}
                   ></div>
                 ))}
               </div>
               {i === currentEjercicioIndex && (
-                <p className="texto-activo">
-                  Ejercicio activo para calificación
-                </p>
+                <p className={styles.textoActivo}>Ejercicio activo para calificación</p>
               )}
             </div>
           ))}
         </div>
 
-        <div className="calificar-botones">
+        <div className={styles.calificarBotones}>
           <button
-            className="btn-calificar malo"
+            className={`${styles.btnCalificar} ${styles.malo}`}
             onClick={() => calificar("Malo")}
             disabled={!canCalificar}
           >
@@ -147,7 +142,7 @@ const CalificarScreen: React.FC = () => {
           </button>
 
           <button
-            className="btn-calificar bueno"
+            className={`${styles.btnCalificar} ${styles.bueno}`}
             onClick={() => calificar("Bueno")}
             disabled={!canCalificar}
           >
