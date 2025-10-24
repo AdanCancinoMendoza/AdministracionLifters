@@ -7,6 +7,7 @@ type Story = {
   description: string;
   category: 'Noticia' | 'Testimonio' | 'Logro';
   date: string;
+  type?: 'imagen' | 'youtube'; // Nuevo campo opcional
 };
 
 const categoryColors: Record<string, string> = {
@@ -15,10 +16,24 @@ const categoryColors: Record<string, string> = {
   Logro: '#f3e5f5',
 };
 
-const StoryCard = ({ image, title, description, category, date }: Story) => {
+const StoryCard = ({ image, title, description, category, date, type = 'imagen' }: Story) => {
   return (
     <div className={styles.storyCard}>
-      <img src={image} alt={title} className={styles.storyImage} />
+      <div className={styles.storyMedia}>
+        {type === 'youtube' ? (
+          <iframe
+            src={image}
+            title={title}
+            width="100%"
+            height="200"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        ) : (
+          <img src={image} alt={title} className={styles.storyImage} />
+        )}
+      </div>
       <div className={styles.storyContent}>
         <h3 dangerouslySetInnerHTML={{ __html: title }} />
         <p>{description}</p>

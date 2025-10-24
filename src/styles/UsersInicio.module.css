@@ -1,116 +1,260 @@
-/* UsersInicio.module.css */
-
+/* ===== ESTILO PRINCIPAL ===== */
 .dashboardMain {
   padding: 20px;
-  background-color: #f9f9f9;
   font-family: "Segoe UI", sans-serif;
+  color: #000; 
 }
 
-/* HERO */
+/* ===== HERO ===== */
 .heroSection {
+  color: white;
+  position: relative;
+  width: 100%;
+  height: 80vh;
   background-size: cover;
   background-position: center;
-  color: white;
-  padding: 60px 30px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.heroOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.3));
+  z-index: 1;
+}
+
+.heroText {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
   text-align: center;
+  max-width: 80%;
+  padding: 20px;
 }
 
-.heroSection h1 {
-  font-size: 24px;
-  font-weight: bold;
+.heroText h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+  letter-spacing: 1px;
+  color: #ffffff;
 }
 
-/* BOTÓN LINK */
-.linkButton {
-  background: none;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  text-decoration: underline;
-  font-weight: bold;
-  font-size: 1.2rem;
+.heroText p {
+  font-size: 1rem;
+  margin-top: 5px;
+  text-shadow: 1px 1px 6px rgba(0,0,0,0.7);
+  color: #ffffff;
 }
 
-/* TITULOS DE SECCIÓN */
-.sectionTitle {
+/* ===== LOGROS (Carrusel) ===== */
+.logrosSection {
+  padding: 2rem 0;
+  margin-bottom: 3rem;
+  background-color: #ffffff;
+  color: #000;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.logrosTitle {
   text-align: center;
-  margin: 40px auto 20px;
-  font-size: 20px;
-  width: fit-content;
-  padding-top: 10px;
-  border-top: 4px solid;
-  border-image: linear-gradient(to right, crimson, royalblue) 1;
-  border-image-slice: 1;
+  font-family: "Permanent Marker", cursive;
+  font-size: 2.5rem;
+  color: #000000;
+  margin: 3rem 0 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
-/* CARRUSEL */
 .carouselContainer {
-  max-width: 1000px;
-  margin: 0 auto;
   position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.carouselSlide {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+  background-color: #000000;
+  min-height: 400px;
+  border-radius: 12px;
+  gap: 15px;
+  padding: 20px;
+  align-items: center;
+}
+
+.competenciaImgWrapper {
+  flex: 3;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  min-height: 400px;
+  border-radius: 0 10px 10px 0;
+  overflow: hidden;
+}
+
+.imageOverlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(to right, #000000 5%, transparent 30%);
+}
+
+.competitors {
+  flex: 2;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #000000;
+}
+
+.competitors h3 {
+  font-family: "Permanent Marker", cursive;
+  font-size: 2rem;
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+  border-bottom: 3px solid #ffffff;
+  padding-bottom: 0.5rem;
+}
+
+.competitor {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.medallaIcon {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+  object-fit: contain;
 }
 
 .carouselBtn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background-color: rgba(0,0,0,0.5);
-  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
   border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  padding: 1rem;
   cursor: pointer;
-  font-size: 18px;
-  z-index: 2;
-}
-
-.carouselBtnLeft { left: 0; }
-.carouselBtnRight { right: 0; }
-
-.carouselSlide {
-  background-color: #1a1a1a;
-  color: #fff;
-  border-radius: 12px;
-  padding: 30px 20px;
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.competitors {
-  flex: 1;
-  text-align: center;
-}
-
-.competitors h3 {
-  font-size: 30px;
-  font-weight: bold;
-  margin-bottom: 15px;
-}
-
-.competitor {
+  z-index: 10;
+  font-size: 1.5rem;
+  transition: background 0.3s;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
-  font-size: 20px;
-  font-weight: bold;
   justify-content: center;
-  gap: 10px;
 }
 
-.medallaIcon {
-  width: 40px;
-  height: 40px;
+.carouselBtn:hover {
+  background: #a00000;
 }
 
-.competenciaImg img {
-  width: 100%;
-  border-radius: 10px;
-  object-fit: cover;
-  max-height: 350px;
+.carouselBtnLeft {
+  left: 10px;
 }
 
-/* POWERLIFTING INFO */
+.carouselBtnRight {
+  right: 10px;
+}
+
+@media (max-width: 768px) {
+  .carouselSlide {
+    flex-direction: column;
+  }
+
+  .competenciaImgWrapper {
+    order: -1;
+    min-height: 200px;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .imageOverlay {
+    background: linear-gradient(to bottom, transparent 70%, #f5f5f5 95%);
+  }
+
+  .competitors {
+    text-align: center;
+    border-radius: 0 0 10px 10px;
+  }
+}
+
+/* ===== TARJETAS DE LOGRO ===== */
+.logroCard {
+  background: rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 12px;
+  padding: 25px 20px;
+  margin-bottom: 30px;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+  word-wrap: break-word;
+  display: inline-block;
+  max-width: 300px;
+}
+
+.logroCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.logroCard h3 {
+  font-family: "Permanent Marker", cursive;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: #000;
+}
+
+.logroCard p {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #000;
+}
+
+/* ===== BOTONES ===== */
+.linkButton {
+  background: none;
+  border: none;
+  color: #000;
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* ===== SECCIONES GENERALES ===== */
+.sectionTitle {
+  text-align: center;
+  margin: 40px auto 20px;
+  font-size: 22px;
+  color: #000;
+}
+
+/* ===== DESCRIPCIÓN ===== */
 .powerliftingInfo {
   text-align: center;
   padding: 20px;
@@ -119,14 +263,17 @@
 .descripcion {
   max-width: 600px;
   margin: 0 auto;
+  text-align: center;
 }
 
 .descripcion p {
   font-size: 16px;
   margin-bottom: 15px;
   line-height: 1.6;
+  color: #000;
 }
 
+/* ===== MOVIMIENTOS ===== */
 .movimientos {
   display: flex;
   justify-content: space-around;
@@ -149,23 +296,25 @@
 .mov p {
   margin-top: 10px;
   font-weight: bold;
+  color: #000;
 }
 
-/* COMPETENCIAS */
+/* ===== COMPETENCIA ===== */
 .card {
-  background-color: #fff;
+  background-color: #f5f5f5;
   border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
   padding: 20px;
   max-width: 1000px;
   margin: 20px auto;
   display: flex;
+  flex-direction: column;
   gap: 20px;
-  flex-wrap: wrap;
+  align-items: center;
+  text-align: center;
 }
 
 .cardCompetencia img {
-  flex: 1;
   width: 100%;
   border-radius: 10px;
   object-fit: cover;
@@ -173,11 +322,95 @@
 }
 
 .texto {
-  flex: 1;
-  min-width: 250px;
+  color: #000;
+  text-align: center;
 }
 
-/* POSTER */
+/* ===== NUEVO ESTILO - PRÓXIMA COMPETENCIA ===== */
+.nombreCompetencia {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #000;
+  margin-bottom: 0.5rem;
+}
+
+.detallesCompetencia p {
+  margin: 0.3rem 0;
+  font-size: 1rem;
+  color: #222;
+}
+
+/* ==== CALENDARIO DE FECHAS ==== */
+.calendario {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: #ffffff;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  justify-content: center;
+  text-align: center;
+}
+
+.fechaItem {
+  flex: 1;
+  min-width: 180px;
+  background: #fdfdfd;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.8rem;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fechaItem:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.etiqueta {
+  display: block;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 0.3rem;
+}
+
+.fechaInicio {
+  color: #0d9488; /* Verde */
+  font-weight: 600;
+}
+
+.fechaCierre {
+  color: #dc2626; /* Rojo */
+  font-weight: 600;
+}
+
+.fechaEvento {
+  color: #2563eb; /* Azul */
+  font-weight: 600;
+}
+
+/* ===== MAPA ===== */
+.mapaContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.mapaContainer iframe {
+  width: 100%;
+  max-width: 900px;
+  height: 400px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+/* ===== POSTER ===== */
 .posterContainer {
   text-align: center;
   margin: 20px 0;
@@ -192,7 +425,7 @@
   margin: 0 auto;
 }
 
-/* VIDEOS */
+/* ===== VIDEOS ===== */
 .cardVideos {
   flex-direction: column;
   align-items: center;
@@ -210,4 +443,20 @@
   border: none;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .card {
+    flex-direction: column;
+    padding: 15px;
+  }
+
+  .calendario {
+    flex-direction: column;
+  }
+
+  .fechaItem {
+    min-width: 100%;
+  }
 }
