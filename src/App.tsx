@@ -120,6 +120,7 @@ function App() {
               <MenuAdmin />
               <main className="main-content">
                 <Routes>
+
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/inicio/editar" element={<EditarInicio />} />
                   <Route path="/inicio/ganadores" element={<Ganadores />} />
@@ -135,9 +136,9 @@ function App() {
                   <Route path="/resultados" element={<Resultados />} />
 
                   {/* Redirección por defecto */}
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/" element={<Navigate to="/usuario/inicio" replace />} />
 
-                  {/* ❌ Error 404 dentro del panel admin */}
+                  {/*  Error 404 dentro del panel admin */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
