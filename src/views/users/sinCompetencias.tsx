@@ -1,6 +1,8 @@
 import React from "react";
 import Footer from "../../components/users/footer";
 import styles from "../../styles/UsersNAcompetencia.module.css";
+import logo from "../../assets/LOgo.png"
+import motivacionn from "../../assets/Motivacion.png"
 
 const SinCompetencias: React.FC = () => {
   return (
@@ -10,7 +12,7 @@ const SinCompetencias: React.FC = () => {
           {/* Panel izquierdo con imagen de powerlifting */}
           <div className={styles.imagePanel}>
             <img
-              src="https://images.unsplash.com/photo-1599058917217-963e37f41c05?auto=format&fit=crop&w=800&q=80"
+              src= {motivacionn}
               alt="Powerlifting"
               className={styles.image}
             />
@@ -27,7 +29,7 @@ const SinCompetencias: React.FC = () => {
               <div className={styles.underline}></div>
 
               <img
-                src="https://images.unsplash.com/photo-1605296867304-46d5465a13f1?auto=format&fit=crop&w=200&q=80"
+                src= {logo}
                 alt="Asociación Deportiva de Lifters"
                 className={styles.associationLogo}
               />
@@ -38,14 +40,8 @@ const SinCompetencias: React.FC = () => {
               </p>
 
               <div className={styles.socialIcons}>
-                <a href="#" title="Facebook">
-                  <img
-                    src="https://cdn-icons-png.flaticon.com/512/733/733547.png"
-                    alt="Facebook"
-                    className={styles.icon}
-                  />
-                </a>
-                <a href="#" title="Instagram">
+
+                <a href="https://www.instagram.com/liftersdepuebla?igsh=dm13eWVvbTI3MHR5" title="Instagram">
                   <img
                     src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png"
                     alt="Instagram"

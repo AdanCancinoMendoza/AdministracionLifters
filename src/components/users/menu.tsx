@@ -41,7 +41,7 @@ const MenuUsuario = () => {
           <NavLink to="/usuario/inscripciones" end className={({ isActive }) => isActive ? styles.activeNav : ""}>
             <Edit /> Registro
           </NavLink>
-          <NavLink to="/usuario/nocompetencia" className={({ isActive }) => isActive ? styles.activeNav : ""}>
+          <NavLink to="/usuario/competencias" className={({ isActive }) => isActive ? styles.activeNav : ""}>
             <Trophy /> Competencias
           </NavLink>
           <NavLink to="/usuario/secciones" className={({ isActive }) => isActive ? styles.activeNav : ""}>
@@ -59,7 +59,7 @@ const MenuUsuario = () => {
           <NavLink to="/usuario/inscripciones" end onClick={toggleMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
             <Edit /> Registro
           </NavLink>
-          <NavLink to="/usuario/nocompetencia" onClick={toggleMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
+          <NavLink to="/usuario/competencias" onClick={toggleMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
             <Trophy /> Competencias
           </NavLink>
           <NavLink to="/usuario/secciones" onClick={toggleMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>

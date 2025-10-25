@@ -127,7 +127,7 @@ const InicioUsuarios: React.FC = () => {
 
         {/* 1. POWERLIFTING INFO */}
         <section className={styles.powerliftingInfo}>
-          <h2>¿Qué es el Powerlifting?</h2>
+          <h2 className={styles.logrosTitle}>¿Qué es el Powerlifting?</h2>
           <div className={styles.descripcion}>
             <p>El powerlifting es un deporte de fuerza que se basa en levantar el mayor peso posible en tres movimientos:</p>
           </div>
@@ -184,7 +184,7 @@ const InicioUsuarios: React.FC = () => {
 {/* 3. PRÓXIMA COMPETENCIA */}
 {competencia && (
   <section className={styles.competenciaSection}>
-    <h2 className={styles.sectionTitle}>Próxima Competencia</h2>
+    <h2 className={styles.logrosTitle}>Próxima Competencia</h2>
     <p className={styles.descripcion} >¡No te pierdas nuestra siguiente competencia! Aquí te dejamos los detalles principales:</p>
 
     <div className={`${styles.card} ${styles.cardCompetencia}`}>
@@ -197,7 +197,7 @@ const InicioUsuarios: React.FC = () => {
           <p><strong>Costo:</strong> ${competencia.costo}</p>
         </div>
 
-        {/* 🗓️ Calendario de Fechas */}
+        {/*  Calendario de Fechas */}
         <div className={styles.calendario}>
           <div className={styles.fechaItem}>
             <span className={styles.etiqueta}>Inicio Inscripciones</span>
@@ -245,7 +245,7 @@ const InicioUsuarios: React.FC = () => {
       )}
     </div>
 
-    {/* 🗺️ Mapa embebido */}
+    {/*  Mapa embebido */}
     <div className={styles.mapaContainer}>
       <iframe
         src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3766.8694359667397!2d-98.9466476247904!3d19.24452118199507!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTnCsDE0JzQwLjMiTiA5OMKwNTYnMzguNyJX!5e0!3m2!1ses!2smx!4v1761276700501!5m2!1ses!2smx"
@@ -266,7 +266,7 @@ const InicioUsuarios: React.FC = () => {
         {/* 4. POSTER */}
         {poster && (
           <section className={styles.posterSection}>
-            <h2 className={styles.sectionTitle}>Póster de Competencia</h2>
+            <h2 className={styles.logrosTitle}>Póster de Competencia</h2>
             <p className={styles.descripcion} >Mira el póster oficial de nuestra próxima competencia:</p>
             <div className={styles.posterContainer}>
               <img src={`http://localhost:3001${poster.imagen_url}`} alt="Póster de competencia" />
@@ -277,7 +277,7 @@ const InicioUsuarios: React.FC = () => {
         {/* 5. VIDEOS */}
         {videos.length > 0 && (
           <section className={styles.videosSection}>
-            <h2 className={styles.sectionTitle}>Videos de Competencias</h2>
+            <h2 className={styles.logrosTitle}>Videos de Competencias</h2>
             <p className={styles.descripcion}>Revive momentos de nuestras competencias pasadas:</p>
             <div className={styles.videosGrid}>
               {videos.map((v) => {

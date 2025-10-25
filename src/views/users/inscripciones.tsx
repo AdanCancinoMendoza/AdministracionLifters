@@ -1,6 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Footer from "../../components/users/footer";
 import styles from "../../styles/Usersinscripcion.module.css";
+import CompetitionModal from "../../components/users/CompetitionModal";
+import SinCompetenciasModal from "../../components/users/SinCompetenciasModal"; // <- Importa el nuevo modal
+
+interface Competencia {
+  id_competencia: number;
+  nombre: string;
+  foto: string;
+  costo: string;
+  fecha_evento: string;
+  tipo?: string;
+  categoria?: string;
+  ubicacion?: string;
+}
 
 interface FormData {
   nombre: string;
@@ -13,6 +26,10 @@ interface FormData {
 }
 
 const RegistroCompetidor: React.FC = () => {
+  const [competencia, setCompetencia] = useState<Competencia | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSinCompetenciasModal, setShowSinCompetenciasModal] = useState(false);
+
   const [formData, setFormData] = useState<FormData>({
     nombre: "",
     apellidos: "",
@@ -24,6 +41,39 @@ const RegistroCompetidor: React.FC = () => {
   });
 
   const [paymentFile, setPaymentFile] = useState<File | null>(null);
+
+  // Obtener competencia más cercana desde API
+  useEffect(() => {
+    const fetchCompetencia = async () => {
+      try {
+        const res = await fetch("http://localhost:3001/api/competenciasadmin");
+        const data = await res.json();
+
+        const now = new Date();
+        const upcomingEvents = data.filter((item: any) =>
+          new Date(item.fecha_evento) > now
+        );
+
+        upcomingEvents.sort(
+          (a: any, b: any) =>
+            new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime()
+        );
+
+        const nextCompetition = upcomingEvents[0] || null;
+        setCompetencia(nextCompetition);
+
+        // Mostrar modal si no hay competencias
+        if (!nextCompetition) {
+          setShowSinCompetenciasModal(true);
+        }
+
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchCompetencia();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -43,145 +93,177 @@ const RegistroCompetidor: React.FC = () => {
 
   return (
     <>
-      <main className={styles["registro-main"]}>
-        <div className={styles["registro-container"]}>
-          {/* Panel izquierdo */}
-          <div className={styles["left-panel"]}>
-            <div className={styles["event-header"]}>
-              <h2>Nombre del Evento:</h2>
-              <div className={styles["event-name-container"]}>
-                <h3>Feria Poblana de Deportes</h3>
-                <span className={styles["star-icon"]}>★</span>
+      {/* ✅ Modal de información de competencia */}
+      <CompetitionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        competencia={competencia}
+      />
+
+      {/* ✅ Modal de Sin Competencias */}
+      <SinCompetenciasModal
+        isOpen={showSinCompetenciasModal}
+        onClose={() => setShowSinCompetenciasModal(false)}
+      />
+
+      {/* Solo mostrar el registro si hay competencias */}
+      {!showSinCompetenciasModal && (
+        <main className={styles["registro-main"]}>
+          <div className={styles["registro-container"]}>
+            
+            {/* Panel izquierdo */}
+            <div className={styles["left-panel"]}>
+              <div className={styles["event-header"]}>
+                <h2>Evento:</h2>
+                <div className={styles["event-name-container"]}>
+                  <h3>{competencia?.nombre ?? "Cargando competencia..."}</h3>
+                  <span className={styles["star-icon"]}>★</span>
+                </div>
               </div>
-            </div>
-            <div className={styles["image-container"]}>
-              <img 
-                src="https://images.unsplash.com/photo-1599058917217-963e37f41c05?auto=format&fit=crop&w=800&q=80" 
-                alt="Evento" 
-              />
-              <button type="button" className={styles["info-button"]}>
+
+              <div className={styles["image-container"]}>
                 <img 
-                  src="https://img.icons8.com/ios-filled/50/000000/info.png" 
-                  alt="Info" 
+                  src={
+                    competencia?.foto
+                      ? `http://localhost:3001${competencia.foto}`
+                      : "https://placehold.co/600x400?text=Evento"
+                  }
+                  alt="Evento"
                 />
-                Más Información
-              </button>
+                <button type="button" className={styles["info-button"]} onClick={() => setIsModalOpen(true)}>
+                  Más Información
+                </button>
+              </div>
+
+              {competencia && (
+                <>
+                  <p className={styles["event-price"]}>
+                    💲 Costo: <strong>${competencia.costo}</strong>
+                  </p>
+                  <p className={styles["event-date"]}>
+                    📅 Fecha del evento:{" "}
+                    {new Date(competencia.fecha_evento).toLocaleDateString("es-MX")}
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Panel derecho — formulario */}
+            <div className={styles["right-panel"]}>
+              <div className={styles["success-checkmark"]}>✔️</div>
+              <h1 className={styles["main-title"]}>Inscríbete y deja tu marca en la plataforma.</h1>
+
+              <form onSubmit={handleSubmit}>
+                <div className={styles["two-column-form"]}>
+                  <div className={styles["form-column"]}>
+                    <InputField 
+                      label="Nombre" 
+                      name="nombre"
+                      value={formData.nombre}
+                      onChange={handleChange}
+                      icon="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png"
+                      required
+                    />
+                    <InputField 
+                      label="Apellidos" 
+                      name="apellidos"
+                      value={formData.apellidos}
+                      onChange={handleChange}
+                      icon="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png"
+                      required
+                    />
+                    <InputField 
+                      label="Peso Corporal (kg)" 
+                      name="peso"
+                      value={formData.peso}
+                      onChange={handleChange}
+                      icon="https://img.icons8.com/ios-filled/50/000000/weight-kg.png"
+                      type="number"
+                      required
+                    />
+                  </div>
+
+                  <div className={styles["form-column"]}>
+                    <InputField 
+                      label="Edad" 
+                      name="edad"
+                      value={formData.edad}
+                      onChange={handleChange}
+                      icon="https://img.icons8.com/ios-filled/50/000000/age.png"
+                      type="number"
+                      required
+                    />
+                    <SelectField 
+                      label="Categoría" 
+                      name="categoria"
+                      value={formData.categoria}
+                      onChange={handleChange}
+                      options={["Seleccionar", "Junior", "Adulto", "Veterano"]}
+                      icon="https://img.icons8.com/ios-filled/50/000000/expand-arrow.png"
+                      required
+                    />
+                    <InputField 
+                      label="Teléfono" 
+                      name="telefono"
+                      value={formData.telefono}
+                      onChange={handleChange}
+                      icon="https://img.icons8.com/ios-filled/50/000000/phone.png"
+                      type="tel"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <InputField 
+                  label="Correo" 
+                  name="correo"
+                  value={formData.correo}
+                  onChange={handleChange}
+                  icon="https://img.icons8.com/ios-filled/50/000000/email.png"
+                  type="email"
+                  fullWidth
+                  required
+                />
+
+                <div className={styles["payment-section"]}>
+                  <label>Pagar</label>
+                  <div className={styles["payment-content"]}>
+                    <span className={styles["payment-warning"]}>
+                      ¡Ten en cuenta tomar captura de tu pago!
+                    </span>
+                    <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" />
+                  </div>
+                </div>
+
+                <div className={styles["upload-section"]}>
+                  <label htmlFor="payment-upload">Subir Captura de Pago</label>
+                  <label htmlFor="payment-upload" className={styles["upload-box"]}>
+                    <input 
+                      id="payment-upload"
+                      type="file" 
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      required
+                    />
+                    <img src="https://img.icons8.com/ios-filled/50/000000/upload.png" alt="Subir" />
+                    <span>{paymentFile ? paymentFile.name : "Haz clic para subir tu comprobante"}</span>
+                  </label>
+                </div>
+
+                <button type="submit" className={styles["submit-button"]}>
+                  <img src="https://img.icons8.com/ios-filled/50/000000/sign-up.png" alt="Registro" />
+                  Registrarse
+                </button>
+              </form>
             </div>
           </div>
-
-          {/* Panel derecho */}
-          <div className={styles["right-panel"]}>
-            <div className={styles["success-checkmark"]}>✔️</div>
-            <h1 className={styles["main-title"]}>Inscríbete y deja tu marca en la plataforma.</h1>
-
-            <form onSubmit={handleSubmit}>
-              <div className={styles["two-column-form"]}>
-                <div className={styles["form-column"]}>
-                  <InputField 
-                    label="Nombre" 
-                    name="nombre"
-                    value={formData.nombre}
-                    onChange={handleChange}
-                    icon="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png"
-                    required
-                  />
-                  <InputField 
-                    label="Apellidos" 
-                    name="apellidos"
-                    value={formData.apellidos}
-                    onChange={handleChange}
-                    icon="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png"
-                    required
-                  />
-                  <InputField 
-                    label="Peso Corporal (kg)" 
-                    name="peso"
-                    value={formData.peso}
-                    onChange={handleChange}
-                    icon="https://img.icons8.com/ios-filled/50/000000/weight-kg.png"
-                    type="number"
-                    required
-                  />
-                </div>
-                <div className={styles["form-column"]}>
-                  <InputField 
-                    label="Edad" 
-                    name="edad"
-                    value={formData.edad}
-                    onChange={handleChange}
-                    icon="https://img.icons8.com/ios-filled/50/000000/age.png"
-                    type="number"
-                    required
-                  />
-                  <SelectField 
-                    label="Categoría" 
-                    name="categoria"
-                    value={formData.categoria}
-                    onChange={handleChange}
-                    options={["Seleccionar", "Junior", "Adulto", "Veterano"]}
-                    icon="https://img.icons8.com/ios-filled/50/000000/expand-arrow.png"
-                    required
-                  />
-                  <InputField 
-                    label="Teléfono" 
-                    name="telefono"
-                    value={formData.telefono}
-                    onChange={handleChange}
-                    icon="https://img.icons8.com/ios-filled/50/000000/phone.png"
-                    type="tel"
-                    required
-                  />
-                </div>
-              </div>
-
-              <InputField 
-                label="Correo" 
-                name="correo"
-                value={formData.correo}
-                onChange={handleChange}
-                icon="https://img.icons8.com/ios-filled/50/000000/email.png"
-                type="email"
-                fullWidth
-                required
-              />
-
-              <div className={styles["payment-section"]}>
-                <label>Pagar</label>
-                <div className={styles["payment-content"]}>
-                  <span className={styles["payment-warning"]}>¡Ten en cuenta tomar captura de tu pago!</span>
-                  <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" />
-                </div>
-              </div>
-
-              <div className={styles["upload-section"]}>
-                <label htmlFor="payment-upload">Subir Captura de Pago</label>
-                <label htmlFor="payment-upload" className={styles["upload-box"]}>
-                  <input 
-                    id="payment-upload"
-                    type="file" 
-                    onChange={handleFileChange}
-                    accept="image/*"
-                    required
-                  />
-                  <img src="https://img.icons8.com/ios-filled/50/000000/upload.png" alt="Subir" />
-                  <span>{paymentFile ? paymentFile.name : "Haz clic para subir tu comprobante"}</span>
-                </label>
-              </div>
-
-              <button type="submit" className={styles["submit-button"]}>
-                <img src="https://img.icons8.com/ios-filled/50/000000/sign-up.png" alt="Registro" />
-                Registrarse
-              </button>
-            </form>
-          </div>
-        </div>
-      </main>
+        </main>
+      )}
       <Footer />
     </>
   );
 };
 
-// COMPONENTES REUTILIZABLES
 interface InputFieldProps {
   label: string;
   name: string;

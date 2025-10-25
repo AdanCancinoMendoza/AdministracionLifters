@@ -7,8 +7,8 @@ import MenuUsuario from "./components/users/menu.tsx"; //
 import InicioUsuarios from "./views/users/inicio.tsx";
 import StoriesSection from "./views/users/StoriesSection.tsx";
 import LiveResultsSection from "./views/users/resultadosLive.tsx";
-import SinCompetencias from "./views/users/sinCompetencias.tsx";
 import RegistroCompetidor from "./views/users/inscripciones.tsx";
+import Competencias from "./views/users/competencias.tsx"
 
 // Admin
 import Dashboard from "./views/admin/Dashboard";
@@ -59,7 +59,7 @@ function App() {
           <Route path="inicio" element={<InicioUsuarios />} />
           <Route path="secciones" element={<StoriesSection />} />
           <Route path="resultados" element={<LiveResultsSection />} />
-          <Route path="nocompetencia" element={<SinCompetencias />} />
+          <Route path="Competencias" element={<Competencias />} />
           <Route path="inscripciones" element={<RegistroCompetidor />} />
 
           {/* Redirección por defecto */}

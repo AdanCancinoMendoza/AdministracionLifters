@@ -1,0 +1,92 @@
+.page {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+  padding: 24px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 100%);
+  color: #000000;
+  font-family: Inter, 'Segoe UI', Roboto, sans-serif;
+}
+
+.sidebar {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+  padding: 18px;
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.brand{
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.filterRow{ display:flex; gap:8px; }
+.filterBtn{
+  flex:1;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid rgba(0, 0, 0, 0.06);
+  background: transparent;
+  color: inherit;
+  cursor:pointer;
+  font-weight:600;
+}
+.filterBtn:hover{ transform: translateY(-1px); }
+.active{ background: linear-gradient(90deg,#ffffff,#ebebeb); box-shadow: 0 6px 18px rgba(255, 255, 255, 0.18); }
+
+.listPreview{ margin-top:6px; display:flex; flex-direction:column; gap:10px; overflow:auto; max-height:420px; padding-right:6px; }
+.previewCard{ display:flex; gap:8px; align-items:center; padding:8px; border-radius:8px; cursor:pointer; transition:background .15s; }
+.previewCard:hover{ background: rgba(255,255,255,0.02); }
+.thumb{ width:72px; height:56px; object-fit:cover; border-radius:6px; }
+.previewInfo{ flex:1 }
+.previewTitle{ font-size:0.95rem; font-weight:700 }
+.previewMeta{ font-size:0.8rem; opacity:0.8 }
+.loading{ padding:12px; opacity:0.9 }
+.empty{ padding:12px; opacity:0.7 }
+
+.legend{ margin-top:auto; font-size:0.85rem; display:flex; flex-direction:column; gap:6px; color: #cfe9ff; }
+.dot{ width:10px; height:10px; display:inline-block; background:#60a5fa; border-radius:50%; margin-right:8px; vertical-align:middle }
+
+.content{ display:flex; flex-direction:column; gap:18px; }
+.calendarWrap{ background: rgba(255,255,255,0.02); padding:12px; border-radius:12px; }
+
+.cardsGrid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap:18px; }
+.card{ background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+.cardMedia img{ width:100%; height:180px; object-fit:cover; display:block }
+.cardBody{ padding:14px; display:flex; flex-direction:column; gap:10px }
+.cardTitle{ margin:0; font-size:1.05rem }
+.cardMeta{ font-size:0.85rem; opacity:0.85 }
+.dateRow{ display:flex; justify-content:space-between; gap:12px; font-size:0.85rem }
+.cardActions{ display:flex; gap:8px }
+.btn{ background: linear-gradient(90deg,#06b6d4,#7c3aed); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700 }
+.btnOutline{ background:transparent; border:1px solid rgba(255,255,255,0.08); color:inherit; padding:8px 12px; border-radius:8px; cursor:pointer }
+
+.mapSmall{ margin-top:10px; border-radius:8px; overflow:hidden; height:140px }
+.mapSmall iframe{ width:100%; height:100%; border:0 }
+
+/* Modal */
+.modalBackdrop{ position:fixed; inset:0; background:rgba(2,6,23,0.6); display:flex; align-items:center; justify-content:center; z-index:60 }
+.modal{ width:min(1000px,95%); background:linear-gradient(180deg,#071633,#041025); border-radius:12px; padding:14px; box-shadow: 0 10px 40px rgba(2,6,23,0.6); color:#e6eef8 }
+.closeBtn{ position:absolute; right:18px; top:18px; background:transparent; border:0; color:#000000; font-size:1.6rem; cursor:pointer }
+.modalContent{ display:flex; gap:18px }
+.modalLeft img{ width:420px; max-width:320px; height:200px; object-fit:cover; border-radius:8px }
+.modalMap{ margin-top:10px; height:220px; border-radius:8px; overflow:hidden }
+.modalMap iframe{ width:100%; height:100%; border:0 }
+.modalRight{ flex:1 }
+.modalMeta{ opacity:0.85 }
+.modalDates{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:12px }
+.noMap{ padding:14px; background:rgba(255,255,255,0.02); border-radius:8px }
+
+.modalContentSmall{ padding:12px }
+.resultsTable{ width:100%; border-collapse:collapse; margin-top:8px }
+.resultsTable th, .resultsTable td{ padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.04) }
+
+@media (max-width:900px){
+  .page{ grid-template-columns: 1fr; }
+  .modalContent{ flex-direction:column }
+  .modalLeft img{ max-width:100% }
+}
