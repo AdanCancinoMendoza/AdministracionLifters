@@ -9,6 +9,8 @@ import competenciasAdminRoutes from "./routes/competenciasAdminRoutes.js";
 import publicacionAdminRoutes from "./routes/publicacionAdminRoutes.js"
 import competidorRoutes from "./routes/competidorRoutes.js"
 import juezRoutes from "./routes/juezAdminRoutes.js"
+import liveStreamRoutes from "./routes/liveStreamRoutes.js";
+
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -36,6 +38,7 @@ app.use("/api/competenciasadmin", competenciasAdminRoutes);
 app.use("/api/publicacion",publicacionAdminRoutes)
 app.use("/api/competidor", competidorRoutes)
 app.use("/api/juez", juezRoutes);
+app.use("/api/lives", liveStreamRoutes)
 
 
 // ✅ Servidor activo

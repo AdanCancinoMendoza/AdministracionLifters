@@ -88,6 +88,8 @@ const MenuAdmin = () => {
       ],
     },
     { label: "Resultados", path: "/resultados", icon: <Trophy size={20} /> },
+    { label: "En vivos", path: "/lives", icon: <Trophy size={20} /> },
+
   ];
 
   return (

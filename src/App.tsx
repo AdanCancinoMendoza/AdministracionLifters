@@ -24,6 +24,7 @@ import AsignarJueces from "./views/admin/Competencias/AsignarJueces";
 import CrearInforme from "./views/admin/Informacion/Crear";
 import VerInformes from "./views/admin/Informacion/Ver";
 import Resultados from "./views/admin/Resultados";
+import Lives from "./views/admin/Envivos/AdminLivePanel"
 
 // Jueces
 import LoginJueces from "./views/jueces/login";
@@ -134,6 +135,9 @@ function App() {
                   <Route path="/informacion/crear" element={<CrearInforme />} />
                   <Route path="/informacion/ver" element={<VerInformes />} />
                   <Route path="/resultados" element={<Resultados />} />
+                  <Route path="/lives" element={<Lives />} />
+
+
 
                   {/* Redirección por defecto */}
                   <Route path="/" element={<Navigate to="/usuario/inicio" replace />} />

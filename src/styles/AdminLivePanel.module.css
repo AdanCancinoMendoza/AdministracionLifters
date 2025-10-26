@@ -1,0 +1,219 @@
+/* AdminLivePanel.module.css */
+/* Paleta suave, diseño claro y cards modernos */
+
+.adminPanel {
+  padding: 20px;
+  background: linear-gradient(180deg,#fcfdff,#f7fbff);
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(9,30,63,0.04);
+  color: #071334;
+  font-family: Inter, "Segoe UI", Roboto, sans-serif;
+}
+
+/* header */
+.header { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.header h2 { margin:0; font-size:1.25rem; color:#06203a; }
+.headerSub { margin:0; color:#51637a; font-size:0.92rem; }
+
+/* form layout */
+.formSection {
+  background: white;
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid rgba(8,20,40,0.04);
+  margin-bottom:18px;
+}
+
+.form { display:block; }
+.row { display:flex; gap:18px; align-items:flex-start; }
+.col { flex:1; display:flex; flex-direction:column; gap:10px; }
+.colPreview { width:300px; min-width:220px; }
+
+/* ✅ inputs → más consistentes */
+label {
+  font-weight:700;
+  font-size:0.9rem;
+  color:#223046;
+  margin-bottom:4px;
+}
+input[type="text"], input[type="url"], input[type="datetime-local"], select {
+  width:100%;
+  padding:12px;
+  font-size:0.92rem;
+  border-radius:10px;
+  border:1px solid rgba(11,35,64,0.12);
+  background: #ffffff;
+  outline:none;
+  transition: box-shadow .12s, transform .08s;
+}
+input:focus, select:focus {
+  box-shadow: 0 6px 18px rgba(11,35,64,0.15);
+  transform: translateY(-1px);
+}
+
+.select {
+  appearance: none;
+  background-image: linear-gradient(45deg,#0000 50%, #000 50%), 
+                    linear-gradient(135deg,#000 50%, #0000 50%);
+  background-position: calc(100% - 20px) calc(1em + 2px), 
+                       calc(100% - 15px) calc(1em + 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right:36px;
+}
+
+/* switch */
+.switchLabel {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:6px;
+  font-weight:600;
+  color:#223046;
+}
+
+/* preview card */
+.previewCard {
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+  border-radius:10px;
+  padding:12px;
+  border:1px solid rgba(8,20,40,0.04);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:center;
+}
+.previewCard img {
+  width:100%;
+  height:140px;
+  object-fit:cover;
+  border-radius:8px;
+  border:1px solid rgba(8,20,40,0.04);
+}
+.previewMeta { width:100%; text-align:center; color:#07203a; }
+.previewMeta strong { display:block; margin-bottom:6px; font-size:1rem; }
+.dateSmall { color:#556b80; font-size:0.85rem; margin-top:4px; }
+.badge {
+  display:inline-block;
+  margin-top:8px;
+  padding:6px 8px;
+  background: linear-gradient(90deg,#e6f0ff,#f0fafc);
+  color:#0b3a6b;
+  border-radius:999px;
+  font-weight:700;
+  font-size:0.78rem;
+}
+.previewWatch {
+  display:inline-block;
+  margin-top:8px;
+  color:#0b66ff;
+  text-decoration: none;
+  font-weight:700;
+}
+
+/* empty preview */
+.previewEmpty {
+  height:140px;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#64748b;
+  background: linear-gradient(180deg,#fbfdff,#f7fbff);
+  border:1px dashed rgba(11,35,64,0.04);
+}
+
+/* form actions */
+.formActions { display:flex; gap:10px; margin-top:8px; }
+.primaryBtn {
+  background: linear-gradient(90deg,#0b66ff,#1bc6ff);
+  color: white;
+  padding:10px 14px;
+  border-radius:10px;
+  border: none;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow: 0 8px 24px rgba(11,102,255,0.12);
+}
+.ghostBtn {
+  background: transparent;
+  border: 1px solid rgba(11,35,64,0.06);
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* table area */
+.listSection { margin-top:8px; }
+.tableWrap {
+  overflow-x:auto;
+  border-radius:10px;
+  border:1px solid rgba(8,20,40,0.03);
+  background:white;
+  scrollbar-width: thin;
+}
+.table {
+  width:100%;
+  border-collapse:collapse;
+  min-width:900px;
+}
+.table thead th {
+  background: linear-gradient(180deg,#fbfdff,#f3f9ff);
+  color:#123047;
+  padding:12px 14px;
+  font-weight:800;
+  text-align:left;
+}
+.table tbody td {
+  padding:12px 14px;
+  border-top:1px solid rgba(8,20,40,0.03);
+  color:#243447;
+  vertical-align:middle;
+}
+
+.cellCompetencia .cellCompInner { display:flex; gap:10px; align-items:center; }
+.cellCompInner img {
+  width:46px;
+  height:32px;
+  object-fit:cover;
+  border-radius:6px;
+  border:1px solid rgba(8,20,40,0.04);
+}
+
+/* actions */
+.actionsCell { display:flex; gap:8px; }
+.actionBtn {
+  background: linear-gradient(180deg,#ffffff,#f6fbff);
+  border: 1px solid rgba(8,20,40,0.06);
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:700;
+}
+.actionBtnDanger {
+  background: linear-gradient(180deg,#fff5f5,#fff);
+  border:1px solid rgba(176,42,42,0.06);
+  color:#b33333;
+}
+
+/* ✅ RESPONSIVE AT REAL LEVEL */
+@media (max-width: 980px) {
+  .row { flex-direction:column; gap:12px; }
+  .colPreview { width:100%; }
+  .table { min-width:760px; }
+}
+
+@media (max-width: 650px) {
+  .formSection { padding:14px; }
+  .adminPanel { padding:14px; }
+  .header h2 { font-size:1.1rem; }
+  .previewCard img { height:120px; }
+}
+
+@media (max-width: 480px) {
+  .row { gap:10px; }
+  .formActions { flex-direction:column; }
+  .primaryBtn, .ghostBtn { width:100%; text-align:center; }
+  input, select { font-size:0.88rem; padding:10px; }
+  .previewMeta strong { font-size:0.92rem; }
+}

@@ -1,114 +1,229 @@
-/* UsersLiveResults.module.css */
+/* contenedor principal */
+.container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  font-family: Inter, "Segoe UI", Roboto, sans-serif;
+  color: #071333;
+}
 
-.liveResultsSection {
-  padding: 2rem;
-  background-color: #f7f7fb;
-  border-radius: 16px;
-  margin: 2rem auto;
-  max-width: 1000px;
+/* Loading */
+.centerSpinner {
+  padding: 28px;
   text-align: center;
-  animation: fadeIn 0.6s ease-in-out;
+  color: #375374;
 }
 
-.mainTitle {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
-}
-
-.subtext {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 1.5rem;
-}
-
-.eventHeader {
+/* EMPTY STATE */
+.emptyCard {
   display: flex;
-  justify-content: space-between;
+  gap: 20px;
   align-items: center;
-  margin: 1rem 0;
-}
-
-.status {
-  background-color: #ff0000;
-  padding: 0.3rem 0.8rem;
-  border-radius: 8px;
-  color: #000;
-  font-weight: bold;
-}
-
-.eventTitle {
-  color: #1e40af;
-  font-weight: bold;
-  font-size: 1.1rem;
-}
-
-.mediaContainer {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.eventImage {
-  width: 50%;
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+  border: 1px solid rgba(15, 44, 70, 0.06);
   border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 8px 30px rgba(7,19,51,0.04);
 }
-
-.videoBox {
-  width: 50%;
-  background-color: #000;
+.emptyLeft { flex: 1; }
+.emptyLeft h2 { margin: 0 0 8px 0; font-size: 1.45rem; color: #0b2340; }
+.emptyLeft p { margin: 0 0 16px 0; color: #4b6178; }
+.emptyActions { display:flex; gap:10px; }
+.primary {
+  background: linear-gradient(90deg,#0d6efd,#2fb4ff);
+  border: none;
   color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ghost {
+  background: transparent;
+  border: 1px solid rgba(11,35,64,0.08);
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: #0b2340;
+  cursor: pointer;
+}
+.emptyRight { width: 280px; display:flex; align-items:center; justify-content:center; }
+
+/* CARD */
+.liveCard {
+  background: white;
   border-radius: 12px;
-  display: flex;
-  justify-content: center;
+  border: 1px solid rgba(7,19,51,0.06);
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(7,19,51,0.03);
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Header centrado */
+.liveHeader {
+  display:flex;
+  flex-direction: column;
+  width: 100%;
   align-items: center;
-  font-size: 1.2rem;
+  text-align: center;
+  gap: 12px;
 }
 
-.tableTitle {
-  color: #2c2c74;
-  font-weight: bold;
-  margin: 1rem 0;
+/* Badges centrados */
+.statusBadge,
+.statusBadgeGray {
+  display:inline-block;
+  margin: 0 auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.statusBadge {
+  background: linear-gradient(90deg,#ff4d4f,#ff7a59);
+  color: #ffffff;
+}
+.statusBadgeGray {
+  background: #6b7280;
+  color: #ffffff;
 }
 
-.resultsTable table {
+/* Título */
+.eventTitle {
+  margin: 8px 0 4px 0;
+  font-size: 1.4rem;
+  color: #07203a;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* Imagen + Video más grandes */
+.headerMedia {
+  display:flex;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  max-width: 1400px;
+}
+
+/* Imagen */
+.mediaLeft {
+  flex: 0 0 55%;
+  position: relative;
+}
+.eventImage {
+  width: 100%;
+  height: 420px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.mediaOverlayText {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 16px;
+  background: rgba(11,35,64,0.88);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight:700;
+}
+
+/* Video */
+.mediaRight {
+  flex: 0 0 45%;
+  position: relative;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.videoWrap {
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 420px;
+  border: 1px solid rgba(7,19,51,0.04);
+}
+.embedIframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display:block;
+}
+.liveBadge {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  background: linear-gradient(90deg,#ff4d4f,#ff7a59);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+/* Tabla */
+.sectionBody { display:flex; flex-direction: column; gap: 12px; }
+.tableTitle { margin: 0; font-size: 1rem; color: #0b2340; font-weight: 700; text-align:center; }
+
+.tableWrapper { overflow-x: auto; border-radius: 8px; }
+.resultsTable {
   width: 100%;
   border-collapse: collapse;
+  min-width: 960px;
+  background: #fff;
+}
+.resultsTable thead th {
+  background: linear-gradient(180deg,#f7fbff,#f3f9ff);
+  text-align: left;
+  padding: 10px 12px;
+  font-weight: 700;
+  color: #24405c;
+  border-bottom: 1px solid rgba(11,35,64,0.06);
+}
+.resultsTable tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(11,35,64,0.04);
+  color: #203345;
+}
+.nameCell { font-weight: 600; color: #0b2340; }
+
+/* Intentos */
+.attemptOk {
+  display:inline-block;
+  padding:6px 8px;
+  border-radius:8px;
+  background: #e6fbf0;
+  color: #0a8a47;
+  font-weight:700;
+}
+.attemptFail {
+  display:inline-block;
+  padding:6px 8px;
+  border-radius:8px;
+  background: #fff2f2;
+  color: #b02a2a;
+  font-weight:700;
 }
 
-.resultsTable th,
-.resultsTable td {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  font-size: 0.9rem;
-  text-align: center;
+/* Botones de acciones */
+.actionsRow {
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  margin-top:6px;
 }
 
-.resultsButton {
-  margin-top: 1.5rem;
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .headerMedia { flex-direction: column; }
+  .mediaLeft, .mediaRight { flex-basis: 100%; }
+  .eventImage, .videoWrap { height: 260px; }
 }
-
-.resultsButton button {
-  background-color: #000;
-  color: white;
-  padding: 0.6rem 1.2rem;
-  border-radius: 24px;
-  border: none;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.resultsButton button:hover {
-  background-color: #333;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+@media (max-width: 640px) {
+  .eventImage, .videoWrap { height: 200px; }
 }

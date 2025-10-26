@@ -58,6 +58,13 @@ export default function CompetenciasView(): JSX.Element {
     return competencias.filter((c) => c.fecha_evento && new Date(c.fecha_evento) < now);
   }, [competencias, filter, now]);
 
+  // Colors for event types
+  const EVENT_COLORS = {
+    inicio: "#60a5fa", // azul
+    cierre: "#f59e0b", // ámbar
+    evento: "#10b981", // verde
+  };
+
   const events = useMemo(() => {
     const ev: any[] = [];
     competencias.forEach((c) => {
@@ -65,18 +72,24 @@ export default function CompetenciasView(): JSX.Element {
         id: `${c.id_competencia}-inicio`,
         title: `${c.nombre} · Inscripciones abren`,
         start: c.fecha_inicio,
+        allDay: true,
+        color: EVENT_COLORS.inicio,
         extendedProps: { tipo: "inicio", competencia: c },
       });
       if (c.fecha_cierre) ev.push({
         id: `${c.id_competencia}-cierre`,
         title: `${c.nombre} · Cierre inscripciones`,
         start: c.fecha_cierre,
+        allDay: true,
+        color: EVENT_COLORS.cierre,
         extendedProps: { tipo: "cierre", competencia: c },
       });
       if (c.fecha_evento) ev.push({
         id: `${c.id_competencia}-evento`,
         title: `${c.nombre} · Evento`,
         start: c.fecha_evento,
+        allDay: true,
+        color: EVENT_COLORS.evento,
         extendedProps: { tipo: "evento", competencia: c },
       });
     });
@@ -127,6 +140,11 @@ export default function CompetenciasView(): JSX.Element {
           ))}
         </div>
 
+        <div className={styles.legend}>
+          <div><span className={styles.dot} style={{ background: EVENT_COLORS.inicio }} />Inscripciones Inicio</div>
+          <div><span className={styles.dot} style={{ background: EVENT_COLORS.cierre }} />Cierre Inscripciones</div>
+          <div><span className={styles.dot} style={{ background: EVENT_COLORS.evento }} />Evento</div>
+        </div>
       </aside>
 
       <main className={styles.content}>
