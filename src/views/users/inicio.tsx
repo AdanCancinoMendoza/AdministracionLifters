@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Footer from "../../components/users/footer";
 import styles from "../../styles/UsersInicio.module.css";
 import sentadilla from "../../assets/sentadilla.png";
@@ -69,8 +69,17 @@ const InicioUsuarios: React.FC = () => {
   const [poster, setPoster] = useState<Poster | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  
+  // Referencias para las secciones
+  const heroRef = useRef<HTMLElement>(null);
+  const powerliftingRef = useRef<HTMLElement>(null);
+  const logrosRef = useRef<HTMLElement>(null);
+  const competenciaRef = useRef<HTMLElement>(null);
+  const posterRef = useRef<HTMLElement>(null);
+  const videosRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    // Cargar datos
     fetch("http://localhost:3001/api/inicio")
       .then(res => res.json())
       .then(setInicio)
@@ -97,6 +106,28 @@ const InicioUsuarios: React.FC = () => {
       .catch(err => console.error(err));
   }, []);
 
+  // Inicializar animaciones después de que el componente se monte
+  useEffect(() => {
+    // Esperar a que los datos se carguen y el DOM se actualice
+    const timer = setTimeout(() => {
+      if (window.initScrollAnimations) {
+        window.initScrollAnimations();
+      } else {
+        // Si la función no está disponible, intentar inicializar directamente
+        const script = document.createElement('script');
+        script.src = '/src/utils/scroll-animations.js';
+        script.onload = () => {
+          if (window.initScrollAnimations) {
+            window.initScrollAnimations();
+          }
+        };
+        document.head.appendChild(script);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [inicio, categorias, competencia, poster, videos]);
+
   // Rotación automática del carrusel de logros
   useEffect(() => {
     if (categorias.length === 0) return;
@@ -111,38 +142,49 @@ const InicioUsuarios: React.FC = () => {
   return (
     <>
       <main className={styles.dashboardMain}>
-        {/* HERO */}
-        {inicio && (
-          <section
-            className={styles.heroSection}
-            style={{ backgroundImage: `url(http://localhost:3001${inicio.Imagen})` }}
-          >
-            <div className={styles.heroOverlay}>
-              <div className={styles.heroText}>
-                <h1>{inicio.Descripcion}</h1>
+        {/* HERO SECTION */}
+        <section 
+          ref={heroRef}
+          className={styles.heroSection}
+          style={{ backgroundImage: inicio ? `url(http://localhost:3001${inicio.Imagen})` : 'none' }}
+        >
+          <div className={styles.heroOverlay}>
+            <div className={styles.heroText}>
+              <h1>{inicio?.Descripcion || "Powerlifting Profesional"}</h1>
+              <p>Descubre el mundo del powerlifting de competición</p>
+              <div className={styles.heroCta}>
+                <a href="#competencias" className={`${styles.ctaButton} ${styles.ctaPrimary}`}>
+                  Ver Competencias
+                </a>
+                <a href="#videos" className={`${styles.ctaButton} ${styles.ctaSecondary}`}>
+                  Ver Videos
+                </a>
               </div>
             </div>
-          </section>
-        )}
+          </div>
+          <div className={styles.scrollIndicator}></div>
+        </section>
 
-        {/* 1. POWERLIFTING INFO */}
-        <section className={styles.powerliftingInfo}>
-          <h2 className={styles.logrosTitle}>¿Qué es el Powerlifting?</h2>
+        {/* POWERLIFTING INFO */}
+        <section ref={powerliftingRef} className={styles.powerliftingInfo}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.logrosTitle}>¿Qué es el Powerlifting?</h2>
+          </div>
           <div className={styles.descripcion}>
             <p>El powerlifting es un deporte de fuerza que se basa en levantar el mayor peso posible en tres movimientos:</p>
           </div>
           <div className={styles.movimientos}>
             <div className={styles.mov}>
-              <p>Sentadilla</p>
               <img src={sentadilla} alt="Sentadilla" />
+              <p>Sentadilla</p>
             </div>
             <div className={styles.mov}>
-              <p>Press de Banca</p>
               <img src={press} alt="Press de Banca" />
+              <p>Press de Banca</p>
             </div>
             <div className={styles.mov}>
-              <p>Peso Muerto</p>
               <img src={pesomuerto} alt="Peso Muerto" />
+              <p>Peso Muerto</p>
             </div>
           </div>
           <div className={styles.descripcion}>
@@ -150,10 +192,12 @@ const InicioUsuarios: React.FC = () => {
           </div>
         </section>
 
-        {/* 2. LOGROS */}
+        {/* LOGROS SECTION */}
         {categorias.length > 0 && (
-          <section className={styles.logrosSection}>
-            <h2 className={styles.logrosTitle}>LOGROS DESTACADOS</h2>
+          <section ref={logrosRef} className={styles.logrosSection}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.logrosTitle}>LOGROS DESTACADOS</h2>
+            </div>
             <div className={styles.carouselContainer}>
               <div className={styles.carouselSlide}>
                 <div className={styles.competitors}>
@@ -181,103 +225,108 @@ const InicioUsuarios: React.FC = () => {
             </div>
           </section>
         )}
-{/* 3. PRÓXIMA COMPETENCIA */}
-{competencia && (
-  <section className={styles.competenciaSection}>
-    <h2 className={styles.logrosTitle}>Próxima Competencia</h2>
-    <p className={styles.descripcion} >¡No te pierdas nuestra siguiente competencia! Aquí te dejamos los detalles principales:</p>
 
-    <div className={`${styles.card} ${styles.cardCompetencia}`}>
-      <div className={styles.texto}>
-        <h3 className={styles.nombreCompetencia}>{competencia.nombre}</h3>
+        {/* PRÓXIMA COMPETENCIA */}
+        {competencia && (
+          <section ref={competenciaRef} id="competencias" className={styles.competenciaSection}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.logrosTitle}>Próxima Competencia</h2>
+            </div>
+            <p className={styles.descripcion}>¡No te pierdas nuestra siguiente competencia! Aquí te dejamos los detalles principales:</p>
 
-        <div className={styles.detallesCompetencia}>
-          <p><strong>Tipo:</strong> {competencia.tipo}</p>
-          <p><strong>Categoría:</strong> {competencia.categoria}</p>
-          <p><strong>Costo:</strong> ${competencia.costo}</p>
-        </div>
+            <div className={`${styles.card} ${styles.cardCompetencia}`}>
+              <div className={styles.texto}>
+                <h3 className={styles.nombreCompetencia}>{competencia.nombre}</h3>
 
-        {/*  Calendario de Fechas */}
-        <div className={styles.calendario}>
-          <div className={styles.fechaItem}>
-            <span className={styles.etiqueta}>Inicio Inscripciones</span>
-            <span className={styles.fecha}>
-              {new Date(competencia.fecha_inicio).toLocaleDateString("es-MX", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric"
-              })}
-            </span>
-          </div>
+                <div className={styles.detallesCompetencia}>
+                  <p><strong>Tipo:</strong> {competencia.tipo}</p>
+                  <p><strong>Categoría:</strong> {competencia.categoria}</p>
+                  <p><strong>Costo:</strong> ${competencia.costo}</p>
+                </div>
 
-          <div className={styles.fechaItem}>
-            <span className={styles.etiqueta}>Cierre Inscripciones</span>
-            <span className={styles.fecha}>
-              {new Date(competencia.fecha_cierre).toLocaleDateString("es-MX", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric"
-              })}
-            </span>
-          </div>
+                {/* Calendario de Fechas */}
+                <div className={styles.calendario}>
+                  <div className={styles.fechaItem}>
+                    <span className={styles.etiqueta}>Inicio Inscripciones</span>
+                    <span className={styles.fecha}>
+                      {new Date(competencia.fecha_inicio).toLocaleDateString("es-MX", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric"
+                      })}
+                    </span>
+                  </div>
 
-          <div className={styles.fechaItem}>
-            <span className={styles.etiqueta}>Fecha del Evento</span>
-            <span className={styles.fechaEvento}>
-              {new Date(competencia.fecha_evento).toLocaleDateString("es-MX", {
-                weekday: "long",
-                day: "2-digit",
-                month: "long",
-                year: "numeric"
-              })}
-            </span>
-          </div>
-        </div>
-      </div>
+                  <div className={styles.fechaItem}>
+                    <span className={styles.etiqueta}>Cierre Inscripciones</span>
+                    <span className={styles.fecha}>
+                      {new Date(competencia.fecha_cierre).toLocaleDateString("es-MX", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric"
+                      })}
+                    </span>
+                  </div>
 
-      {/* Imagen de la competencia */}
-      {competencia.foto && (
-        <img
-          src={`http://localhost:3001${competencia.foto}`}
-          alt={competencia.nombre}
-          className={styles.imagenCompetencia}
-        />
-      )}
-    </div>
+                  <div className={styles.fechaItem}>
+                    <span className={styles.etiqueta}>Fecha del Evento</span>
+                    <span className={styles.fechaEvento}>
+                      {new Date(competencia.fecha_evento).toLocaleDateString("es-MX", {
+                        weekday: "long",
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric"
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-    {/*  Mapa embebido */}
-    <div className={styles.mapaContainer}>
-      <iframe
-        src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3766.8694359667397!2d-98.9466476247904!3d19.24452118199507!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTnCsDE0JzQwLjMiTiA5OMKwNTYnMzguNyJX!5e0!3m2!1ses!2smx!4v1761276700501!5m2!1ses!2smx"
-        width="600"
-        height="450"
-        style={{ border: 0 }}
-        allowFullScreen=""
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        title="Mapa de la competencia"
-      ></iframe>
-    </div>
-  </section>
-)}
+              {/* Imagen de la competencia */}
+              {competencia.foto && (
+                <img
+                  src={`http://localhost:3001${competencia.foto}`}
+                  alt={competencia.nombre}
+                  className={styles.imagenCompetencia}
+                />
+              )}
+            </div>
 
+            {/* Mapa embebido */}
+            <div className={styles.mapaContainer}>
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3766.8694359667397!2d-98.9466476247904!3d19.24452118199507!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTnCsDE0JzQwLjMiTiA5OMKwNTYnMzguNyJX!5e0!3m2!1ses!2smx!4v1761276700501!5m2!1ses!2smx"
+                width="600"
+                height="450"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Mapa de la competencia"
+              ></iframe>
+            </div>
+          </section>
+        )}
 
-
-        {/* 4. POSTER */}
+        {/* POSTER SECTION */}
         {poster && (
-          <section className={styles.posterSection}>
-            <h2 className={styles.logrosTitle}>Póster de Competencia</h2>
-            <p className={styles.descripcion} >Mira el póster oficial de nuestra próxima competencia:</p>
+          <section ref={posterRef} className={styles.posterSection}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.logrosTitle}>Póster de Competencia</h2>
+            </div>
+            <p className={styles.descripcion}>Mira el póster oficial de nuestra próxima competencia:</p>
             <div className={styles.posterContainer}>
               <img src={`http://localhost:3001${poster.imagen_url}`} alt="Póster de competencia" />
             </div>
           </section>
         )}
 
-        {/* 5. VIDEOS */}
+        {/* VIDEOS SECTION */}
         {videos.length > 0 && (
-          <section className={styles.videosSection}>
-            <h2 className={styles.logrosTitle}>Videos de Competencias</h2>
+          <section ref={videosRef} id="videos" className={styles.videosSection}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.logrosTitle}>Videos de Competencias</h2>
+            </div>
             <p className={styles.descripcion}>Revive momentos de nuestras competencias pasadas:</p>
             <div className={styles.videosGrid}>
               {videos.map((v) => {
