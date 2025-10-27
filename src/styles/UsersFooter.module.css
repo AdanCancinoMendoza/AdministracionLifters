@@ -1,8 +1,246 @@
 /* UsersFooter.module.css */
 
 .mainFooter {
-  background-color: #111;
-  color: white;
-  text-align: center;
-  padding: 20px 0;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
+  color: #ffffff;
+  border-top: 3px solid #333;
+  font-family: 'Courier New', monospace;
+}
+
+.footerContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px 20px;
+}
+
+/* Sección Principal */
+.mainSection {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 40px;
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 2px solid #333;
+}
+
+.brandSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.brandTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.divider {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b6b, #ffa500);
+  margin: 10px 0;
+}
+
+.brandSubtitle {
+  color: #b0b0b0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Grid de Contenido */
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.contentColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.columnTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ff6b6b;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.featureList li {
+  color: #e0e0e0;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+}
+
+.entityText {
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.entityDescription {
+  color: #b0b0b0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Sección de Contacto */
+.contactSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 30px;
+  border-bottom: 2px solid #333;
+}
+
+.contactInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+}
+
+.contactIcon {
+  color: #ff6b6b;
+  min-width: 16px;
+}
+
+.actionSection {
+  display: flex;
+  gap: 15px;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #333, #555);
+  color: #ffffff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.actionButton:hover {
+  background: linear-gradient(135deg, #444, #666);
+  border-color: #ff6b6b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+/* Footer Bottom */
+.footerBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20px;
+}
+
+.copyright p {
+  color: #888;
+  font-size: 0.85rem;
+  margin: 0;
+  font-family: 'Courier New', monospace;
+}
+
+.version p {
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  margin: 0;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footerContainer {
+    padding: 30px 15px 15px;
+  }
+
+  .mainSection {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .contentGrid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+  .contactSection {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .actionSection {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .footerBottom {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .brandTitle {
+    font-size: 1.5rem;
+  }
+
+  .actionSection {
+    flex-direction: column;
+  }
+
+  .actionButton {
+    justify-content: center;
+  }
+}
+
+/* Efectos adicionales */
+.featureList li {
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.featureList li:hover {
+  color: #ff6b6b;
+}
+
+.contactItem {
+  transition: transform 0.3s ease;
+}
+
+.contactItem:hover {
+  transform: translateX(5px);
 }
