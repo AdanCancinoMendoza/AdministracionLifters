@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Home, Edit, Trophy, Video, FileText, Menu } from "lucide-react";
+import { Home, Edit, Trophy, Video, FileText, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import styles from "../../styles/UsersMenu.module.css";
 import logo from "../../assets/LOgo.png";
@@ -10,6 +10,7 @@ const MenuUsuario = () => {
   const [hideHeader, setHideHeader] = useState(false);
 
   const toggleMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+  const closeMenu = () => setMobileMenuOpen(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +22,29 @@ const MenuUsuario = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [scrollPos]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        closeMenu();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <>
@@ -36,37 +60,56 @@ const MenuUsuario = () => {
 
         <nav className={styles.navLinks}>
           <NavLink to="/usuario/inicio" end className={({ isActive }) => isActive ? styles.activeNav : ""}>
-            <Home /> Inicio
+            <Home size={18} /> Inicio
           </NavLink>
           <NavLink to="/usuario/inscripciones" end className={({ isActive }) => isActive ? styles.activeNav : ""}>
-            <Edit /> Registro
+            <Edit size={18} /> Registro
           </NavLink>
           <NavLink to="/usuario/competencias" className={({ isActive }) => isActive ? styles.activeNav : ""}>
-            <Trophy /> Competencias
+            <Trophy size={18} /> Competencias
           </NavLink>
           <NavLink to="/usuario/secciones" className={({ isActive }) => isActive ? styles.activeNav : ""}>
-            <Video /> Información
+            <Video size={18} /> Información
           </NavLink>
           <NavLink to="/usuario/resultados" className={({ isActive }) => isActive ? styles.activeNav : ""}>
-            <FileText /> Resultados
+            <FileText size={18} /> Resultados
           </NavLink>
         </nav>
 
+        {/* Overlay para cerrar menú */}
+        <div 
+          className={`${styles.mobileNavOverlay} ${mobileMenuOpen ? styles.active : ""}`}
+          onClick={closeMenu}
+        />
+
+        {/* Menú móvil lateral con fondo blanco */}
         <div className={`${styles.mobileNav} ${mobileMenuOpen ? styles.open : ""}`}>
-          <NavLink to="/usuario/inicio" end onClick={toggleMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
-            <Home /> Inicio
+          {/* Header del menú móvil */}
+          <div className={styles.mobileNavHeader}>
+            <img src={logo} alt="Logo" />
+            <span>MiApp</span>
+            <button 
+              onClick={closeMenu}
+              className={styles.closeBtn}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <NavLink to="/usuario/inicio" end onClick={closeMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
+            <Home size={20} /> Inicio
           </NavLink>
-          <NavLink to="/usuario/inscripciones" end onClick={toggleMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
-            <Edit /> Registro
+          <NavLink to="/usuario/inscripciones" end onClick={closeMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
+            <Edit size={20} /> Registro
           </NavLink>
-          <NavLink to="/usuario/competencias" onClick={toggleMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
-            <Trophy /> Competencias
+          <NavLink to="/usuario/competencias" onClick={closeMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
+            <Trophy size={20} /> Competencias
           </NavLink>
-          <NavLink to="/usuario/secciones" onClick={toggleMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
-            <Video /> Información
+          <NavLink to="/usuario/secciones" onClick={closeMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
+            <Video size={20} /> Información
           </NavLink>
-          <NavLink to="/usuario/resultados" onClick={toggleMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
-            <FileText /> Resultados
+          <NavLink to="/usuario/resultados" onClick={closeMenu} className={({ isActive }) => isActive ? styles.activeNavMobile : ""}>
+            <FileText size={20} /> Resultados
           </NavLink>
         </div>
       </header>
