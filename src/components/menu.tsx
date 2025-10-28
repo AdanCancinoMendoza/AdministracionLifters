@@ -82,7 +82,7 @@ const MenuAdmin = () => {
       children: [{ path: "/informacion/ver", label: "Ver Informes", icon: <FileText size={14} /> }],
     },
     { label: "En vivos", path: "/lives", icon: <Video size={18} /> },
-    { label: "Gestión en vivos", path: "/lives/manage", icon: <Settings size={18} /> },
+    { label: "Gestión en vivos", path: "/gestionlives", icon: <Settings size={18} /> },
     { label: "Resultados", path: "/resultados", icon: <FileText size={18} /> },
   ];
 

@@ -67,7 +67,7 @@ function AdminLayout() {
           <Route path="/informacion/ver" element={<VerInformes />} />
           <Route path="/resultados" element={<Resultados />} />
           <Route path="/lives" element={<Lives />} />
-          <Route path="/tiempos" element={<TiemposyPesos />} />
+          <Route path="/gestionlives" element={<TiemposyPesos />} />
           <Route path="/loginAdmin" element={<LoginAdmin />} />
           <Route path="/404" element={<NotFound />} />
 
