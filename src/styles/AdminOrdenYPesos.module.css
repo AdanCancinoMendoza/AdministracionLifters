@@ -1,0 +1,144 @@
+/* -----------------------------------------------------------------
+AdminOrdenYPesos.module.css
+Copia este bloque a: src/styles/AdminOrdenYPesos.module.css
+Es modular y no globaliza estilos.
+----------------------------------------------------------------- */
+
+
+/* Container */
+.container {
+padding: 18px;
+font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+color: #111827;
+}
+
+
+.header {
+margin-bottom: 12px;
+}
+
+
+.controls {
+display: flex;
+gap: 12px;
+align-items: center;
+margin-bottom: 12px;
+}
+
+
+.selectWrap select {
+padding: 6px 8px;
+border-radius: 6px;
+border: 1px solid #d1d5db;
+}
+
+
+.searchWrap {
+display: flex;
+gap: 8px;
+align-items: center;
+flex: 1;
+}
+
+
+.input {
+padding: 8px 10px;
+border: 1px solid #e5e7eb;
+border-radius: 6px;
+width: 220px;
+}
+
+
+.inputSmall {
+padding: 6px 8px;
+border: 1px solid #e5e7eb;
+border-radius: 6px;
+width: 100px;
+}
+
+
+.pesoFilters {
+display: flex;
+gap: 6px;
+}
+
+
+.loading { margin: 10px 0; }
+
+
+.main {
+display: flex;
+gap: 16px;
+}
+
+
+.left {
+flex: 1.2;
+background: #fff;
+border: 1px solid #e6e6e6;
+border-radius: 8px;
+padding: 12px;
+}
+
+
+.right {
+flex: 0.8;
+background: #fff;
+border: 1px solid #e6e6e6;
+border-radius: 8px;
+padding: 12px;
+min-width: 320px;
+}
+
+
+.ordenHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; }
+.actionButtons { display:flex; gap:8px; }
+.primary {
+background: #0ea5a4;
+color: white;
+border: none;
+padding: 8px 12px;
+border-radius: 6px;
+cursor: pointer;
+}
+
+
+.ordenList { display:flex; flex-direction:column; gap:8px; max-height: 600px; overflow:auto; }
+
+
+.ordenItem { display:flex; justify-content:space-between; align-items:center; padding:8px; border-radius:6px; background: #fafafa; border:1px solid #f0f0f0; }
+.itemLeft { display:flex; gap:12px; align-items:center; cursor:pointer; }
+.ordenBadge { width:36px; height:36px; border-radius:50%; background:#111827; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; margin-right:6px; }
+.name { font-weight:600; }
+.meta { font-size:12px; color:#6b7280; }
+.itemRight { display:flex; gap:8px; align-items:center; }
+.timeInput { width:80px; padding:6px; border-radius:6px; border:1px solid #e5e7eb; }
+.controlsSmall button { padding:6px 8px; border-radius:6px; border:1px solid #e5e7eb; background:white; cursor:pointer; }
+.empty { padding: 16px; color:#6b7280; }
+
+
+/* Right panel */
+.selectedCard { display:flex; flex-direction:column; gap:12px; }
+.selectedHeader { display:flex; justify-content:space-between; align-items:center; }
+.nameLarge { font-weight:700; font-size:16px; }
+.closeBtn { background:transparent; border:1px solid #e5e7eb; padding:6px 8px; border-radius:6px; cursor:pointer; }
+.help { font-size:13px; color:#6b7280; }
+.pesosGrid { display:flex; flex-direction:column; gap:10px; }
+.ejercicioCard { padding:8px; border-radius:6px; border:1px solid #f1f5f9; background:#fff; }
+.ejercicioTitle { font-weight:700; margin-bottom:6px; }
+.intentosRow { display:flex; gap:8px; }
+.intentoBox { display:flex; flex-direction:column; }
+.intentoLabel { font-size:12px; color:#374151; }
+.pesoInput { width:100%; padding:6px; border-radius:6px; border:1px solid #e5e7eb; }
+.footerActions { display:flex; gap:8px; margin-top:8px; }
+.emptyRight { color:#6b7280; }
+
+
+.selectedHeader .meta { font-size:13px; }
+
+
+/* Responsiveness */
+@media (max-width: 900px) {
+.main { flex-direction:column; }
+.right { min-width: auto; }
+}

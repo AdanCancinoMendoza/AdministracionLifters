@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import styles from "../../../styles/RegistrarCompetidor.module.css";
+import LoadingModal from "../../../components/common/LoadingModal";
+import StatusModal from "../../../components/common/StatusModal";
 
 interface Competidor {
   nombre: string;
@@ -43,11 +45,22 @@ const RegistrarCompetidor: React.FC = () => {
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
   const [competenciaSeleccionada, setCompetenciaSeleccionada] = useState<Competencia | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const categorias = ["Peso Pluma", "Ligero", "Medio", "Pesado", "Superpesado"];
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // estado del modal de estado (success / error / info)
+  const [status, setStatus] = useState<{
+    open: boolean;
+    type?: "success" | "error" | "info";
+    title?: string;
+    message?: string;
+  }>({ open: false });
 
   useEffect(() => {
     const fetchCompetencias = async () => {
+      setLoading(true);
       try {
         const res = await axios.get("http://localhost:3001/api/competenciasadmin");
         const data: Competencia[] = res.data;
@@ -62,19 +75,36 @@ const RegistrarCompetidor: React.FC = () => {
         setCompetenciaSeleccionada(proxima || (data.length > 0 ? data[0] : null));
       } catch (error) {
         console.error("Error al obtener competencias:", error);
+        setStatus({
+          open: true,
+          type: "error",
+          title: "Error al cargar",
+          message: "No se pudieron obtener las competencias del servidor.",
+        });
+      } finally {
+        setLoading(false);
       }
     };
     fetchCompetencias();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setCompetidor({ ...competidor, [name]: value });
+    const { name, value, type } = e.target as HTMLInputElement;
+    // convertir a number si corresponde
+    if (name === "peso" || name === "edad") {
+      const numeric = Number(value);
+      setCompetidor(prev => ({ ...prev, [name]: Number.isNaN(numeric) ? 0 : numeric }));
+    } else if (name === "pagado") {
+      setCompetidor(prev => ({ ...prev, pagado: value }));
+    } else {
+      setCompetidor(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setCompetidor({ ...competidor, comprobante_pago: e.target.files[0] });
+      const file = e.target.files[0];
+      setCompetidor(prev => ({ ...prev, comprobante_pago: file }));
     }
   };
 
@@ -86,10 +116,12 @@ const RegistrarCompetidor: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!competenciaSeleccionada) {
-      alert("Selecciona una competencia");
+      setStatus({ open: true, type: "error", title: "Falta seleccionar", message: "Selecciona una competencia" });
       return;
     }
+
     setSubmitting(true);
+    setLoading(true);
     try {
       const formData = new FormData();
       formData.append("nombre", competidor.nombre);
@@ -105,12 +137,19 @@ const RegistrarCompetidor: React.FC = () => {
         formData.append("comprobante_pago", competidor.comprobante_pago);
       }
 
-      await axios.post("http://localhost:3001/api/competidor", formData, {
+      const res = await axios.post("http://localhost:3001/api/competidor", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      alert("✅ Competidor registrado con éxito!");
+      // éxito
+      setStatus({
+        open: true,
+        type: "success",
+        title: "Registrado",
+        message: " Competidor registrado con éxito!",
+      });
 
+      // limpiar formulario
       setCompetidor({
         nombre: "",
         apellidos: "",
@@ -122,16 +161,42 @@ const RegistrarCompetidor: React.FC = () => {
         pagado: "No",
         comprobante_pago: null,
       });
+
+      // limpiar input file visual
+      if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error("Error al registrar competidor:", error);
-      alert("❌ Error al registrar competidor");
+      setStatus({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: " Error al registrar competidor",
+      });
     } finally {
       setSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <main className={styles.container}>
+      <LoadingModal
+        open={loading || submitting}
+        title={submitting ? "Registrando competidor" : undefined}
+        message={submitting ? "Registrando en el servidor..." : "Cargando datos..."}
+        subMessage={submitting ? "Por favor espera..." : undefined}
+      />
+
+      <StatusModal
+        open={status.open}
+        type={status.type as any}
+        title={status.title}
+        message={status.message}
+        autoClose={true}
+        duration={3000}
+        onClose={() => setStatus({ open: false })}
+      />
+
       <header className={styles.header}>
         <h1 className={styles.title}>Registro de Competidor</h1>
         <p className={styles.subtitle}>Llena todos los campos para registrar un competidor en la competencia</p>
@@ -193,7 +258,13 @@ const RegistrarCompetidor: React.FC = () => {
 
           <div className={styles.inputGroup}>
             <label htmlFor="comprobante_pago">Comprobante de pago (opcional)</label>
-            <input id="comprobante_pago" type="file" accept="image/*,application/pdf" onChange={handleFileChange} />
+            <input
+              id="comprobante_pago"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={handleFileChange}
+            />
             {competidor.comprobante_pago && <p className={styles.fileName}>Archivo: {competidor.comprobante_pago.name}</p>}
           </div>
 

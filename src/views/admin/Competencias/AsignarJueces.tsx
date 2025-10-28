@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import styles from "../../../styles/AsignarJueces.module.css";
-import Logo from "../../../assets/LOgo.png";
 import axios from "axios";
+
+// Importar modales
+import LoadingModal from "../../../components/common/LoadingModal";
+import StatusModal from "../../../components/common/StatusModal";
 
 interface Competencia {
   id_competencia: number;
@@ -33,6 +36,15 @@ const AsignarJueces: React.FC = () => {
   const [form, setForm] = useState({ nombre: "", apellidos: "", usuario: "", password: "" });
   const [juezSeleccionado, setJuezSeleccionado] = useState<Juez | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Estados para los modales de carga y estatus
+  const [loadingModal, setLoadingModal] = useState(false);
+  const [statusModal, setStatusModal] = useState({
+    open: false,
+    type: "info" as "success" | "error" | "info",
+    title: "",
+    message: "",
+  });
 
   useEffect(() => {
     const cargarCompetencias = async () => {
@@ -91,6 +103,7 @@ const AsignarJueces: React.FC = () => {
 
   const handleAgregar = async () => {
     if (!competenciaSeleccionada) return;
+    setLoadingModal(true);
     try {
       const nuevoJuez = {
         id_competencia: competenciaSeleccionada.id_competencia,
@@ -100,41 +113,88 @@ const AsignarJueces: React.FC = () => {
         password: generarPassword(),
       };
       const { data } = await axios.post("http://localhost:3001/api/juez", nuevoJuez);
-      setJueces([...jueces, { id: data.id_juez, nombre: data.nombre, apellidos: data.apellidos, usuario: data.usuario, password: data.password }]);
+      setJueces([
+        ...jueces,
+        {
+          id: data.id_juez,
+          nombre: data.nombre,
+          apellidos: data.apellidos,
+          usuario: data.usuario,
+          password: data.password,
+        },
+      ]);
       setForm({ nombre: "", apellidos: "", usuario: "", password: "" });
       setModalAgregar(false);
-      alert("✅ Juez agregado correctamente");
+      setStatusModal({
+        open: true,
+        type: "success",
+        title: "Juez agregado",
+        message: "El juez fue agregado correctamente.",
+      });
     } catch (error) {
-      console.error("❌ Error agregando juez:", error);
-      alert("Error al agregar juez");
+      console.error("Error agregando juez:", error);
+      setStatusModal({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "No se pudo agregar el juez.",
+      });
+    } finally {
+      setLoadingModal(false);
     }
   };
 
   const handleEditar = async () => {
     if (!juezSeleccionado) return;
+    setLoadingModal(true);
     try {
       await axios.put(`http://localhost:3001/api/juez/${juezSeleccionado.id}`, form);
       setJueces(jueces.map(j => (j.id === juezSeleccionado.id ? { ...j, ...form } : j)));
       setModalEditar(false);
       setJuezSeleccionado(null);
-      alert("✅ Juez actualizado correctamente");
+      setStatusModal({
+        open: true,
+        type: "success",
+        title: "Juez actualizado",
+        message: "Los datos del juez se guardaron correctamente.",
+      });
     } catch (error) {
-      console.error("❌ Error editando juez:", error);
-      alert("Error al editar juez");
+      console.error("Error editando juez:", error);
+      setStatusModal({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "No se pudo actualizar el juez.",
+      });
+    } finally {
+      setLoadingModal(false);
     }
   };
 
   const handleEliminar = async () => {
     if (!juezSeleccionado) return;
+    setLoadingModal(true);
     try {
       await axios.delete(`http://localhost:3001/api/juez/${juezSeleccionado.id}`);
       setJueces(jueces.filter(j => j.id !== juezSeleccionado.id));
       setModalEliminar(false);
       setJuezSeleccionado(null);
-      alert("🗑️ Juez eliminado correctamente");
+      setStatusModal({
+        open: true,
+        type: "success",
+        title: "Juez eliminado",
+        message: "El juez fue eliminado correctamente.",
+      });
     } catch (error) {
-      console.error("❌ Error eliminando juez:", error);
-      alert("Error al eliminar juez");
+      console.error("Error eliminando juez:", error);
+      setStatusModal({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "No se pudo eliminar el juez.",
+      });
+    } finally {
+      setLoadingModal(false);
     }
   };
 
@@ -144,15 +204,15 @@ const AsignarJueces: React.FC = () => {
     accion === "editar" ? setModalEditar(true) : setModalEliminar(true);
   };
 
-  if (loading) return (
-    <div className={styles.modalCarga}>
-      <div className={styles.modalCaja}>
-        <img src={Logo} alt="Logo" className={styles.logoModal} />
-        <p>Cargando competencias pendientes...</p>
-        <div className={styles.spinner}></div>
-      </div>
-    </div>
-  );
+  if (loading)
+    return (
+      <LoadingModal
+        open={true}
+        title="Cargando datos"
+        message="Cargando competencias pendientes..."
+        subMessage="Por favor espere"
+      />
+    );
 
   if (!competenciaSeleccionada) return <p>No hay competencias pendientes.</p>;
 
@@ -168,7 +228,7 @@ const AsignarJueces: React.FC = () => {
           value={competenciaSeleccionada.id_competencia}
           onChange={(e) => handleSeleccionarCompetencia(Number(e.target.value))}
         >
-          {competencias.map(c => (
+          {competencias.map((c) => (
             <option key={c.id_competencia} value={c.id_competencia}>
               {c.nombre} ({new Date(c.fecha_evento!).toLocaleDateString()})
             </option>
@@ -179,7 +239,11 @@ const AsignarJueces: React.FC = () => {
       <section className={styles.competenciaFila}>
         <div className={styles.competenciaImagen}>
           <img
-            src={competenciaSeleccionada.foto ? `http://localhost:3001${competenciaSeleccionada.foto}` : "http://via.placeholder.com/300x200.png?text=Sin+Imagen"}
+            src={
+              competenciaSeleccionada.foto
+                ? `http://localhost:3001${competenciaSeleccionada.foto}`
+                : "http://via.placeholder.com/300x200.png?text=Sin+Imagen"
+            }
             alt={competenciaSeleccionada.nombre}
           />
         </div>
@@ -187,18 +251,26 @@ const AsignarJueces: React.FC = () => {
           <Calendar
             selectRange
             value={[
-              competenciaSeleccionada.fecha_inicio ? new Date(competenciaSeleccionada.fecha_inicio) : new Date(),
-              competenciaSeleccionada.fecha_evento ? new Date(competenciaSeleccionada.fecha_evento) : new Date(),
+              competenciaSeleccionada.fecha_inicio
+                ? new Date(competenciaSeleccionada.fecha_inicio)
+                : new Date(),
+              competenciaSeleccionada.fecha_evento
+                ? new Date(competenciaSeleccionada.fecha_evento)
+                : new Date(),
             ]}
           />
         </div>
       </section>
 
-      <button className={styles.btnRegistrar} onClick={() => setModalAgregar(true)}>Agregar Juez</button>
+      <button className={styles.btnRegistrar} onClick={() => setModalAgregar(true)}>
+        Agregar Juez
+      </button>
 
       <section className={styles.listaJueces}>
         <h3>Jueces Registrados</h3>
-        {jueces.length === 0 ? <p>No hay jueces registrados.</p> :
+        {jueces.length === 0 ? (
+          <p>No hay jueces registrados.</p>
+        ) : (
           <table className={styles.tablaJueces}>
             <thead>
               <tr>
@@ -210,21 +282,25 @@ const AsignarJueces: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {jueces.map(j => (
+              {jueces.map((j) => (
                 <tr key={j.id}>
                   <td>{j.nombre}</td>
                   <td>{j.apellidos}</td>
                   <td>{j.usuario}</td>
                   <td>{j.password}</td>
                   <td>
-                    <button className={styles.btnEditar} onClick={() => seleccionarJuez(j, "editar")}>Editar</button>
-                    <button className={styles.btnEliminar} onClick={() => seleccionarJuez(j, "eliminar")}>Eliminar</button>
+                    <button className={styles.btnEditar} onClick={() => seleccionarJuez(j, "editar")}>
+                      Editar
+                    </button>
+                    <button className={styles.btnEliminar} onClick={() => seleccionarJuez(j, "eliminar")}>
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        }
+        )}
       </section>
 
       {(modalAgregar || modalEditar || modalEliminar) && (
@@ -255,7 +331,9 @@ const AsignarJueces: React.FC = () => {
             {modalEliminar && (
               <>
                 <h3>¿Eliminar este juez?</h3>
-                <p>{juezSeleccionado?.nombre} {juezSeleccionado?.apellidos}</p>
+                <p>
+                  {juezSeleccionado?.nombre} {juezSeleccionado?.apellidos}
+                </p>
                 <button onClick={handleEliminar}>Sí, eliminar</button>
                 <button onClick={() => setModalEliminar(false)}>Cancelar</button>
               </>
@@ -263,6 +341,21 @@ const AsignarJueces: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Modales globales */}
+      <LoadingModal
+        open={loadingModal}
+        title="Procesando solicitud"
+        message="Por favor espere..."
+      />
+
+      <StatusModal
+        open={statusModal.open}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+        onClose={() => setStatusModal({ ...statusModal, open: false })}
+      />
     </div>
   );
 };

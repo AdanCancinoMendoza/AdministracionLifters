@@ -1,243 +1,326 @@
+/* 🌟 Estilo moderno para VerCompetidores.module.css */
+
 .container {
-  font-family: "Segoe UI", Roboto, Arial, sans-serif;
-  background-color: #f9fafb;
-  color: #1f2937;
-  min-height: 100vh;
   padding: 2rem;
+  background: #f7f9fc;
+  min-height: 100vh;
+  font-family: "Inter", system-ui, sans-serif;
+  color: #1a1a1a;
 }
 
+/* ===== HEADER ===== */
 .header {
   text-align: center;
   margin-bottom: 2rem;
+  animation: fadeInDown 0.6s ease-in-out;
 }
 
 .title {
-  font-size: 2.2rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  color: #111827;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #2b3a67;
 }
 
 .subtitle {
   font-size: 1rem;
-  color: #6b7280;
-  max-width: 700px;
-  margin: 0 auto;
+  color: #5a5a5a;
+  margin-top: 0.5rem;
 }
 
+/* ===== RESUMEN ===== */
 .resumen {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background-color: #f472b6;
-  color: white;
-  border-radius: 12px;
-  padding: 0.8rem 1.2rem;
-  margin-bottom: 2rem;
   gap: 1rem;
-  max-width: 300px;
-  margin-left: auto;
-  margin-right: auto;
+  background: white;
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-width: 400px;
+  margin: 0 auto 2rem auto;
 }
 
 .resumenTexto {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  color: #777;
 }
 
 .resumenNumero {
-  font-size: 1.6rem;
-  font-weight: bold;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2b3a67;
 }
 
+/* ===== COMPETENCIAS ===== */
 .competenciaCard {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  border-radius: 1.2rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
   margin-bottom: 2rem;
-  overflow: hidden;
+  padding: 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.competenciaFoto {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-  display: block;
+.competenciaCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
 }
 
 .competenciaInfo {
-  padding: 1rem 1.5rem;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.competenciaFoto {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
 }
 
 .competenciaNombre {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #111827;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2b3a67;
 }
 
 .competenciaFechas {
-  font-size: 0.95rem;
-  color: #6b7280;
+  font-size: 0.9rem;
+  color: #666;
 }
 
+/* ===== TABLAS ===== */
 .tabla {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-}
-
-.tabla th,
-.tabla td {
-  border: 1px solid #e5e7eb;
-  padding: 0.75rem;
-  text-align: center;
-  font-size: 0.95rem;
+  overflow-x: auto;
 }
 
 .tabla th {
-  background-color: #f3f4f6;
+  background: #2b3a67;
+  color: white;
+  padding: 0.75rem;
   font-weight: 600;
-  color: #374151;
+  text-align: left;
+  border-radius: 8px 8px 0 0;
 }
 
-.tabla tr:nth-child(even) {
-  background-color: #f9fafb;
+.tabla td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.tabla tr:hover {
+  background: #f4f6ff;
 }
 
 .acciones {
   display: flex;
-  justify-content: center;
   gap: 0.5rem;
+  justify-content: center;
 }
 
-.verBaucher, .editar, .eliminar {
+/* ===== BOTONES ===== */
+.verBaucher,
+.editar,
+.eliminar {
+  background: transparent;
   border: none;
   cursor: pointer;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  transition: background-color 0.3s;
-  color: white;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.verBaucher { background-color: #9ca3af; }
-.verBaucher:hover { background-color: #6b7280; }
-.editar { background-color: #3b82f6; }
-.editar:hover { background-color: #2563eb; }
-.eliminar { background-color: #ef4444; }
-.eliminar:hover { background-color: #dc2626; }
+.verBaucher:hover {
+  color: #007bff;
+  transform: scale(1.1);
+}
 
+.editar:hover {
+  color: #28a745;
+  transform: scale(1.1);
+}
+
+.eliminar:hover {
+  color: #dc3545;
+  transform: scale(1.1);
+}
+
+/* ===== MODALES ===== */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 50;
+  align-items: center;
+  animation: fadeIn 0.3s ease;
+  z-index: 1000;
 }
 
 .modalContent {
   background: white;
+  border-radius: 1rem;
   padding: 2rem;
-  border-radius: 14px;
-  width: 400px;
-  max-width: 90%;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-  animation: fadeIn 0.3s ease;
-  text-align: left;
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.4s ease;
 }
 
 .modalTitle {
   font-size: 1.4rem;
+  font-weight: 600;
   margin-bottom: 1rem;
-  font-weight: 700;
-  color: #111827;
+  color: #2b3a67;
   text-align: center;
+}
+
+.modalImagen {
+  width: 100%;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.modalCerrar {
+  background: #2b3a67;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+  transition: background 0.2s ease;
+}
+
+.modalCerrar:hover {
+  background: #1f2d52;
 }
 
 .modalForm {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.8rem;
 }
 
 .modalForm input {
-  padding: 0.7rem;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  font-size: 0.95rem;
-  outline: none;
-  transition: all 0.2s;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: border 0.2s ease;
 }
 
 .modalForm input:focus {
-  border-color: #f472b6;
-  box-shadow: 0 0 0 3px rgba(244,114,182,0.25);
+  border-color: #2b3a67;
+  outline: none;
 }
 
 .modalButtons {
   display: flex;
   justify-content: space-between;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .guardar {
-  background-color: #10b981;
+  background: #28a745;
   color: white;
   border: none;
-  padding: 0.7rem 1.2rem;
   border-radius: 8px;
-  cursor: pointer;
+  padding: 0.6rem 1.2rem;
   font-weight: 600;
-  transition: background 0.3s;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
-.guardar:hover { background-color: #059669; }
+
+.guardar:hover {
+  background: #218838;
+}
 
 .cancelar {
-  background-color: #ef4444;
+  background: #6c757d;
   color: white;
   border: none;
-  padding: 0.7rem 1.2rem;
   border-radius: 8px;
+  padding: 0.6rem 1.2rem;
   cursor: pointer;
   font-weight: 600;
-  transition: background 0.3s;
+  transition: background 0.2s ease;
 }
-.cancelar:hover { background-color: #dc2626; }
+
+.cancelar:hover {
+  background: #5a6268;
+}
 
 .eliminarConfirmar {
-  background-color: #ef4444;
+  background: #dc3545;
   color: white;
   border: none;
-  padding: 0.7rem 1.2rem;
   border-radius: 8px;
-  cursor: pointer;
+  padding: 0.6rem 1.2rem;
   font-weight: 600;
-  transition: background 0.3s;
-}
-.eliminarConfirmar:hover { background-color: #dc2626; }
-
-.modalImagen {
-  width: 100%;
-  max-width: 400px;
-  max-height: 400px;
-  height: auto;
-  border-radius: 12px;
-  object-fit: contain;
-  display: block;
-  margin: 0 auto 1rem auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
+.eliminarConfirmar:hover {
+  background: #c82333;
+}
+
+/* ===== ANIMACIONES ===== */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.loading {
-  text-align: center;
-  font-size: 1.2rem;
-  margin-top: 3rem;
-  color: #6b7280;
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 768px) {
+  .competenciaInfo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tabla th,
+  .tabla td {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+  }
+
+  .competenciaFoto {
+    width: 100%;
+    height: 150px;
+  }
+
+  .modalContent {
+    padding: 1.2rem;
+  }
 }

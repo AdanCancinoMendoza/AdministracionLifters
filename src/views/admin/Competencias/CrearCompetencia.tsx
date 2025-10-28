@@ -2,11 +2,16 @@ import React, { useState } from "react";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import styles from "../../../styles/CrearCompetencia.module.css";
+import axios from "axios";
 
 // Leaflet
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+
+// Modales reutilizables
+import LoadingModal from "../../../components/common/LoadingModal";
+import StatusModal from "../../../components/common/StatusModal";
 
 // Configurar ícono Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -77,11 +82,21 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
     lat: null,
     lng: null,
   });
+
   const [search, setSearch] = useState("");
   const [searchPosition, setSearchPosition] = useState<[number, number] | null>(null);
 
+  // Estados de modales
+  const [loadingModal, setLoadingModal] = useState(false);
+  const [statusModal, setStatusModal] = useState({
+    open: false,
+    type: "info" as "success" | "error" | "info",
+    title: "",
+    message: "",
+  });
+
   const handleChange = (field: keyof Competencia, value: any) => {
-    setCompetencia({ ...competencia, [field]: value });
+    setCompetencia((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,11 +105,14 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
 
   const handleSearch = async () => {
     if (!search.trim()) return;
+
+    setLoadingModal(true);
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(search)}`
       );
       const data = await res.json();
+
       if (data && data.length > 0) {
         const { lat, lon, display_name } = data[0];
         const pos: [number, number] = [parseFloat(lat), parseFloat(lon)];
@@ -102,20 +120,129 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
         handleChange("lat", pos[0]);
         handleChange("lng", pos[1]);
         handleChange("ubicacion", display_name);
-      } else alert("No se encontró la ubicación");
+
+        setStatusModal({
+          open: true,
+          type: "success",
+          title: "Ubicación encontrada",
+          message: "La dirección fue localizada correctamente.",
+        });
+      } else {
+        setStatusModal({
+          open: true,
+          type: "error",
+          title: "Sin resultados",
+          message: "No se encontró la ubicación solicitada.",
+        });
+      }
     } catch (error) {
       console.error(error);
-      alert("Error buscando dirección");
+      setStatusModal({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: "Ocurrió un error al buscar la dirección.",
+      });
+    } finally {
+      setLoadingModal(false);
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!competencia.nombre || !competencia.tipo || !competencia.categoria) {
-      alert("Por favor completa los campos obligatorios");
+      setStatusModal({
+        open: true,
+        type: "error",
+        title: "Campos incompletos",
+        message: "Por favor completa los campos obligatorios.",
+      });
       return;
     }
-    alert("Competencia creada correctamente");
-    if (onCrear) onCrear();
+
+    setLoadingModal(true);
+
+    try {
+      const formData = new FormData();
+
+      // Campos simples
+      formData.append("nombre", competencia.nombre);
+      formData.append("tipo", competencia.tipo);
+      formData.append("categoria", competencia.categoria);
+      formData.append("costo", String(competencia.costo ?? 0));
+      formData.append("ubicacion", competencia.ubicacion ?? "");
+
+      // Lat / Lng (si existen)
+      if (competencia.lat !== null && competencia.lat !== undefined) {
+        formData.append("lat", String(competencia.lat));
+      }
+      if (competencia.lng !== null && competencia.lng !== undefined) {
+        formData.append("lng", String(competencia.lng));
+      }
+
+      // Fechas en formato ISO o cadena vacía
+      if (competencia.fechaInicio) formData.append("fecha_inicio", competencia.fechaInicio.toISOString());
+      else formData.append("fecha_inicio", "");
+      if (competencia.fechaCierre) formData.append("fecha_cierre", competencia.fechaCierre.toISOString());
+      else formData.append("fecha_cierre", "");
+      if (competencia.fechaEvento) formData.append("fecha_evento", competencia.fechaEvento.toISOString());
+      else formData.append("fecha_evento", "");
+
+      // Archivo (campo 'foto' que espera multer)
+      if (competencia.foto instanceof File) {
+        formData.append("foto", competencia.foto);
+      }
+
+      // Enviar al backend. Ajusta la URL si es otra.
+      const response = await axios.post("/api/competenciasadmin", formData, {
+        // No fijes Content-Type: axios lo pone automáticamente para FormData
+        timeout: 20000,
+      });
+
+      // Respuesta esperada: { message: "Competencia creada correctamente", id }
+      const data = response.data;
+
+      setStatusModal({
+        open: true,
+        type: "success",
+        title: "Competencia creada",
+        message: data?.message || "La competencia fue creada correctamente.",
+      });
+
+      // Llamar callback para que el padre recargue listas o cambie de vista
+      if (onCrear) onCrear();
+
+      // Limpiar formulario
+      setCompetencia({
+        nombre: "",
+        tipo: "",
+        foto: null,
+        fechaInicio: null,
+        fechaCierre: null,
+        fechaEvento: null,
+        categoria: "",
+        costo: 0,
+        ubicacion: "",
+        lat: null,
+        lng: null,
+      });
+      setSearch("");
+      setSearchPosition(null);
+    } catch (error: any) {
+      console.error("Error guardando competencia:", error);
+      const msg =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "No se pudo crear la competencia.";
+      setStatusModal({
+        open: true,
+        type: "error",
+        title: "Error",
+        message: msg,
+      });
+    } finally {
+      setLoadingModal(false);
+    }
   };
 
   return (
@@ -153,7 +280,7 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
         </div>
 
         <div className={`${styles.card} ${styles.uploadCard}`}>
-          <label>📷 Subir Foto</label>
+          <label>Subir Foto</label>
           <input type="file" accept="image/*" onChange={handleFileChange} />
           {competencia.foto && <p className={styles.fileName}>{competencia.foto.name}</p>}
         </div>
@@ -219,11 +346,8 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
             />
             <button onClick={handleSearch}>Buscar</button>
           </div>
-          <MapContainer
-            center={[19.4326, -99.1332]}
-            zoom={12}
-            className={styles.map}
-          >
+
+          <MapContainer center={[19.4326, -99.1332]} zoom={12} className={styles.map}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -237,6 +361,7 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
               }}
             />
           </MapContainer>
+
           {competencia.ubicacion && (
             <p className={styles.ubicacionText}>Ubicación: {competencia.ubicacion}</p>
           )}
@@ -246,6 +371,17 @@ const CrearCompetencia: React.FC<CrearCompetenciaProps> = ({ onCrear }) => {
           <button onClick={handleSubmit}>Crear Competencia</button>
         </div>
       </section>
+
+      {/* Modales globales */}
+      <LoadingModal open={loadingModal} title="Procesando solicitud" message="Por favor espere..." />
+
+      <StatusModal
+        open={statusModal.open}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+        onClose={() => setStatusModal({ ...statusModal, open: false })}
+      />
     </main>
   );
 };

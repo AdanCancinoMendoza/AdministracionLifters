@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import MenuAdmin from "./components/menu";
-import MenuUsuario from "./components/users/menu.tsx"; // 
+import MenuUsuario from "./components/users/menu.tsx";
 
 // Usuario
 import InicioUsuarios from "./views/users/inicio.tsx";
 import StoriesSection from "./views/users/StoriesSection.tsx";
 import LiveResultsSection from "./views/users/resultadosLive.tsx";
 import RegistroCompetidor from "./views/users/inscripciones.tsx";
-import Competencias from "./views/users/competencias.tsx"
+import Competencias from "./views/users/competencias.tsx";
 
 // Admin
 import Dashboard from "./views/admin/Dashboard";
@@ -24,7 +24,9 @@ import AsignarJueces from "./views/admin/Competencias/AsignarJueces";
 import CrearInforme from "./views/admin/Informacion/Crear";
 import VerInformes from "./views/admin/Informacion/Ver";
 import Resultados from "./views/admin/Resultados";
-import Lives from "./views/admin/Envivos/AdminLivePanel"
+import Lives from "./views/admin/Envivos/AdminLivePanel";
+import TiemposyPesos from "./views/admin/Envivos/OrdenCompetidorTiempos";
+import LoginAdmin from "./views/admin/lodin.tsx";
 
 // Jueces
 import LoginJueces from "./views/jueces/login";
@@ -37,6 +39,48 @@ import InformacionScreen from "./views/jueces/perfil";
 // Componentes extra
 import PrivateRoute from "../backend/src/private/privateJuez.tsx";
 import NotFound from "./views/NotFound";
+
+// Wrapper para controlar cuándo mostrar el menú admin
+function AdminLayout() {
+  const location = useLocation();
+
+  // Oculta el menú en loginAdmin y en 404
+  const hideMenu =
+    location.pathname === "/loginAdmin" || location.pathname === "/404";
+
+  return (
+    <div className="app">
+      {!hideMenu && <MenuAdmin />}
+      <main className="main-content">
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/inicio/editar" element={<EditarInicio />} />
+          <Route path="/inicio/ganadores" element={<Ganadores />} />
+          <Route path="/inicio/poster" element={<Poster />} />
+          <Route path="/inicio/videos" element={<Videos />} />
+          <Route path="/competidores/registrar" element={<RegistrarCompetidor />} />
+          <Route path="/competidores/ver" element={<VerCompetidores />} />
+          <Route path="/competencias/crearcompetencia" element={<CrearCompetencia />} />
+          <Route path="/competencias/listacompetencias" element={<ListaCompetencias />} />
+          <Route path="/competencias/asignarjueces" element={<AsignarJueces />} />
+          <Route path="/informacion/crear" element={<CrearInforme />} />
+          <Route path="/informacion/ver" element={<VerInformes />} />
+          <Route path="/resultados" element={<Resultados />} />
+          <Route path="/lives" element={<Lives />} />
+          <Route path="/tiempos" element={<TiemposyPesos />} />
+          <Route path="/loginAdmin" element={<LoginAdmin />} />
+          <Route path="/404" element={<NotFound />} />
+
+          {/* Redirección por defecto */}
+          <Route path="/" element={<Navigate to="/usuario/inicio" replace />} />
+
+          {/* Error 404 dentro del admin */}
+          <Route path="*" element={<Navigate to="/404" replace />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
 
 function App() {
   const [userJuez, setUserJuez] = useState<any>(() => {
@@ -55,12 +99,12 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Rutas Usuarios con menuUsuario */}
+        {/* -------------------- USUARIOS -------------------- */}
         <Route path="/usuario" element={<MenuUsuario />}>
           <Route path="inicio" element={<InicioUsuarios />} />
           <Route path="secciones" element={<StoriesSection />} />
           <Route path="resultados" element={<LiveResultsSection />} />
-          <Route path="Competencias" element={<Competencias />} />
+          <Route path="competencias" element={<Competencias />} />
           <Route path="inscripciones" element={<RegistroCompetidor />} />
 
           {/* Redirección por defecto */}
@@ -68,10 +112,8 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
 
-        {/* Login Jueces */}
+        {/* -------------------- JUECES -------------------- */}
         <Route path="/jueces/login" element={<LoginJueces onLoginSuccess={setUserJuez} />} />
-
-        {/* Rutas protegidas Jueces */}
         <Route
           path="/jueces/inicio"
           element={
@@ -113,45 +155,11 @@ function App() {
           }
         />
 
-        {/* Rutas Administración */}
-        <Route
-          path="/*"
-          element={
-            <div className="app">
-              <MenuAdmin />
-              <main className="main-content">
-                <Routes>
+        {/* -------------------- ADMINISTRADOR -------------------- */}
+        <Route path="/*" element={<AdminLayout />} />
 
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/inicio/editar" element={<EditarInicio />} />
-                  <Route path="/inicio/ganadores" element={<Ganadores />} />
-                  <Route path="/inicio/poster" element={<Poster />} />
-                  <Route path="/inicio/videos" element={<Videos />} />
-                  <Route path="/competidores/registrar" element={<RegistrarCompetidor />} />
-                  <Route path="/competidores/ver" element={<VerCompetidores />} />
-                  <Route path="/competencias/crearcompetencia" element={<CrearCompetencia />} />
-                  <Route path="/competencias/listacompetencias" element={<ListaCompetencias />} />
-                  <Route path="/competencias/asignarjueces" element={<AsignarJueces />} />
-                  <Route path="/informacion/crear" element={<CrearInforme />} />
-                  <Route path="/informacion/ver" element={<VerInformes />} />
-                  <Route path="/resultados" element={<Resultados />} />
-                  <Route path="/lives" element={<Lives />} />
-
-
-
-                  {/* Redirección por defecto */}
-                  <Route path="/" element={<Navigate to="/usuario/inicio" replace />} />
-
-                  {/*  Error 404 dentro del panel admin */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-            </div>
-          }
-        />
-
-        {/* ❌ Error 404 global */}
-        <Route path="*" element={<NotFound />} />
+        {/* -------------------- ERROR GLOBAL -------------------- */}
+        <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
     </Router>
   );

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import styles from "../../../styles/SeccionLogros.module.css";
 import MenuAdmin from "../../../components/menu";
 import { FaMedal } from "react-icons/fa";
+import LoadingModal from "../../../components/common/LoadingModal";
+import StatusModal from "../../../components/common/StatusModal";
 
 interface Ganador {
   nombre: string;
@@ -58,9 +60,19 @@ const SERVER_BASE_URL = "http://localhost:3001";
 const SeccionLogros: React.FC = () => {
   const [categorias, setCategorias] = useState<Categoria[]>(initialCategorias);
   const [loading, setLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // estado del modal de estado (success / error / info)
+  const [status, setStatus] = useState<{
+    open: boolean;
+    type?: "success" | "error" | "info";
+    title?: string;
+    message?: string;
+  }>({ open: false });
 
   useEffect(() => {
     const fetchCategorias = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`${SERVER_BASE_URL}/api/categorias`);
         if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
@@ -68,6 +80,14 @@ const SeccionLogros: React.FC = () => {
         if (Array.isArray(data) && data.length > 0) setCategorias(data);
       } catch (error) {
         console.error("Error al cargar categorías:", error);
+        setStatus({
+          open: true,
+          type: "error",
+          title: "Error al cargar",
+          message: "No se pudieron obtener las categorías del servidor.",
+        });
+      } finally {
+        setLoading(false);
       }
     };
     fetchCategorias();
@@ -94,6 +114,7 @@ const SeccionLogros: React.FC = () => {
   };
 
   const handleGuardar = async () => {
+    setIsSaving(true);
     setLoading(true);
     try {
       const formData = new FormData();
@@ -114,21 +135,62 @@ const SeccionLogros: React.FC = () => {
 
       if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
       const data = await res.json();
-      alert(data.message || "Cambios guardados correctamente");
 
+      // reemplazamos alert por StatusModal
+      setStatus({
+        open: true,
+        type: "success",
+        title: data.message || "Cambios guardados",
+        message: "Cambios guardados correctamente.",
+      });
+
+      // refrescar datos
       const res2 = await fetch(`${SERVER_BASE_URL}/api/categorias`);
-      const updated = await res2.json();
-      setCategorias(updated);
+      if (res2.ok) {
+        const updated = await res2.json();
+        setCategorias(updated);
+      } else {
+        // si falla refrescar, avisar pero no bloquear
+        setStatus({
+          open: true,
+          type: "info",
+          title: "Guardado",
+          message: "Cambios guardados. No se pudo actualizar la lista local.",
+        });
+      }
     } catch (error) {
       console.error("Error al guardar:", error);
-      alert("Hubo un error al guardar los datos.");
+      setStatus({
+        open: true,
+        type: "error",
+        title: "Error al guardar",
+        message: "Hubo un error al guardar los datos.",
+      });
     } finally {
+      setIsSaving(false);
       setLoading(false);
     }
   };
 
   return (
     <>
+      <LoadingModal
+        open={loading}
+        title={isSaving ? "Guardando cambios" : undefined}
+        message={isSaving ? "Guardando cambios en el servidor..." : "Cargando datos..."}
+        subMessage={isSaving ? "Por favor espera, no cierres la ventana." : undefined}
+      />
+
+      <StatusModal
+        open={status.open}
+        type={status.type as any}
+        title={status.title}
+        message={status.message}
+        autoClose={true}
+        duration={3000}
+        onClose={() => setStatus({ open: false })}
+      />
+
       <MenuAdmin />
       <div className={styles.seccionLogros}>
         <h1 className={styles.tituloLogros}>Sección de Logros</h1>

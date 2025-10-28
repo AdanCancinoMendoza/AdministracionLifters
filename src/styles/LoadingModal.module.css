@@ -1,0 +1,94 @@
+/* styles/LoadingModal.module.css */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10, 15, 25, 0.55), rgba(10, 15, 25, 0.65));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 1.5rem;
+}
+
+.modal {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  border-radius: 12px;
+  padding: 18px;
+  min-width: 320px;
+  max-width: 520px;
+  box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #fff;
+  transform-origin: center;
+  animation: modalPop .18s ease-out;
+}
+
+@keyframes modalPop {
+  from { transform: translateY(8px) scale(.995); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.content {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.spinnerWrapper {
+  min-width: 72px;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 6px solid rgba(255,255,255,0.12);
+  border-top-color: rgba(255,255,255,1);
+  animation: spin 0.9s linear infinite;
+  box-shadow: 0 4px 12px rgba(2,6,23,0.45);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+}
+
+.message {
+  margin: 6px 0 0 0;
+  font-size: 0.95rem;
+  opacity: 0.92;
+}
+
+.sub {
+  margin: 6px 0 0 0;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.75);
+}
+
+/* responsive */
+@media (max-width: 420px) {
+  .modal { width: 100%; padding: 14px; border-radius: 10px; }
+  .spinner { width: 40px; height: 40px; border-width: 5px; }
+}

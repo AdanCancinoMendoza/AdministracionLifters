@@ -1,0 +1,143 @@
+/* --- Fondo global (solo para este diseño) --- */
+.container {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #ff3b3b, #007bff);
+  background-repeat: no-repeat;
+  background-size: cover;
+  animation: fadeIn 1.5s ease;
+}
+
+/* --- Tarjeta principal --- */
+.card {
+  display: flex;
+  flex-direction: row;
+  background: #ffffff;
+  border-radius: 25px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  width: 900px;
+  height: 550px; /* Aumenta la altura */
+  animation: slideUp 1s ease;
+}
+
+/* --- Lado izquierdo (logo) --- */
+.leftSection {
+  flex: 1.1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f9f9f9;
+  animation: float 3s ease-in-out infinite;
+}
+
+.imageCircle {
+  background: #ffffff;
+  border-radius: 50%;
+  width: 220px; /* Más grande */
+  height: 220px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 1.5s ease;
+}
+
+.logoImg {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* --- Lado derecho (formulario) --- */
+.rightSection {
+  flex: 1;
+  padding: 50px 60px;
+}
+
+.title {
+  text-align: center;
+  font-weight: 800;
+  font-size: 26px;
+  color: #222;
+  margin-bottom: 35px;
+  animation: fadeIn 1.5s ease;
+}
+
+/* --- Formulario --- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* --- Inputs --- */
+.inputGroup {
+  display: flex;
+  align-items: center;
+  background: #f3f3f3;
+  border-radius: 35px;
+  padding: 14px 18px;
+  transition: all 0.3s ease;
+}
+
+.inputGroup:hover {
+  background: #e8f0ff;
+}
+
+.inputGroup i {
+  color: #007bff;
+  margin-right: 12px;
+  font-size: 18px;
+}
+
+.inputGroup input {
+  border: none;
+  outline: none;
+  background: none;
+  flex: 1;
+  font-size: 16px;
+  color: #333;
+}
+
+/* --- Botón principal --- */
+.loginBtn {
+  background: linear-gradient(90deg, #ff3b3b, #007bff);
+  color: #fff;
+  border: none;
+  border-radius: 35px;
+  padding: 14px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.loginBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(255, 59, 59, 0.35);
+}
+
+/* --- Animaciones --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(60px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
