@@ -1,0 +1,172 @@
+.chatContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 🔘 Botón flotante */
+.chatButton {
+  background-color: #0078ff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.chatButton:hover {
+  background-color: #005fcc;
+  transform: scale(1.1);
+}
+
+/* 💬 Ventana del chat */
+.chatBox {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  width: 320px;
+  max-height: 480px;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Animación de aparición */
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 🧠 Encabezado */
+.chatHeader {
+  background-color: #0078ff;
+  color: white;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+.chatHeader button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.chatHeader button:hover {
+  transform: scale(1.2);
+}
+
+/* 🗨️ Mensajes */
+.chatMessages {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: #f8f9fb;
+}
+
+/* Scroll estilizado */
+.chatMessages::-webkit-scrollbar {
+  width: 6px;
+}
+.chatMessages::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 4px;
+}
+.chatMessages::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+
+/* 🧍 Mensajes del usuario */
+.userMsg {
+  align-self: flex-end;
+  background-color: #0078ff;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 15px 15px 0 15px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+/* 🤖 Mensajes del bot */
+.botMsg {
+  align-self: flex-start;
+  background-color: #e6e6e6;
+  color: #333;
+  padding: 8px 12px;
+  border-radius: 15px 15px 15px 0;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+
+/* 📝 Caja de entrada */
+.chatInput {
+  display: flex;
+  border-top: 1px solid #ddd;
+  padding: 8px;
+  background-color: white;
+}
+
+.chatInput input {
+  flex: 1;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  background-color: #f3f4f6;
+  outline: none;
+  font-size: 14px;
+}
+
+.chatInput button {
+  background-color: #0078ff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-left: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.chatInput button:hover {
+  background-color: #005fcc;
+}
+
+/* 📱 Responsive */
+@media (max-width: 500px) {
+  .chatBox {
+    width: 90vw;
+    bottom: 90px;
+    right: 5vw;
+  }
+
+  .chatButton {
+    width: 55px;
+    height: 55px;
+    font-size: 22px;
+  }
+}
