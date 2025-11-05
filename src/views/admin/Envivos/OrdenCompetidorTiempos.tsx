@@ -8,6 +8,7 @@ type Competidor = {
   categoria: string; telefono?: string; correo?: string; pagado?: string; id_competencia?: number;
   fecha_inscripcion?: string; nombre_competencia?: string;
 };
+
 type OrdenItem = { id_competidor: number; orden: number; tiempo_por_ejercicio: number; estado?: string; };
 
 const EJERCICIOS = [

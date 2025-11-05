@@ -144,7 +144,6 @@ export default function AdminLivePanel() {
 
   function handleEdit(stream: LiveStream) {
     setEditingId(stream.id_live ?? null);
-    // Convertir start_datetime ISO -> local datetime-local value (YYYY-MM-DDTHH:mm)
     let localValue = "";
     if (stream.start_datetime) {
       const d = new Date(stream.start_datetime);
@@ -182,24 +181,15 @@ export default function AdminLivePanel() {
     }
   }
 
-  // NUEVO toggleActive: primero GET el stream, luego PUT el objeto completo con active toggled.
   async function toggleActive(id?: number, current?: number) {
     if (!id) return;
-    // evitar múltiples clicks en la misma fila
     if (togglingIds.includes(id)) return;
 
     try {
       setTogglingIds(prev => [...prev, id]);
-
-      // 1) Obtener el registro completo
       const getRes = await fetch(`${LIVE_STREAMS_API}/${id}`);
-      if (!getRes.ok) {
-        const txt = await getRes.text().catch(() => null);
-        throw new Error(txt || "No se pudo obtener el stream existente.");
-      }
+      if (!getRes.ok) throw new Error("No se pudo obtener el stream existente.");
       const existing = await getRes.json();
-
-      // 2) Construir payload completo (mantener los campos actuales y solo toggle active)
       const payload = {
         id_competencia: Number(existing.id_competencia),
         youtube_url: existing.youtube_url,
@@ -207,20 +197,12 @@ export default function AdminLivePanel() {
         active: current ? 0 : 1,
         start_datetime: existing.start_datetime ?? null
       };
-
-      // 3) Enviar PUT con objeto completo
       const putRes = await fetch(`${LIVE_STREAMS_API}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
-      if (!putRes.ok) {
-        const text = await putRes.text().catch(() => null);
-        throw new Error(text || "Error cambiando estado en el servidor.");
-      }
-
-      // 4) Refrescar lista
+      if (!putRes.ok) throw new Error("Error cambiando estado en el servidor.");
       await fetchData();
     } catch (err) {
       console.error("toggleActive error:", err);
@@ -230,7 +212,6 @@ export default function AdminLivePanel() {
     }
   }
 
-  // When a competition is selected, show its image and metadata
   const selectedCompetencia = competencias.find(c => c.id_competencia === form.id_competencia);
 
   return (
@@ -261,6 +242,7 @@ export default function AdminLivePanel() {
                 value={form.title}
                 onChange={e => setForm({ ...form, title: e.target.value })}
                 placeholder="Título público (ej. transmisión oficial)"
+                className={styles.inputField}
               />
 
               <label>URL de YouTube</label>
@@ -268,6 +250,7 @@ export default function AdminLivePanel() {
                 value={form.youtube_url}
                 onChange={e => setForm({ ...form, youtube_url: e.target.value })}
                 placeholder="https://www.youtube.com/watch?v=XXXX"
+                className={styles.inputField}
               />
 
               <label>Programar inicio (opcional)</label>
@@ -275,6 +258,7 @@ export default function AdminLivePanel() {
                 type="datetime-local"
                 value={form.start_datetime || ""}
                 onChange={e => setForm({ ...form, start_datetime: e.target.value })}
+                className={styles.inputField}
               />
 
               <label className={styles.switchLabel}>

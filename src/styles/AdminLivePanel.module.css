@@ -2,16 +2,17 @@
 /* Paleta suave, diseño claro y cards modernos */
 
 .adminPanel {
-  padding: 20px;
   background: linear-gradient(180deg,#fcfdff,#f7fbff);
-  border-radius: 12px;
   box-shadow: 0 8px 40px rgba(9,30,63,0.04);
-  color: #071334;
-  font-family: Inter, "Segoe UI", Roboto, sans-serif;
-}
+  
+  padding: 50px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  color: #111827;
+  text-align: center;
+  }
 
 /* header */
-.header { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.header { display:flex; flex-direction:column; gap:6px; margin-bottom:14px ; }
 .header h2 { margin:0; font-size:1.25rem; color:#06203a; }
 .headerSub { margin:0; color:#51637a; font-size:0.92rem; }
 
@@ -216,4 +217,22 @@ input:focus, select:focus {
   .primaryBtn, .ghostBtn { width:100%; text-align:center; }
   input, select { font-size:0.88rem; padding:10px; }
   .previewMeta strong { font-size:0.92rem; }
+}
+
+
+/* INPUTS uniformes */
+.inputField {
+  width: 100%;
+  padding: 12px;
+  font-size: 0.92rem;
+  border-radius: 10px;
+  border: 1px solid rgba(11, 35, 64, 0.12);
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+  outline: none;
+  transition: box-shadow 0.12s, transform 0.08s;
+}
+
+.inputField:focus {
+  box-shadow: 0 6px 18px rgba(11, 35, 64, 0.15);
+  transform: translateY(-1px);
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Footer from "../../components/users/footer";
 import styles from "../../styles/Usersinscripcion.module.css";
 import CompetitionModal from "../../components/users/CompetitionModal";
-import SinCompetenciasModal from "../../components/users/SinCompetenciasModal"; // <- Importa el nuevo modal
+import SinCompetenciasModal from "../../components/users/SinCompetenciasModal";
 
 interface Competencia {
   id_competencia: number;
@@ -29,6 +29,8 @@ const RegistroCompetidor: React.FC = () => {
   const [competencia, setCompetencia] = useState<Competencia | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showSinCompetenciasModal, setShowSinCompetenciasModal] = useState(false);
+  const [paymentFile, setPaymentFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     nombre: "",
@@ -40,38 +42,26 @@ const RegistroCompetidor: React.FC = () => {
     correo: ""
   });
 
-  const [paymentFile, setPaymentFile] = useState<File | null>(null);
-
-  // Obtener competencia más cercana desde API
   useEffect(() => {
     const fetchCompetencia = async () => {
       try {
         const res = await fetch("http://localhost:3001/api/competenciasadmin");
         const data = await res.json();
-
         const now = new Date();
-        const upcomingEvents = data.filter((item: any) =>
-          new Date(item.fecha_evento) > now
-        );
-
-        upcomingEvents.sort(
-          (a: any, b: any) =>
-            new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime()
-        );
+        const upcomingEvents = data
+          .filter((item: any) => new Date(item.fecha_evento) > now)
+          .sort(
+            (a: any, b: any) =>
+              new Date(a.fecha_evento).getTime() - new Date(b.fecha_evento).getTime()
+          );
 
         const nextCompetition = upcomingEvents[0] || null;
         setCompetencia(nextCompetition);
-
-        // Mostrar modal si no hay competencias
-        if (!nextCompetition) {
-          setShowSinCompetenciasModal(true);
-        }
-
+        if (!nextCompetition) setShowSinCompetenciasModal(true);
       } catch (error) {
         console.error(error);
       }
     };
-
     fetchCompetencia();
   }, []);
 
@@ -82,7 +72,10 @@ const RegistroCompetidor: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setPaymentFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setPaymentFile(file);
+      const preview = URL.createObjectURL(file);
+      setPreviewUrl(preview);
     }
   };
 
@@ -93,36 +86,31 @@ const RegistroCompetidor: React.FC = () => {
 
   return (
     <>
-      {/* ✅ Modal de información de competencia */}
       <CompetitionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         competencia={competencia}
       />
 
-      {/* ✅ Modal de Sin Competencias */}
       <SinCompetenciasModal
         isOpen={showSinCompetenciasModal}
         onClose={() => setShowSinCompetenciasModal(false)}
       />
 
-      {/* Solo mostrar el registro si hay competencias */}
       {!showSinCompetenciasModal && (
-        <main className={styles["registro-main"]}>
-          <div className={styles["registro-container"]}>
-            
-            {/* Panel izquierdo */}
-            <div className={styles["left-panel"]}>
-              <div className={styles["event-header"]}>
-                <h2>Evento:</h2>
-                <div className={styles["event-name-container"]}>
-                  <h3>{competencia?.nombre ?? "Cargando competencia..."}</h3>
-                  <span className={styles["star-icon"]}>★</span>
-                </div>
+        <main className={styles.main}>
+          <div className={styles.container}>
+            {/* Panel Izquierdo */}
+            <div className={styles.leftPanel}>
+              <div className={styles.eventHeader}>
+                <h2>Evento</h2>
+                <h3 className={styles.eventName}>
+                  {competencia?.nombre ?? "Cargando competencia..."}
+                </h3>
               </div>
 
-              <div className={styles["image-container"]}>
-                <img 
+              <div className={styles.imageContainer}>
+                <img
                   src={
                     competencia?.foto
                       ? `http://localhost:3001${competencia.foto}`
@@ -130,128 +118,142 @@ const RegistroCompetidor: React.FC = () => {
                   }
                   alt="Evento"
                 />
-                <button type="button" className={styles["info-button"]} onClick={() => setIsModalOpen(true)}>
-                  Más Información
+                <button
+                  type="button"
+                  className={styles.infoButton}
+                  onClick={() => setIsModalOpen(true)}
+                >
+                  Más información
                 </button>
               </div>
 
               {competencia && (
-                <>
-                  <p className={styles["event-price"]}>
-                    💲 Costo: <strong>${competencia.costo}</strong>
+                <div className={styles.eventDetails}>
+
+                  <div className={styles["event-date-box"]}>
+ 
+                  <p>
+                    <strong>Costo:</strong> ${competencia.costo}
                   </p>
-                  <p className={styles["event-date"]}>
-                    📅 Fecha del evento:{" "}
+                  <p>
+                    <strong>Fecha del evento:</strong>{" "}
                     {new Date(competencia.fecha_evento).toLocaleDateString("es-MX")}
                   </p>
-                </>
+                    </div>
+                </div>
               )}
             </div>
 
-            {/* Panel derecho — formulario */}
-            <div className={styles["right-panel"]}>
-              <div className={styles["success-checkmark"]}>✔️</div>
-              <h1 className={styles["main-title"]}>Inscríbete y deja tu marca en la plataforma.</h1>
+            {/* Panel Derecho */}
+            <div className={styles.rightPanel}>
+              <h1 className={styles.title}>
+                Regístrate y participa en el próximo evento.
+              </h1>
 
               <form onSubmit={handleSubmit}>
-                <div className={styles["two-column-form"]}>
-                  <div className={styles["form-column"]}>
-                    <InputField 
-                      label="Nombre" 
+                <div className={styles.formGrid}>
+                  <div>
+                    <InputField
+                      label="Nombre"
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
-                      icon="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png"
                       required
                     />
-                    <InputField 
-                      label="Apellidos" 
+                    <InputField
+                      label="Apellidos"
                       name="apellidos"
                       value={formData.apellidos}
                       onChange={handleChange}
-                      icon="https://img.icons8.com/ios-filled/50/000000/user-male-circle.png"
                       required
                     />
-                    <InputField 
-                      label="Peso Corporal (kg)" 
+                    <InputField
+                      label="Peso corporal (kg)"
                       name="peso"
+                      type="number"
                       value={formData.peso}
                       onChange={handleChange}
-                      icon="https://img.icons8.com/ios-filled/50/000000/weight-kg.png"
-                      type="number"
                       required
                     />
                   </div>
 
-                  <div className={styles["form-column"]}>
-                    <InputField 
-                      label="Edad" 
+                  <div>
+                    <InputField
+                      label="Edad"
                       name="edad"
+                      type="number"
                       value={formData.edad}
                       onChange={handleChange}
-                      icon="https://img.icons8.com/ios-filled/50/000000/age.png"
-                      type="number"
                       required
                     />
-                    <SelectField 
-                      label="Categoría" 
+                    <SelectField
+                      label="Categoría"
                       name="categoria"
                       value={formData.categoria}
                       onChange={handleChange}
                       options={["Seleccionar", "Junior", "Adulto", "Veterano"]}
-                      icon="https://img.icons8.com/ios-filled/50/000000/expand-arrow.png"
                       required
                     />
-                    <InputField 
-                      label="Teléfono" 
+                    <InputField
+                      label="Teléfono"
                       name="telefono"
+                      type="tel"
                       value={formData.telefono}
                       onChange={handleChange}
-                      icon="https://img.icons8.com/ios-filled/50/000000/phone.png"
-                      type="tel"
                       required
                     />
                   </div>
                 </div>
 
-                <InputField 
-                  label="Correo" 
+                <InputField
+                  label="Correo electrónico"
                   name="correo"
+                  type="email"
                   value={formData.correo}
                   onChange={handleChange}
-                  icon="https://img.icons8.com/ios-filled/50/000000/email.png"
-                  type="email"
                   fullWidth
                   required
                 />
 
-                <div className={styles["payment-section"]}>
-                  <label>Pagar</label>
-                  <div className={styles["payment-content"]}>
-                    <span className={styles["payment-warning"]}>
-                      ¡Ten en cuenta tomar captura de tu pago!
-                    </span>
-                    <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" />
+                <div className={styles.paymentSection}>
+                  <label>Pago</label>
+                  <div className={styles.paymentBox}>
+                    <span>Realiza tu pago y sube el comprobante.</span>
+                    <img
+                      src="https://www.paypalobjects.com/webstatic/icon/pp258.png"
+                      alt="PayPal"
+                    />
                   </div>
                 </div>
 
-                <div className={styles["upload-section"]}>
-                  <label htmlFor="payment-upload">Subir Captura de Pago</label>
-                  <label htmlFor="payment-upload" className={styles["upload-box"]}>
-                    <input 
+                <div className={styles.uploadSection}>
+                  <label>Subir comprobante de pago</label>
+                  <div
+                    className={styles.uploadBox}
+                    onClick={() =>
+                      document.getElementById("payment-upload")?.click()
+                    }
+                  >
+                    <input
                       id="payment-upload"
-                      type="file" 
-                      onChange={handleFileChange}
+                      type="file"
                       accept="image/*"
-                      required
+                      onChange={handleFileChange}
                     />
-                    <img src="https://img.icons8.com/ios-filled/50/000000/upload.png" alt="Subir" />
-                    <span>{paymentFile ? paymentFile.name : "Haz clic para subir tu comprobante"}</span>
-                  </label>
+                    <span>
+                      {paymentFile
+                        ? paymentFile.name
+                        : "Selecciona una imagen..."}
+                    </span>
+                  </div>
+                  {previewUrl && (
+                    <div className={styles.previewContainer}>
+                      <img src={previewUrl} alt="Comprobante" />
+                    </div>
+                  )}
                 </div>
 
-                <button type="submit" className={styles["submit-button"]}>
-                  <img src="https://img.icons8.com/ios-filled/50/000000/sign-up.png" alt="Registro" />
+                <button type="submit" className={styles.submitButton}>
                   Registrarse
                 </button>
               </form>
@@ -269,28 +271,25 @@ interface InputFieldProps {
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  icon: string;
   type?: string;
   fullWidth?: boolean;
   required?: boolean;
 }
 
-const InputField: React.FC<InputFieldProps> = ({ 
-  label, 
+const InputField: React.FC<InputFieldProps> = ({
+  label,
   name,
   value,
   onChange,
-  icon,
   type = "text",
   fullWidth = false,
   required = false
 }) => (
-  <div className={`${styles["form-group"]} ${fullWidth ? styles["full-width"] : ""}`}>
-    <label>{label}{required && <span className={styles["required-star"]}> *</span>}</label>
-    <div className={styles["input-wrapper"]}>
-      <input type={type} name={name} value={value} onChange={onChange} required={required} />
-      <img src={icon} alt={label} className={styles["field-icon"]}/>
-    </div>
+  <div className={`${styles.formGroup} ${fullWidth ? styles.fullWidth : ""}`}>
+    <label>
+      {label} {required && <span className={styles.required}>*</span>}
+    </label>
+    <input type={type} name={name} value={value} onChange={onChange} required={required} />
   </div>
 );
 
@@ -300,29 +299,28 @@ interface SelectFieldProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   options: string[];
-  icon: string;
   required?: boolean;
 }
 
-const SelectField: React.FC<SelectFieldProps> = ({ 
-  label, 
+const SelectField: React.FC<SelectFieldProps> = ({
+  label,
   name,
   value,
   onChange,
   options,
-  icon,
   required = false
 }) => (
-  <div className={styles["form-group"]}>
-    <label>{label}{required && <span className={styles["required-star"]}> *</span>}</label>
-    <div className={styles["select-wrapper"]}>
-      <select name={name} value={value} onChange={onChange} required={required}>
-        {options.map((option, index) => (
-          <option key={index} value={option}>{option}</option>
-        ))}
-      </select>
-      <img src={icon} alt={label} className={styles["field-icon"]}/>
-    </div>
+  <div className={styles.formGroup}>
+    <label>
+      {label} {required && <span className={styles.required}>*</span>}
+    </label>
+    <select name={name} value={value} onChange={onChange} required={required}>
+      {options.map((option, index) => (
+        <option key={index} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
   </div>
 );
 
