@@ -8,7 +8,6 @@ const ChatBot: React.FC = () => {
   ]);
   const [input, setInput] = useState("");
 
-  const token = "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"; // Tu token de Hugging Face
   const model = "mistralai/Mistral-7B-Instruct-v0.2"; // Puedes usar otro si prefieres
 
   const sendMessage = async () => {
