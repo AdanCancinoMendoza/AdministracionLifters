@@ -13,7 +13,10 @@ import publicacionAdminRoutes from "./routes/publicacionAdminRoutes.js";
 import competidorRoutes from "./routes/competidorRoutes.js";
 import juezRoutes from "./routes/juezAdminRoutes.js";
 import liveStreamRoutes from "./routes/liveStreamRoutes.js";
-import calificacionesRoutes from "./routes/calificacionesRoutes.js"; // <-- rutas de calificaciones (POST /api/competencias/:id/calificaciones)
+import calificacionesRoutes from "./routes/calificacionesRoutes.js"; 
+import modulesRoutes from "./routes/modulesRoutes.js";
+import attemptsRoutes from "./routes/attemptsRoutes.js";
+
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -42,6 +45,9 @@ app.use("/api/publicacion", publicacionAdminRoutes);
 app.use("/api/competidor", competidorRoutes);
 app.use("/api/juez", juezRoutes);
 app.use("/api/lives", liveStreamRoutes);
+app.use("/api/modules", modulesRoutes);
+app.use("/api/attempts", attemptsRoutes);
+
 
 // Montar rutas de calificaciones bajo /api/competencias
 // POST /api/competencias/:id/calificaciones
