@@ -1,280 +1,511 @@
-/* -----------------------------------------------------------------
-AdminOrdenYPesos.module.css
-Copia este bloque a: src/styles/AdminOrdenYPesos.module.css
-Es modular y no globaliza estilos.
------------------------------------------------------------------ */
+/* src/styles/AdminOrdenYPesos.module.css */
 
+/* Variables y reset local */
+:root {
+  --bg: #f7fbff;
+  --card-bg: #ffffff;
+  --muted: #627d98;
+  --text: #0f1724;
 
-/* Container */
+  /* Paleta azul */
+  --accent: #1976d2;      /* azul principal */
+  --accent-600: #1565c0;
+  --accent-400: #42a5f5;
+
+  /* Timer / overlay azul semitransparente */
+  --timer-bg: rgba(25, 118, 210, 0.06);
+  --timer-border: rgba(25, 118, 210, 0.12);
+
+  --danger: #d32f2f;
+  --soft-border: rgba(12, 35, 61, 0.08);
+  --glass: rgba(25, 118, 210, 0.06);
+  --shadow: 0 6px 18px rgba(11, 35, 70, 0.06);
+  --radius: 10px;
+  --gap: 12px;
+  --pad: 14px;
+  --max-width: 1200px;
+  --footer-height: 12px;
+  font-size: 16px;
+}
+
+/* Box sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Contenedor general */
 .container {
-padding: 18px;
-font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-color: #111827;
-text-align: center;
-}
-
-
-.header {
-margin-bottom: 12px;
-}
-
-
-.controls {
-display: flex;
-gap: 12px;
-align-items: center;
-margin-bottom: 12px;
-}
-
-
-.selectWrap select {
-padding: 6px 8px;
-border-radius: 6px;
-border: 1px solid #d1d5db;
-}
-
-
-.searchWrap {
-display: flex;
-gap: 8px;
-align-items: center;
-flex: 1;
-}
-
-
-.input {
-padding: 8px 10px;
-border: 1px solid #e5e7eb;
-border-radius: 6px;
-width: 220px;
-}
-
-
-.inputSmall {
-padding: 6px 8px;
-border: 1px solid #e5e7eb;
-border-radius: 6px;
-width: 100px;
-}
-
-
-.pesoFilters {
-display: flex;
-gap: 6px;
-}
-
-
-.loading { margin: 10px 0; }
-
-
-.main {
-display: flex;
-gap: 16px;
-}
-
-
-.left {
-flex: 1.2;
-background: #fff;
-border: 1px solid #e6e6e6;
-border-radius: 8px;
-padding: 12px;
-}
-
-
-.right {
-flex: 0.8;
-background: #fff;
-border: 1px solid #e6e6e6;
-border-radius: 8px;
-padding: 12px;
-min-width: 320px;
-}
-
-
-.ordenHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; }
-.actionButtons { display:flex; gap:8px; }
-.primary {
-background: #0ea5a4;
-color: white;
-border: none;
-padding: 8px 12px;
-border-radius: 6px;
-cursor: pointer;
-}
-
-
-.ordenList { display:flex; flex-direction:column; gap:8px; max-height: 600px; overflow:auto; }
-
-
-.ordenItem { display:flex; justify-content:space-between; align-items:center; padding:8px; border-radius:6px; background: #fafafa; border:1px solid #f0f0f0; }
-.itemLeft { display:flex; gap:12px; align-items:center; cursor:pointer; }
-.ordenBadge { width:36px; height:36px; border-radius:50%; background:#111827; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; margin-right:6px; }
-.name { font-weight:600; }
-.meta { font-size:12px; color:#6b7280; }
-.itemRight { display:flex; gap:8px; align-items:center; }
-.timeInput { width:80px; padding:6px; border-radius:6px; border:1px solid #e5e7eb; }
-.controlsSmall button { padding:6px 8px; border-radius:6px; border:1px solid #e5e7eb; background:white; cursor:pointer; }
-.empty { padding: 16px; color:#6b7280; }
-
-
-/* Right panel */
-.selectedCard { display:flex; flex-direction:column; gap:12px; }
-.selectedHeader { display:flex; justify-content:space-between; align-items:center; }
-.nameLarge { font-weight:700; font-size:16px; }
-.closeBtn { background:transparent; border:1px solid #e5e7eb; padding:6px 8px; border-radius:6px; cursor:pointer; }
-.help { font-size:13px; color:#6b7280; }
-.pesosGrid { display:flex; flex-direction:column; gap:10px; }
-.ejercicioCard { padding:8px; border-radius:6px; border:1px solid #f1f5f9; background:#fff; }
-.ejercicioTitle { font-weight:700; margin-bottom:6px; }
-.intentosRow { display:flex; gap:8px; }
-.intentoBox { display:flex; flex-direction:column; }
-.intentoLabel { font-size:12px; color:#374151; }
-.pesoInput { width:100%; padding:6px; border-radius:6px; border:1px solid #e5e7eb; }
-.footerActions { display:flex; gap:8px; margin-top:8px; }
-.emptyRight { color:#6b7280; }
-
-
-.selectedHeader .meta { font-size:13px; }
-
-
-/* Responsiveness */
-@media (max-width: 900px) {
-.main { flex-direction:column; }
-.right { min-width: auto; }
-}
-
-/* --- (mantén todo lo anterior) --- */
-
-/* time display junto al input */
-.timeDisplay {
-  min-width: 74px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-  background: #fafafa;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* resaltado del item activo */
-.activeItem {
-  box-shadow: 0 2px 10px rgba(14,165,164,0.08);
-  border: 1px solid rgba(14,165,164,0.25);
-  background: linear-gradient(180deg, #ffffff, #f8fdfd);
-}
-
-/* cuando el tiempo expiró */
-.expiredItem {
-  opacity: 0.85;
-  border: 1px solid #f87171;
-  background: linear-gradient(180deg, #fff6f6, #fffafa);
-}
-
-/* botón de control (iconos) */
-.controlsSmall button {
-  padding: 6px;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-  background: white;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-}
-
-/* agrandar iconos dentro del botón */
-.controlsSmall button svg {
-  width: 18px;
-  height: 18px;
-}
-
-/* status visual para tiempo en rojo cuando queda <= 5s */
-.activeItem .timeDisplay {
-  font-size: 14px;
-}
-.activeItem .timeDisplay.warning {
-  color: #b91c1c;
-}
-
-/* compactar un poco los elementos */
-.itemRight { display:flex; gap:8px; align-items:center; }
-
-/* mantener responsividad */
-@media (max-width: 900px) {
-  .timeDisplay { min-width: 60px; font-size: 13px; }
-  .controlsSmall button { width: 32px; height: 32px; }
-}
-
-
-
-/* ---------- MODAL ---------- */
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-.modal {
-  width: 880px;
-  max-width: calc(100% - 32px);
-  background: #fff;
+  max-width: var(--max-width);
+  margin: 18px auto;
   padding: 18px;
+  background: linear-gradient(180deg, var(--bg), #ffffff);
   border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(2,6,23,0.12);
-}
-.modalHeader {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:12px;
-}
-.iconBtn {
-  padding:6px;
-  border-radius:6px;
-  border:1px solid #e5e7eb;
-  background:white;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-}
-.sectionCard {
-  border: 1px solid #e6e6e6;
-  background: #fff;
-  padding: 10px;
-  border-radius: 8px;
-}
-.sectionHeader {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:10px;
-}
-.sectionBody {
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+  color: var(--text);
 }
 
-/* make sure small controls exist (reused) */
-.pesoInput { width: 100%; padding:6px; border-radius:6px; border:1px solid #e5e7eb; }
-.smallIconBtn {
-  padding:6px;
-  border-radius:6px;
-  border:1px solid #e5e7eb;
-  background:white;
-  cursor:pointer;
-  width:34px;
-  height:34px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+/* Titulos */
+.title {
+  text-align: center;
+  margin: 0 0 12px 0;
+  font-size: 23px;
+  font-weight: 800;
+  color: black;
+  margin-top: 30px;
+}
+
+/* Controls row */
+.controlsRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin-right: 6px;
+}
+
+.select {
+  border: 1px solid var(--soft-border);
+  background: #fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  outline: none;
+  min-width: 220px;
+  transition: box-shadow .15s, border-color .15s;
+}
+.select:focus {
+  box-shadow: 0 0 0 4px var(--glass);
+  border-color: var(--accent);
+}
+
+/* Hint / mensajes */
+.hint {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* Indicador competencia concluida */
+.concluded {
+  display: inline-block;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgb(0, 128, 255), rgba(66,165,245,0.04));
+  color: var(--accent-600);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* Grid principal: left cards | right detalles */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 18px;
+  align-items: start;
+}
+
+/* Columnas */
+.leftCol {
+  background: transparent;
+}
+
+.rightCol {
+  background: transparent;
+  /* asegurar que no empuje layout si panel derecho es alto */
+  min-width: 280px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Section header inside left column (title + add btn) */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.sectionHeader h3 { margin: 0; font-size: 1rem; color: var(--accent-600); }
+
+/* Buttons: primarios con texto blanco asegurado */
+.addBtn,
+.primaryBtn {
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--accent);
+  color: white;                 /* texto blanco */
+  font-weight: 700;
+  box-shadow: 0 6px 12px rgba(210, 25, 25, 0.08);
+  transition: transform .08s ease, box-shadow .12s ease, background .12s;
+}
+
+/* Add button estilo degradado y hover */
+.addBtn {
+  background-color: #d32f2f;
+  padding: 8px 10px;
+  font-size: .95rem;
+}
+.addBtn:hover { transform: translateY(-1px); }
+
+/* Primary hover/active */
+.primaryBtn { background: var(--accent-600); padding: 8px 10px; }
+.primaryBtn:hover { background: var(--accent); transform: translateY(-1px); }
+.primaryBtn:active { transform: translateY(0); }
+
+/* Botones pequeños (texto en azul oscuro para contraste) */
+.smallBtn {
+  background: transparent;
+  color: var(--accent-600);
+  border: 1px solid var(--soft-border);
+  padding: 6px 8px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.smallBtn:hover {
+  background: rgba(25, 118, 210, 0.06);
+  color: var(--accent-600);
+}
+
+.tinyBtn {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.05);
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text);
+}
+.tinyBtn:hover { background: rgba(25,118,210,0.06); }
+
+/* Cards list: scrollable si hay muchas cards */
+.cardsList {
+  display: flex;
+  border-top: 4px solid rgb(0, 4, 255) ;
+  flex-direction: column;
+  gap: var(--gap);
+  max-height: 56vh;
+  overflow: auto;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+/* Card individual */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--soft-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Header del card: titulo y acciones */
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+.cardTitle {
+  font-weight: 800;
+  border: 1px solid rgba(0,0,0,0.04);
+  padding: 8px 10px;
+  border-radius: 8px;
+  min-width: 170px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Card actions (pasarán, botones) */
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.smallNumber {
+  width: 64px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--soft-border);
+  background: #fff;
+}
+
+/* Card body: lista asignados + selector */
+.cardBody {
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+}
+
+/* Lista de asignados */
+.assignedList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 28vh;
+  overflow: auto;
+  padding-right: 6px;
+}
+.assignedItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(15, 23, 36, 0.03);
+  background: linear-gradient(180deg, rgba(25,118,210,0.02), transparent);
+}
+.assignedMeta {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* Botones dentro de cada asignado */
+.assignedBtns { display: flex; gap: 6px; align-items: center; }
+
+/* Row para asignar nuevo competidor */
+.assignRow { display: flex; gap: 8px; margin-top: 6px; }
+.addSelect {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--soft-border);
+  background: white;
+}
+
+/* Lista disponible en la columna derecha */
+.availableList {
+  border-radius: 10px;
+  list-style: none;
+  padding: 2;
+  margin: 6px 0 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 28vh;
+  overflow: auto;
+}
+
+/* Panel de pesos - CORRECCIONES para evitar overflow */
+.weightsPanel {
+  margin-top: 8px;
+  border-radius: 10px;
+  padding: 10px;
+  border: 3px dashed rgb(0, 123, 247);
+  background: linear-gradient(180deg, rgba(25,118,210,0.02), rgba(255,255,255,0.01));
+  /* evita que el contenido empuje el layout: */
+  max-height: 400vh;       /* ajuste razonable — cámbialo si lo necesitas */
+  overflow: auto;         /* scroll interno si hay muchas filas */
+  box-sizing: border-box;
+}
+.weightCard {
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid var(--soft-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.weightHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Filas de ejercicio e intentos — ahora responsivas */
+.exerciseRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  flex-wrap: wrap; /* permite que los inputs salten a la siguiente línea */
+  width: 100%;
+}
+.exerciseLabel {
+  flex: 0 0 120px; /* fija el ancho de la etiqueta sin romper el layout */
+  min-width: 90px;
+  font-weight: 700;
+}
+.attemptsRow {
+  display: flex;
+  gap: 8px;
+  flex: 1 1 auto; /* ocupa el espacio restante y puede reducirse */
+  min-width: 0;   /* importante para evitar overflow en flexbox */
+  flex-wrap: wrap; /* permite wrapping si hay muchos inputs */
+  align-items: center;
+}
+
+/* Inputs de intento: no deben forzar ancho */
+.attemptInput {
+  /* preferimos un tamaño flexible: 100px ideal, pero reducible */
+  flex: 0 0 100px;
+  max-width: 100%;
+  min-width: 64px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--soft-border);
+  box-sizing: border-box;
+}
+
+/* Si hay más intentos, permitir scroll horizontal dentro del attemptsRow
+   (esto se aplica solo en pantallas amplias si prefieres scroll en vez de wrap) */
+.attemptsRow.scrollable {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* Timer y setup - ahora con fondo semi azul transparente */
+.timerSetup {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 12px;
+  /* Fondo semitransparente azul bajo */
+  background: var(--timer-bg);
+  border: 3px solid rgb(74, 8, 255);
+  box-shadow: 0 6px 18px rgba(25,118,210,0.03);
+}
+.exerciseSelector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.blockStatus {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+.activeMeta { color: var(--accent-600); font-weight: 700; }
+
+/* Footer (espacio) */
+.footer {
+  height: var(--footer-height);
+}
+
+/* Barra inferior fija */
+.bottomBar {
+  position: sticky;
+  bottom: 12px;
+  border: 2px solid rgba(76, 0, 255, 0.445);
+  margin-top: 14px;
+  border-radius: 12px;
+  background-color: white;
+  padding: 10px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 10px 30px rgba(11, 35, 70, 0.06);
+  z-index: 30;
+}
+.bottomLeft {
+  display: flex;
+  flex-direction: column;
+  
+}
+
+
+.activeName { font-weight: 800; }
+.activeMetaSmall { color: var(--muted); font-size: 0.9rem; }
+
+/* Temporizador grande en centro */
+.bottomCenter { display:flex; align-items:center; justify-content:center; width: 160px; }
+.timerDisplay {
+  background: rgb(0, 17, 255);
+  color:  white;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-weight: 900;
+  font-size: 1.1rem;
+  border: 1px solid var(--soft-border);
+}
+
+/* Botones en la derecha */
+.bottomRight { display:flex; gap:8px; align-items:center; }
+
+/* Estados y focus para accesibilidad */
+button:focus, input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(66,165,245,0.12);
+  border-color: var(--accent-400);
+}
+
+/* Pequeñas utilidades */
+.hidden { display: none; }
+.error { color: var(--danger); font-weight: 700; }
+
+/* Scrollbar styling (solo mejora visual) */
+.cardsList::-webkit-scrollbar,
+.assignedList::-webkit-scrollbar,
+.availableList::-webkit-scrollbar,
+.weightsPanel::-webkit-scrollbar,
+.attemptsRow::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.cardsList::-webkit-scrollbar-thumb,
+.assignedList::-webkit-scrollbar-thumb,
+.availableList::-webkit-scrollbar-thumb,
+.weightsPanel::-webkit-scrollbar-thumb,
+.attemptsRow::-webkit-scrollbar-thumb {
+  background: rgba(25,118,210,0.12);
+  border-radius: 99px;
+}
+
+/* Responsive: móvil */
+@media (max-width: 900px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+  .rightCol { max-width: 100%; }
+  .bottomCenter { width: auto; }
+  .timerDisplay { font-size: 1rem; padding: 6px 10px; }
+  .cardTitle { min-width: 120px; }
+  .assignedList, .cardsList, .availableList { max-height: 30vh; }
+  .cardHeader { flex-direction: column; align-items: stretch; gap: 8px; }
+
+  /* En móvil, los inputs ocupan más espacio: 2 columnas si hay muchos */
+  .attemptsRow { gap: 6px; }
+  .attemptInput {
+    flex: 1 1 calc(50% - 8px); /* intenta dos por fila */
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* Responsive: muy pequeño */
+@media (max-width: 420px) {
+  .controlsRow { gap: 6px; }
+  .select { min-width: 140px; }
+  .addBtn { padding: 6px 8px; font-size: .9rem; }
+  .tinyBtn, .smallBtn { padding: 4px 6px; font-size: .82rem; }
+  .bottomBar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .exerciseLabel { flex: 0 0 100%; }
+  .attemptInput { flex: 1 1 100%; }
 }
