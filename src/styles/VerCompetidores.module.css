@@ -1,326 +1,347 @@
-/* 🌟 Estilo moderno para VerCompetidores.module.css */
+:root {
+  --primary: #0d47a1;
+  --primary-light: #1976d2;
+  --primary-soft: #e3f2fd;
+  --danger: #d32f2f;
+  --success: #2e7d32;
 
-.container {
-  padding: 2rem;
-  background: #f7f9fc;
-  min-height: 100vh;
-  font-family: "Inter", system-ui, sans-serif;
-  color: #1a1a1a;
+  --text-dark: #1a1a1a;
+  --text-muted: #5b5b5b;
+  --border: #e0e0e0;
+
+  --radius: 14px;
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
-/* ===== HEADER ===== */
+/* Contenedor general */
+.container {
+  max-width: 1400px;
+  width: calc(100% - 48px);
+  margin: 30px auto;
+  padding: 20px;
+  color: var(--text-dark);
+  font-family: "Inter", sans-serif;
+}
+
+/* Header */
 .header {
   text-align: center;
-  margin-bottom: 2rem;
-  animation: fadeInDown 0.6s ease-in-out;
+  margin-bottom: 20px;
 }
 
 .title {
-  font-size: 2.4rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #2b3a67;
+  margin: 0;
 }
 
 .subtitle {
-  font-size: 1rem;
-  color: #5a5a5a;
-  margin-top: 0.5rem;
+  margin-top: 6px;
+  color: var(--text-muted);
 }
 
-/* ===== RESUMEN ===== */
-.resumen {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: white;
-  padding: 1rem 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  max-width: 400px;
-  margin: 0 auto 2rem auto;
+/* Grid */
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  align-items: start;
+  grid-auto-rows: minmax(80px, auto);
 }
 
-.resumenTexto {
-  font-size: 0.9rem;
-  color: #777;
-}
-
-.resumenNumero {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #2b3a67;
-}
-
-/* ===== COMPETENCIAS ===== */
+/* Tarjeta */
 .competenciaCard {
   background: white;
-  border-radius: 1.2rem;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
-  margin-bottom: 2rem;
-  padding: 1.5rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: all 0.22s ease;
+  overflow: visible; /* importante: permitir overlays por encima */
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* evita forcing width en flex/grid */
+  z-index: 1;
 }
 
 .competenciaCard:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+  transform: translateY(-4px);
 }
 
-.competenciaInfo {
+/* Card activa: ocupa todo el ancho del grid para mostrar la tabla completa */
+.activeCard {
+  border-color: var(--primary);
+  box-shadow: 0 18px 40px rgba(13, 71, 161, 0.18);
+  grid-column: 1 / -1;
+  transform: none;
+  z-index: 2; /* debajo del modal overlay */
+}
+
+/* Header tarjeta */
+.cardHeader {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
 }
 
-.competenciaFoto {
+/* Imagen circular */
+.cardImage {
   width: 80px;
   height: 80px;
-  border-radius: 12px;
+  border-radius: 50%;
   object-fit: cover;
+  border: 3px solid var(--primary-light);
+  transition: transform 0.25s ease, border-color 0.25s;
 }
 
-.competenciaNombre {
-  font-size: 1.4rem;
+.competenciaCard:hover .cardImage {
+  transform: scale(1.07);
+  border-color: var(--primary);
+}
+
+/* Info */
+.cardInfo h3 {
+  margin: 0;
   font-weight: 600;
-  color: #2b3a67;
+  font-size: 1.1rem;
 }
 
-.competenciaFechas {
+.cardInfo p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
   font-size: 0.9rem;
-  color: #666;
 }
 
-/* ===== TABLAS ===== */
+/* Contador */
+.countBadge {
+  background: var(--primary-soft);
+  color: var(--primary);
+  padding: 6px 10px;
+  border-radius: 100px;
+  font-size: 0.8rem;
+  display: inline-block;
+  margin-top: 8px;
+}
+
+/* Body expandible */
+.cardBody {
+  animation: fadeDown 0.3s ease;
+  padding: 16px;
+  background: white;
+  border-top: 1px solid var(--border);
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+/* Animación */
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Tabla */
 .tabla {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
-  overflow-x: auto;
+  margin-top: 10px;
+  font-size: 0.92rem;
+  text-align: center;
+  table-layout: auto;
+  white-space: normal;
+  position: relative;
+  z-index: 1;
 }
 
-.tabla th {
-  background: #2b3a67;
-  color: white;
-  padding: 0.75rem;
-  font-weight: 600;
-  text-align: left;
-  border-radius: 8px 8px 0 0;
+.tabla thead {
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
+.tabla th,
 .tabla td {
-  padding: 0.75rem;
-  border-bottom: 1px solid #eaeaea;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  word-break: break-word;
+  white-space: normal;
+  max-width: 320px;
 }
 
-.tabla tr:hover {
-  background: #f4f6ff;
+.tabla td.nowrap, .tabla th.nowrap {
+  white-space: nowrap;
 }
 
+.tabla tbody tr:hover {
+  background: #f6f9ff;
+}
+
+/* Acciones: asegurar que los botones estén por encima de la tabla y no queden cortados */
 .acciones {
   display: flex;
-  gap: 0.5rem;
   justify-content: center;
+  gap: 8px;
+  position: relative;
+  z-index: 50; /* mucho más alto que la tabla */
 }
 
-/* ===== BOTONES ===== */
-.verBaucher,
-.editar,
+.acciones button {
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.12s;
+  position: relative;
+  z-index: 60; /* asegúrate que estén siempre encima */
+}
+
+.acciones button:hover {
+  background: var(--primary-soft);
+}
+
+/* Botones específicos */
+.verBaucher {
+  background: transparent;
+}
+
+.editar {
+  background: transparent;
+}
+
 .eliminar {
   background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.verBaucher:hover {
-  color: #007bff;
-  transform: scale(1.1);
-}
-
-.editar:hover {
-  color: #28a745;
-  transform: scale(1.1);
-}
-
-.eliminar:hover {
-  color: #dc3545;
-  transform: scale(1.1);
-}
-
-/* ===== MODALES ===== */
+/* Modal overlay: capa superior global */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0,0,0,0.45);
   display: flex;
   justify-content: center;
   align-items: center;
-  animation: fadeIn 0.3s ease;
-  z-index: 1000;
+  padding: 20px;
+  z-index: 9999; /* muy arriba */
 }
 
+/* Modal content: scroll interno si es necesario */
 .modalContent {
+  width: min(900px, 98%);
+  max-height: calc(100vh - 120px);
+  overflow: auto;
   background: white;
-  border-radius: 1rem;
-  padding: 2rem;
-  max-width: 500px;
-  width: 90%;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
   position: relative;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  animation: slideUp 0.4s ease;
+  z-index: 10000;
 }
 
 .modalTitle {
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: #2b3a67;
+  margin: 0 0 12px;
   text-align: center;
 }
 
+/* Imagen baucher */
 .modalImagen {
   width: 100%;
-  border-radius: 0.5rem;
-  margin-bottom: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  object-fit: contain;
+  max-height: 60vh;
 }
 
+/* Botón cerrar modal */
 .modalCerrar {
-  background: #2b3a67;
-  color: white;
+  display: inline-block;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
   border: none;
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-weight: 500;
+  background: #eee;
   cursor: pointer;
-  display: block;
-  margin: 0 auto;
-  transition: background 0.2s ease;
 }
 
-.modalCerrar:hover {
-  background: #1f2d52;
-}
-
+/* Form */
 .modalForm {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 10px;
 }
 
 .modalForm input {
-  padding: 0.6rem 0.8rem;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-  transition: border 0.2s ease;
-}
-
-.modalForm input:focus {
-  border-color: #2b3a67;
-  outline: none;
+  padding: 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 
 .modalButtons {
   display: flex;
-  justify-content: space-between;
-  margin-top: 1rem;
+  justify-content: center;
+  gap: 12px;
 }
 
 .guardar {
-  background: #28a745;
+  background: var(--primary);
   color: white;
+  padding: 10px 16px;
+  border-radius: var(--radius);
   border: none;
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.guardar:hover {
-  background: #218838;
 }
 
 .cancelar {
-  background: #6c757d;
-  color: white;
+  background: #eee;
+  padding: 10px 16px;
+  border-radius: var(--radius);
   border: none;
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s ease;
-}
-
-.cancelar:hover {
-  background: #5a6268;
 }
 
 .eliminarConfirmar {
-  background: #dc3545;
+  background: var(--danger);
   color: white;
+  padding: 10px 16px;
+  border-radius: var(--radius);
   border: none;
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease;
 }
 
-.eliminarConfirmar:hover {
-  background: #c82333;
-}
-
-/* ===== ANIMACIONES ===== */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(30px);
-    opacity: 0;
+/* Responsive */
+@media (max-width: 950px) {
+  .cardsGrid {
+    grid-template-columns: 1fr 1fr;
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+
+  .activeCard {
+    grid-column: 1 / -1;
   }
 }
 
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+@media (max-width: 650px) {
+  .cardsGrid {
+    grid-template-columns: 1fr;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-/* ===== RESPONSIVO ===== */
-@media (max-width: 768px) {
-  .competenciaInfo {
+  .cardHeader {
     flex-direction: column;
-    align-items: flex-start;
   }
 
-  .tabla th,
-  .tabla td {
-    font-size: 0.85rem;
-    padding: 0.5rem;
+  .cardImage {
+    width: 90px;
+    height: 90px;
   }
 
-  .competenciaFoto {
-    width: 100%;
-    height: 150px;
-  }
-
-  .modalContent {
-    padding: 1.2rem;
+  .tabla th, .tabla td {
+    max-width: none;
+    font-size: 0.9rem;
   }
 }

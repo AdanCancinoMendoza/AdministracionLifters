@@ -99,6 +99,7 @@ const StoriesSection: React.FC = () => {
           </div>
         </div>
       )}
+      
     </section>
   );
 };

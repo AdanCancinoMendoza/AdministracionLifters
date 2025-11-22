@@ -1,26 +1,31 @@
 /* UsersFooter.module.css */
 
+/* ====== ESTRUCTURA GENERAL ====== */
 .mainFooter {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
-  color: #ffffff;
-  border-top: 3px solid #333;
-  font-family: 'Courier New', monospace;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f8ff 50%, #eaf1ff 100%);
+  color: #1a1a1a;
+  border-top: 3px solid #0077ff;
+  font-family: 'Poppins', sans-serif;
+  width: 100%;
+  position: relative;
+  bottom: 0;
+  left: 0;
 }
 
 .footerContainer {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 40px 20px 20px;
+  padding: 40px 30px 20px;
 }
 
-/* Sección Principal */
+/* ====== SECCIÓN PRINCIPAL ====== */
 .mainSection {
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 40px;
   margin-bottom: 40px;
   padding-bottom: 30px;
-  border-bottom: 2px solid #333;
+  border-bottom: 2px solid #cfd8ef;
 }
 
 .brandSection {
@@ -31,7 +36,7 @@
 .brandTitle {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #004aad;
   margin-bottom: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -40,18 +45,18 @@
 .divider {
   width: 60px;
   height: 3px;
-  background: linear-gradient(90deg, #ff6b6b, #ffa500);
+  background: linear-gradient(90deg, #0077ff, #00c2ff);
   margin: 10px 0;
 }
 
 .brandSubtitle {
-  color: #b0b0b0;
+  color: #5f6f89;
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-/* Grid de Contenido */
+/* ====== GRID DE CONTENIDO ====== */
 .contentGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -66,7 +71,7 @@
 .columnTitle {
   font-size: 1rem;
   font-weight: 600;
-  color: #ff6b6b;
+  color: #0077ff;
   margin-bottom: 15px;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -79,33 +84,37 @@
 }
 
 .featureList li {
-  color: #e0e0e0;
+  color: #2e3a59;
   margin-bottom: 8px;
-  font-size: 0.9rem;
-  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  transition: color 0.3s ease;
+}
+
+.featureList li:hover {
+  color: #0077ff;
 }
 
 .entityText {
-  color: #ffffff;
+  color: #004aad;
   font-weight: 600;
   margin-bottom: 10px;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .entityDescription {
-  color: #b0b0b0;
+  color: #5f6f89;
   font-size: 0.9rem;
   line-height: 1.5;
 }
 
-/* Sección de Contacto */
+/* ====== CONTACTO ====== */
 .contactSection {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 30px;
   padding-bottom: 30px;
-  border-bottom: 2px solid #333;
+  border-bottom: 2px solid #cfd8ef;
 }
 
 .contactInfo {
@@ -118,13 +127,18 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #e0e0e0;
+  color: #2e3a59;
   font-size: 0.9rem;
-  font-family: 'Courier New', monospace;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.contactItem:hover {
+  transform: translateX(5px);
+  color: #0077ff;
 }
 
 .contactIcon {
-  color: #ff6b6b;
+  color: #0077ff;
   min-width: 16px;
 }
 
@@ -138,11 +152,11 @@
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #333, #555);
+  background: linear-gradient(135deg, #0077ff, #00c2ff);
   color: #ffffff;
-  border: 1px solid #555;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -151,13 +165,12 @@
 }
 
 .actionButton:hover {
-  background: linear-gradient(135deg, #444, #666);
-  border-color: #ff6b6b;
+  background: linear-gradient(135deg, #005ecc, #00a8e8);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 119, 255, 0.3);
 }
 
-/* Footer Bottom */
+/* ====== PARTE INFERIOR ====== */
 .footerBottom {
   display: flex;
   justify-content: space-between;
@@ -166,21 +179,19 @@
 }
 
 .copyright p {
-  color: #888;
+  color: #5f6f89;
   font-size: 0.85rem;
   margin: 0;
-  font-family: 'Courier New', monospace;
 }
 
 .version p {
-  color: #ff6b6b;
+  color: #0077ff;
   font-size: 0.85rem;
   margin: 0;
   font-weight: 600;
-  font-family: 'Courier New', monospace;
 }
 
-/* Responsive */
+/* ====== RESPONSIVE ====== */
 @media (max-width: 768px) {
   .footerContainer {
     padding: 30px 15px 15px;
@@ -225,22 +236,4 @@
   .actionButton {
     justify-content: center;
   }
-}
-
-/* Efectos adicionales */
-.featureList li {
-  position: relative;
-  transition: color 0.3s ease;
-}
-
-.featureList li:hover {
-  color: #ff6b6b;
-}
-
-.contactItem {
-  transition: transform 0.3s ease;
-}
-
-.contactItem:hover {
-  transform: translateX(5px);
 }

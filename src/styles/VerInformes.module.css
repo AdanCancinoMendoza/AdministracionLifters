@@ -267,3 +267,31 @@
 .addBtn:hover {
   background-color: #2ecc71;
 }
+
+
+.btnCrear {
+  margin-bottom: 10px;
+  padding: 0.7rem 1.4rem;
+  background: linear-gradient(135deg, #0095ff, #007ee6);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btnCrear:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #0b5fa4, #0a3d62);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+}
+
+.btnCrear:active {
+  transform: scale(0.96);
+}

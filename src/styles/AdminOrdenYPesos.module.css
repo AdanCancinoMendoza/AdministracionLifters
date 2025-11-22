@@ -143,3 +143,138 @@ cursor: pointer;
 .main { flex-direction:column; }
 .right { min-width: auto; }
 }
+
+/* --- (mantén todo lo anterior) --- */
+
+/* time display junto al input */
+.timeDisplay {
+  min-width: 74px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #fafafa;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* resaltado del item activo */
+.activeItem {
+  box-shadow: 0 2px 10px rgba(14,165,164,0.08);
+  border: 1px solid rgba(14,165,164,0.25);
+  background: linear-gradient(180deg, #ffffff, #f8fdfd);
+}
+
+/* cuando el tiempo expiró */
+.expiredItem {
+  opacity: 0.85;
+  border: 1px solid #f87171;
+  background: linear-gradient(180deg, #fff6f6, #fffafa);
+}
+
+/* botón de control (iconos) */
+.controlsSmall button {
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+}
+
+/* agrandar iconos dentro del botón */
+.controlsSmall button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* status visual para tiempo en rojo cuando queda <= 5s */
+.activeItem .timeDisplay {
+  font-size: 14px;
+}
+.activeItem .timeDisplay.warning {
+  color: #b91c1c;
+}
+
+/* compactar un poco los elementos */
+.itemRight { display:flex; gap:8px; align-items:center; }
+
+/* mantener responsividad */
+@media (max-width: 900px) {
+  .timeDisplay { min-width: 60px; font-size: 13px; }
+  .controlsSmall button { width: 32px; height: 32px; }
+}
+
+
+
+/* ---------- MODAL ---------- */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal {
+  width: 880px;
+  max-width: calc(100% - 32px);
+  background: #fff;
+  padding: 18px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.12);
+}
+.modalHeader {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+.iconBtn {
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #e5e7eb;
+  background:white;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.sectionCard {
+  border: 1px solid #e6e6e6;
+  background: #fff;
+  padding: 10px;
+  border-radius: 8px;
+}
+.sectionHeader {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+.sectionBody {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* make sure small controls exist (reused) */
+.pesoInput { width: 100%; padding:6px; border-radius:6px; border:1px solid #e5e7eb; }
+.smallIconBtn {
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #e5e7eb;
+  background:white;
+  cursor:pointer;
+  width:34px;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}

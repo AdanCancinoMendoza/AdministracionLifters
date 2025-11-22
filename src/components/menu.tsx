@@ -50,7 +50,7 @@ const MenuAdmin = () => {
   const menuItems: MenuItem[] = [
     { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard size={18} /> },
     {
-      label: "Inicio",
+      label: "  Inicio",
       icon: <Home size={18} />,
       children: [
         { path: "/inicio/editar", label: "Editar Texto e Imagen", icon: <Edit size={14} /> },
@@ -60,7 +60,7 @@ const MenuAdmin = () => {
       ],
     },
     {
-      label: "Competidores",
+      label: " Competidores",
       icon: <Users size={18} />,
       children: [
         { path: "/competidores/registrar", label: "Registrar Competidor", icon: <UserPlus size={14} /> },
@@ -68,7 +68,7 @@ const MenuAdmin = () => {
       ],
     },
     {
-      label: "Competencias",
+      label: " Competencias",
       icon: <Flag size={18} />,
       children: [
         { path: "/competencias/crearcompetencia", label: "Registrar Competencia", icon: <PlusCircle size={14} /> },
@@ -77,7 +77,7 @@ const MenuAdmin = () => {
       ],
     },
     {
-      label: "Difusión de Información",
+      label: " Información",
       icon: <Newspaper size={18} />,
       children: [{ path: "/informacion/ver", label: "Ver Informes", icon: <FileText size={14} /> }],
     },

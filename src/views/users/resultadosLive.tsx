@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import styles from '../../styles/UsersLiveResults.module.css';
+import Footer from "../../components/users/footer";
 
 type Competencia = {
   id_competencia: number;
@@ -293,6 +294,9 @@ export default function LiveResultsSection(): JSX.Element {
           </article>
         );
       })}
+    
+          <Footer />
+
     </section>
   );
 }
