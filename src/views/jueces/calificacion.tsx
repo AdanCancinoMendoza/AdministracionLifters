@@ -1,94 +1,147 @@
-// src/pages/CalificarScreen.tsx
+// src/views/jueces/calificacion.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { FaFlag, FaFlagCheckered } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
 import styles from "../../styles/CalificarJuez.module.css";
 
-/**
- * Ajusta según tu entorno:
- * - COMPETENCIA_ID: puede venir por props/route; aquí lo dejamos como constante para pruebas.
- * - ID_JUEZ: en producción debe venir del token/auth; aquí usamos localStorage como fallback.
- * - API_BASE / SOCKET_URL: apuntan a tu backend (por defecto http://localhost:3001).
- */
-const COMPETENCIA_ID = Number(localStorage.getItem("competencia_id")) || 4;
-const ID_JUEZ = Number(localStorage.getItem("id_juez")) || 2;
-const API_BASE = "http://localhost:3001";
-const SOCKET_URL = API_BASE;
+interface Juez { id_juez: number; id_competencia: number; nombre?: string; apellidos?: string; usuario?: string; }
+type PesoAsignado = { id?: number; id_ejercicio: number; intento: number; peso?: any; estado_intento?: string; approved?: number | null; notes?: string | null };
+type OrdenResponseItem = { competidor: { id_competidor: number; nombre: string; orden: number; [k: string]: any }; pesos: PesoAsignado[]; };
 
-/** Tipos locales */
-type PesoAsignado = { id_ejercicio: number; intento: number; peso: string; estado_intento: string };
-type OrdenResponseItem = { competidor: { id_competidor: number; nombre: string; orden: number }; pesos: PesoAsignado[] };
+type IntentoLocal = { intento: number; peso?: string | undefined; estado_intento: string; resultadoFinal?: "Bueno" | "Malo" | null; tally?: { Bueno: number; Malo: number }; attemptId?: number | null; votedByMe?: boolean };
+type EjercicioLocal = { id_ejercicio: number; nombre: string; intentos: IntentoLocal[]; };
+type CompetidorLocal = { id_competidor: number; nombre: string; orden: number; ejercicios: EjercicioLocal[]; };
 
-type IntentoLocal = {
-  intento: number;
-  peso?: string;
-  estado_intento: string;
-  resultadoFinal?: "Bueno" | "Malo" | null;
-  tally?: { Bueno: number; Malo: number };
-};
-
-type EjercicioLocal = {
-  id_ejercicio: number;
-  nombre: string;
-  intentos: IntentoLocal[]; // 3 elementos
-};
-
-type CompetidorLocal = {
+type CompetidorApi = {
   id_competidor: number;
   nombre: string;
-  orden: number;
-  ejercicios: EjercicioLocal[];
+  apellidos?: string;
+  peso?: string | null;
+  id_competencia?: number;
+  [k: string]: any;
 };
 
-const EXERCISE_NAMES: Record<number, string> = {
-  1: "Press Banca",
-  2: "Sentadilla",
-  3: "Peso Muerto",
-};
+const API_BASE = "http://localhost:3001";
+const SOCKET_URL = API_BASE;
+const ATTEMPTS_API = `${API_BASE}/api/attempts`;
+const MODULES_API = `${API_BASE}/api/modules`;
+const COMPETITOR_API = `${API_BASE}/api/competidor`;
+const EXERCISE_NAMES: Record<number, string> = { 1: "Press Banca", 2: "Peso Muerto", 3: "Sentadilla" };
 
-const CalificarScreen: React.FC = () => {
+const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
+  const navigate = useNavigate();
+
+  const [juez, setJuez] = useState<Juez | null>(userJuez);
+  const [competenciaId, setCompetenciaId] = useState<number | null>(userJuez?.id_competencia ?? null);
+  const [competitionName, setCompetitionName] = useState<string | null>(null);
+
   const [listaCompetidores, setListaCompetidores] = useState<CompetidorLocal[]>([]);
   const [activeCompetitorId, setActiveCompetitorId] = useState<number | null>(null);
   const [currentEjercicioIndex, setCurrentEjercicioIndex] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(60);
   const [isRunning, setIsRunning] = useState<boolean>(false);
-  const [canCalificar, setCanCalificar] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const [activeCompetitorDetail, setActiveCompetitorDetail] = useState<CompetidorApi | null>(null);
+
+  // evita dobles envíos: keyed por attemptId (si existe)
+  const [pendingSubmits, setPendingSubmits] = useState<Record<number, boolean>>({});
+
+  // almacenamiento local para saber si este juez ya votó un intento (keyed por attemptId o comp-ex-attempt)
+  const [votedAttempts, setVotedAttempts] = useState<Record<string, boolean>>({});
+
+  // clave del intento "congelado" después de votar; evita que la UI salte al siguiente intento automáticamente
+  const [frozenAttemptKey, setFrozenAttemptKey] = useState<string | null>(null);
+
   const socketRef = useRef<Socket | null>(null);
-  const pollRef = useRef<number | null>(null);
   const timerRef = useRef<number | null>(null);
 
-  // --- Helpers para mapear la respuesta del endpoint a la estructura local ---
-  const mapCompetidores = (raw: OrdenResponseItem[]): CompetidorLocal[] => {
-    // ordenar por competidor.orden asc
-    const sorted = [...raw].sort((a, b) => (a.competidor.orden || 0) - (b.competidor.orden || 0));
-    return sorted.map((item) => {
-      // construir mapa de ejercicios -> intentos
-      const ejerciciosMap: Record<number, IntentoLocal[]> = {};
+  useEffect(() => {
+    if (!userJuez) {
+      navigate("/jueces/login");
+      return;
+    }
+    setJuez(userJuez);
+    setCompetenciaId(userJuez.id_competencia ?? null);
+  }, [userJuez, navigate]);
 
+  const parseNotesTally = (notesRaw: any) => {
+    const tally = { Bueno: 0, Malo: 0 };
+    if (!notesRaw) return tally;
+    try {
+      const arr = typeof notesRaw === "string" ? JSON.parse(notesRaw) : notesRaw;
+      if (Array.isArray(arr)) {
+        for (const n of arr) {
+          if (n?.valor === "Bueno") tally.Bueno++;
+          if (n?.valor === "Malo") tally.Malo++;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return tally;
+  };
+
+  // intenta detectar si en notes hay referencia a un voto del juez actual
+  const didJudgeVote = (notesRaw: any, judgeIdToCheck: number | null) => {
+    if (!notesRaw || !judgeIdToCheck) return false;
+    try {
+      const arr = typeof notesRaw === "string" ? JSON.parse(notesRaw) : notesRaw;
+      if (!Array.isArray(arr)) return false;
+      for (const n of arr) {
+        if (n?.judge_id === judgeIdToCheck || n?.juez_id === judgeIdToCheck || n?.judgeId === judgeIdToCheck || n?.author_id === judgeIdToCheck || n?.user_id === judgeIdToCheck) {
+          return true;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return false;
+  };
+
+  const getAttemptKey = (attemptId: number | null | undefined, id_competidor?: number, exercise_id?: number, attempt_number?: number) => {
+    if (attemptId) return `id:${attemptId}`;
+    if (id_competidor != null && exercise_id != null && attempt_number != null) return `${id_competidor}-${exercise_id}-${attempt_number}`;
+    return `unknown`;
+  };
+
+  const mapCompetidores = (raw: OrdenResponseItem[]): CompetidorLocal[] => {
+    const sorted = [...raw].sort((a, b) => (a.competidor.orden ?? 0) - (b.competidor.orden ?? 0));
+    return sorted.map((item) => {
+      const ejerciciosMap: Record<number, IntentoLocal[]> = {};
       for (const p of item.pesos || []) {
         if (!ejerciciosMap[p.id_ejercicio]) {
           ejerciciosMap[p.id_ejercicio] = [
-            { intento: 1, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 } },
-            { intento: 2, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 } },
-            { intento: 3, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 } },
+            { intento: 1, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 }, attemptId: null, votedByMe: false },
+            { intento: 2, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 }, attemptId: null, votedByMe: false },
+            { intento: 3, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 }, attemptId: null, votedByMe: false },
           ];
         }
         const arr = ejerciciosMap[p.id_ejercicio];
         if (p.intento >= 1 && p.intento <= 3) {
-          arr[p.intento - 1].peso = p.peso;
-          arr[p.intento - 1].estado_intento = p.estado_intento ?? arr[p.intento - 1].estado_intento;
+          const idx = p.intento - 1;
+          arr[idx].peso = p.peso;
+          arr[idx].attemptId = (p as any).id ?? arr[idx].attemptId ?? null;
+          arr[idx].estado_intento = p.estado_intento ?? arr[idx].estado_intento;
+          if ((p as any).approved !== undefined && (p as any).approved !== null) {
+            arr[idx].resultadoFinal = (p as any).approved ? "Bueno" : "Malo";
+          }
+          if ((p as any).notes) {
+            arr[idx].tally = parseNotesTally((p as any).notes);
+            arr[idx].votedByMe = didJudgeVote((p as any).notes, getJudgeId());
+            if (arr[idx].votedByMe) {
+              const key = getAttemptKey(arr[idx].attemptId, item.competidor.id_competidor, p.id_ejercicio, p.intento);
+              setVotedAttempts(prev => ({ ...prev, [key]: true }));
+            }
+          }
         }
       }
-
-      // asegurar ejercicios 1..3 existan
       const ejercicios: EjercicioLocal[] = [1, 2, 3].map((id) => {
         const intentos = ejerciciosMap[id] ?? [
-          { intento: 1, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 } },
-          { intento: 2, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 } },
-          { intento: 3, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 } },
+          { intento: 1, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 }, attemptId: null, votedByMe: false },
+          { intento: 2, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 }, attemptId: null, votedByMe: false },
+          { intento: 3, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 }, attemptId: null, votedByMe: false },
         ];
         return { id_ejercicio: id, nombre: EXERCISE_NAMES[id] ?? `Ejercicio ${id}`, intentos };
       });
@@ -96,133 +149,321 @@ const CalificarScreen: React.FC = () => {
       return {
         id_competidor: item.competidor.id_competidor,
         nombre: item.competidor.nombre,
-        orden: item.competidor.orden,
+        orden: item.competidor.orden ?? 0,
         ejercicios,
       };
     });
   };
 
-  // --- Fetch inicial ---
+  const fetchCompetitionName = async (compId: number) => {
+    try {
+      const r = await fetch(`${API_BASE}/api/competencias/${compId}`);
+      if (!r.ok) return setCompetitionName(null);
+      const j = await r.json();
+      const name = j?.nombre ?? j?.name ?? j?.title ?? null;
+      setCompetitionName(name);
+    } catch {
+      setCompetitionName(null);
+    }
+  };
+
+  const fetchOrdenPesos = async (): Promise<CompetidorLocal[] | void> => {
+    if (!competenciaId) return;
+    try {
+      const mRes = await fetch(`${MODULES_API}?competition_id=${competenciaId}`);
+      if (!mRes.ok) throw new Error("No se pudo obtener módulos");
+      const modules = await mRes.json();
+
+      const assignPromises = modules.map(async (m: any) => {
+        try {
+          const r = await fetch(`${MODULES_API}/${m.id}/assignments`);
+          if (!r.ok) return { module: m, assigns: [] };
+          const assigns = await r.json();
+          return { module: m, assigns };
+        } catch {
+          return { module: m, assigns: [] };
+        }
+      });
+      const moduleAssigns = await Promise.all(assignPromises);
+
+      const ordenArray: { id_competidor: number; nombre: string; orden: number }[] = [];
+      for (const ma of moduleAssigns) {
+        const assigns = ma.assigns || [];
+        for (const a of assigns) {
+          const existing = ordenArray.find((x) => x.id_competidor === Number(a.id_competidor));
+          if (!existing) {
+            ordenArray.push({
+              id_competidor: Number(a.id_competidor),
+              nombre: `${a.nombre ?? ""}${a.apellidos ? " " + a.apellidos : ""}`.trim() || (a.nombre ?? "Competidor"),
+              orden: a.position != null ? Number(a.position) : ordenArray.length + 1,
+            });
+          }
+        }
+      }
+
+      if (ordenArray.length === 0) {
+        setListaCompetidores([]);
+        return [];
+      }
+
+      const itemsPromises = ordenArray.map(async (c) => {
+        try {
+          const r = await fetch(`${ATTEMPTS_API}/by-competitor?id_competencia=${competenciaId}&id_competidor=${c.id_competidor}`);
+          const rows = r.ok ? await r.json() : [];
+          const pesos: PesoAsignado[] = (rows || []).map((row: any) => ({
+            id: row.id,
+            id_ejercicio: Number(row.exercise_id),
+            intento: Number(row.attempt_number),
+            peso: row.weight_kg,
+            estado_intento: row.approved == null ? "pendiente" : row.approved ? "realizado" : "invalidado",
+            approved: row.approved,
+            notes: row.notes ?? null,
+          }));
+          return { competidor: { id_competidor: c.id_competidor, nombre: c.nombre, orden: c.orden }, pesos };
+        } catch (err) {
+          return { competidor: { id_competidor: c.id_competidor, nombre: c.nombre, orden: c.orden }, pesos: [] };
+        }
+      });
+
+      const responseItems: OrdenResponseItem[] = await Promise.all(itemsPromises);
+      const mapped = mapCompetidores(responseItems);
+      setListaCompetidores(mapped);
+      return mapped;
+    } catch (err) {
+      console.error("fetchOrdenPesos err:", err);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     const init = async () => {
+      if (!competenciaId) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE}/api/orden/${COMPETENCIA_ID}/orden_pesos`);
-        if (!res.ok) throw new Error("No se pudo obtener orden_pesos");
-        const data: OrdenResponseItem[] = await res.json();
-        if (!mounted) return;
-        const mapped = mapCompetidores(data);
-        setListaCompetidores(mapped);
+        const mapped = await fetchOrdenPesos();
+        await fetchCompetitionName(competenciaId);
+        if (mounted && mapped && mapped.length > 0) {
+          // nothing specific now
+        }
       } catch (err) {
-        console.error("error fetch orden_pesos:", err);
+        console.error("init error", err);
       } finally {
         if (mounted) setLoading(false);
       }
     };
     init();
     return () => { mounted = false; };
-  }, []);
-
-  // --- Polling fallback para detectar competidor activo (si el servidor NO emite sockets) ---
-  useEffect(() => {
-    const poll = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/orden/${COMPETENCIA_ID}/orden`);
-        if (!res.ok) return;
-        const rows = await res.json(); // rows de orden_participacion
-        // buscar el que tenga estado 'en_curso'
-        const active = (rows || []).find((r: any) => r.estado === "en_curso");
-        if (active) {
-          // actualizar activeCompetitorId si cambió
-          setActiveCompetitorId(active.id_competidor);
-          // Opcional: colocar ejercicio inicial en 0
-          setCurrentEjercicioIndex(0);
-          setIsRunning(true);
-          // y refrescar lista de pesos por si cambiaron
-          fetchOrdenPesos();
-        } else {
-          setIsRunning(false);
-          // si el admin finalizó todo puede no haber en_curso
-        }
-      } catch (err) {
-        // ignore
-      }
-    };
-    // lanzar poll inmediatamente y luego cada 3s
-    poll();
-    pollRef.current = window.setInterval(poll, 3000) as unknown as number;
-    return () => {
-      if (pollRef.current) {
-        window.clearInterval(pollRef.current);
-        pollRef.current = null;
-      }
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listaCompetidores]);
+  }, [competenciaId]);
 
-  // --- Socket.IO: conexión y listeners ---
+  const fetchCompetitorDetailAndAttempts = async (id_competidor: number) => {
+    try {
+      let detail: CompetidorApi | null = null;
+      try {
+        const r = await fetch(`${COMPETITOR_API}/${id_competidor}`);
+        if (r.ok) detail = await r.json();
+      } catch {
+        try {
+          const r2 = await fetch(COMPETITOR_API);
+          if (r2.ok) {
+            const arr = await r2.json();
+            detail = arr.find((x: any) => Number(x.id_competidor) === Number(id_competidor)) ?? null;
+          }
+        } catch {}
+      }
+
+      if (!detail) {
+        const fallback = listaCompetidores.find((c) => c.id_competidor === id_competidor);
+        if (fallback) {
+          detail = { id_competidor: fallback.id_competidor, nombre: fallback.nombre, peso: (fallback as any).peso ?? null } as CompetidorApi;
+        }
+      }
+
+      setActiveCompetitorDetail(detail);
+    } catch (err) {
+      console.warn("fetch competitor detail failed", err);
+      setActiveCompetitorDetail(null);
+    }
+
+    try {
+      if (!competenciaId) return;
+      const r = await fetch(`${ATTEMPTS_API}/by-competitor?id_competencia=${competenciaId}&id_competidor=${id_competidor}`);
+      if (!r.ok) return;
+      const rows = await r.json();
+
+      setListaCompetidores((prev) => {
+        const copy = prev.map((c) => ({ ...c, ejercicios: c.ejercicios.map((e) => ({ ...e, intentos: e.intentos.map(it => ({ ...it })) })) }));
+        const comp = copy.find((c) => c.id_competidor === id_competidor);
+        if (!comp) return prev;
+        comp.ejercicios.forEach((ej) => {
+          ej.intentos = [
+            { intento: 1, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 }, attemptId: null, votedByMe: false },
+            { intento: 2, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 }, attemptId: null, votedByMe: false },
+            { intento: 3, peso: undefined, estado_intento: "pendiente", resultadoFinal: null, tally: { Bueno: 0, Malo: 0 }, attemptId: null, votedByMe: false },
+          ];
+        });
+        for (const row of rows) {
+          const exIdx = comp.ejercicios.findIndex(e => e.id_ejercicio === Number(row.exercise_id));
+          if (exIdx >= 0) {
+            const slot = Number(row.attempt_number) - 1;
+            if (slot >= 0 && slot < 3) {
+              comp.ejercicios[exIdx].intentos[slot].peso = row.weight_kg;
+              comp.ejercicios[exIdx].intentos[slot].estado_intento = row.approved == null ? "pendiente" : row.approved ? "realizado" : "invalidado";
+              comp.ejercicios[exIdx].intentos[slot].resultadoFinal = row.approved == null ? null : row.approved ? "Bueno" : "Malo";
+              comp.ejercicios[exIdx].intentos[slot].attemptId = row.id ?? null;
+              comp.ejercicios[exIdx].intentos[slot].tally = parseNotesTally(row.notes);
+              comp.ejercicios[exIdx].intentos[slot].votedByMe = didJudgeVote(row.notes, getJudgeId());
+              if (comp.ejercicios[exIdx].intentos[slot].votedByMe) {
+                const key = getAttemptKey(row.id ?? null, id_competidor, Number(row.exercise_id), Number(row.attempt_number));
+                setVotedAttempts(prev => ({ ...prev, [key]: true }));
+              }
+            }
+          }
+        }
+        return copy;
+      });
+
+      if (Array.isArray(rows) && rows.length > 0) {
+        const maybeBody = rows.find((r: any) => r.body_weight || r.peso_corporal || r.peso || r.bodyWeight);
+        if (maybeBody) {
+          setActiveCompetitorDetail((prev) => {
+            if (prev && (prev.peso != null && prev.peso !== "")) return prev;
+            return { ...(prev ?? {}), peso: maybeBody.body_weight ?? maybeBody.peso_corporal ?? maybeBody.peso ?? maybeBody.bodyWeight ?? null } as CompetidorApi;
+          });
+        }
+      }
+
+    } catch (err) {
+      console.warn("fetch attempts by competitor failed", err);
+    }
+  };
+
   useEffect(() => {
-    socketRef.current = io(SOCKET_URL, { transports: ["websocket"] });
-    socketRef.current.emit("join", { id_competencia: COMPETENCIA_ID });
+    if (!competenciaId) return;
 
-    socketRef.current.on("order_update", () => {
-      // re-fetch toda la lista de pesos para mantener single source of truth
-      fetchOrdenPesos();
+    const s = io(SOCKET_URL, { transports: ["websocket"] });
+    socketRef.current = s;
+    s.on("connect", () => {
+      try { s.emit("join", { id_competencia: competenciaId }); } catch {}
     });
 
-    socketRef.current.on("start", (payload: any) => {
-      if (payload?.id_competencia !== COMPETENCIA_ID) return;
-      setActiveCompetitorId(payload.id_competidor ?? null);
+    // actualiza UI con eventos de voto
+    s.on("vote_update", (payload: any) => {
+      if (!payload) return;
+      if (payload.id_competencia && payload.id_competencia !== competenciaId) return;
+      if (payload.attempt) {
+        const att = payload.attempt;
+        setListaCompetidores(prev => {
+          const copy = prev.map(c => ({ ...c, ejercicios: c.ejercicios.map(e => ({ ...e, intentos: e.intentos.map(it => ({ ...it })) })) }));
+          for (const comp of copy) {
+            for (const ej of comp.ejercicios) {
+              for (let i = 0; i < ej.intentos.length; i++) {
+                if (ej.intentos[i].attemptId === att.id) {
+                  ej.intentos[i].estado_intento = att.approved == null ? "pendiente" : att.approved ? "realizado" : "invalidado";
+                  ej.intentos[i].resultadoFinal = att.approved == null ? null : att.approved ? "Bueno" : "Malo";
+                  ej.intentos[i].tally = parseNotesTally(att.notes);
+                  ej.intentos[i].votedByMe = didJudgeVote(att.notes, getJudgeId());
+                  if (ej.intentos[i].votedByMe) {
+                    const key = getAttemptKey(att.id, undefined, undefined, undefined);
+                    setVotedAttempts(prev => ({ ...prev, [key]: true }));
+                  }
+                }
+              }
+            }
+          }
+          return copy;
+        });
+      }
+    });
+
+    s.on("start", async (payload: any) => {
+      if (payload?.id_competencia !== competenciaId) return;
+      // cuando admin manda start, limpiamos freeze para permitir nueva selección desde admin
+      setFrozenAttemptKey(null);
+
+      if (payload?.id_competidor != null) setActiveCompetitorId(Number(payload.id_competidor));
       if (payload?.id_ejercicio) {
         const idx = [1,2,3].indexOf(Number(payload.id_ejercicio));
         setCurrentEjercicioIndex(idx >= 0 ? idx : 0);
+      } else setCurrentEjercicioIndex(0);
+
+      if (typeof payload?.remaining === "number") {
+        setTimeLeft(Number(payload.remaining));
+        setIsRunning(Number(payload.remaining) > 0);
+      } else if (payload?.running !== undefined) {
+        setIsRunning(Boolean(payload.running));
       } else {
-        setCurrentEjercicioIndex(0);
+        setIsRunning(true);
       }
-      setTimeLeft(payload?.remaining ?? 60);
-      setIsRunning(true);
-      setCanCalificar(true);
-      // refresh pesos
-      fetchOrdenPesos();
+      await fetchOrdenPesos();
     });
 
-    socketRef.current.on("pause", (payload: any) => {
-      if (payload?.id_competencia !== COMPETENCIA_ID) return;
-      setIsRunning(false);
+    s.on("competitor:selected", async (payload: any) => {
+      if (payload?.id_competencia !== competenciaId) return;
+      // limpiar freeze si admin selecciona otro competidor/ejercicio
+      setFrozenAttemptKey(null);
+
+      const compId = payload?.id_competidor ?? null;
+      if (compId != null) {
+        setActiveCompetitorId(Number(compId));
+        if (payload?.id_ejercicio) {
+          const idx = [1,2,3].indexOf(Number(payload.id_ejercicio));
+          setCurrentEjercicioIndex(idx >= 0 ? idx : 0);
+        } else setCurrentEjercicioIndex(0);
+        if (typeof payload?.remaining === "number") {
+          setTimeLeft(Number(payload.remaining));
+          setIsRunning(Number(payload.remaining) > 0);
+        } else if (payload?.running !== undefined) {
+          setIsRunning(Boolean(payload.running));
+        }
+        await fetchOrdenPesos();
+      }
     });
 
-    socketRef.current.on("resume", (payload: any) => {
-      if (payload?.id_competencia !== COMPETENCIA_ID) return;
-      setIsRunning(true);
+    s.on("pause", (payload: any) => {
+      if (payload?.id_competencia !== competenciaId) return;
+      if (typeof payload?.remaining === "number") setTimeLeft(Number(payload.remaining));
+      if (payload?.running !== undefined) setIsRunning(Boolean(payload.running));
+      else setIsRunning(false);
     });
 
-    socketRef.current.on("next", (payload: any) => {
-      if (payload?.id_competencia !== COMPETENCIA_ID) return;
-      // payload puede traer nextId o id_competidor
+    s.on("resume", (payload: any) => {
+      if (payload?.id_competencia !== competenciaId) return;
+      if (typeof payload?.remaining === "number") setTimeLeft(Number(payload.remaining));
+      if (payload?.running !== undefined) setIsRunning(Boolean(payload.running));
+      else if (typeof payload?.remaining === "number") setIsRunning(payload.remaining > 0);
+      else setIsRunning(true);
+    });
+
+    s.on("next", async (payload: any) => {
+      if (payload?.id_competencia !== competenciaId) return;
+      // admin avanzó al siguiente -> limpiamos freeze para mostrar el nuevo intento real
+      setFrozenAttemptKey(null);
+
       const nextId = payload?.nextId ?? payload?.id_competidor;
       setActiveCompetitorId(nextId ?? null);
       setCurrentEjercicioIndex(0);
-      setTimeLeft(payload?.remaining ?? 60);
-      setIsRunning(true);
-      setCanCalificar(true);
-      fetchOrdenPesos();
-    });
-
-    socketRef.current.on("vote_update", (payload: any) => {
-      if (payload?.id_competencia !== COMPETENCIA_ID) return;
-      applyVoteUpdateToState(payload);
+      if (typeof payload?.remaining === "number") { setTimeLeft(Number(payload.remaining)); setIsRunning(Number(payload.remaining) > 0); }
+      else if (payload?.running !== undefined) setIsRunning(Boolean(payload.running));
+      await fetchOrdenPesos();
     });
 
     return () => {
-      socketRef.current?.emit("leave", { id_competencia: COMPETENCIA_ID });
-      socketRef.current?.disconnect();
+      try { s.emit("leave", { id_competencia: competenciaId }); } catch {}
+      s.disconnect();
       socketRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listaCompetidores]);
+  }, [competenciaId]);
 
-  // --- Timer (cuando isRunning=true) ---
+  // limpiar freeze si cambia el competidor o ejercicio localmente
+  useEffect(() => {
+    setFrozenAttemptKey(null);
+  }, [activeCompetitorId, currentEjercicioIndex]);
+
   useEffect(() => {
     if (!isRunning) {
       if (timerRef.current) { window.clearInterval(timerRef.current); timerRef.current = null; }
@@ -232,10 +473,8 @@ const CalificarScreen: React.FC = () => {
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // cuando expire, dejamos que admin haga 'next' o backend mande 'next'. Aquí solo reiniciamos timer.
-          // Podríamos autopeticionar 'next' si esa es tu regla.
-          setCanCalificar(true);
-          return 60;
+          setIsRunning(false);
+          return 0;
         }
         return prev - 1;
       });
@@ -243,115 +482,174 @@ const CalificarScreen: React.FC = () => {
     return () => { if (timerRef.current) { window.clearInterval(timerRef.current); timerRef.current = null; } };
   }, [isRunning]);
 
-  // --- Helpers de fetch ---
-  const fetchOrdenPesos = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/orden/${COMPETENCIA_ID}/orden_pesos`);
-      if (!res.ok) throw new Error("No se pudo obtener orden_pesos");
-      const data: OrdenResponseItem[] = await res.json();
-      const mapped = mapCompetidores(data);
-      setListaCompetidores(mapped);
-    } catch (err) {
-      console.error("fetchOrdenPesos err:", err);
+  useEffect(() => {
+    if (!activeCompetitorId) {
+      setActiveCompetitorDetail(null);
+      return;
     }
+    void fetchCompetitorDetailAndAttempts(activeCompetitorId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCompetitorId, competenciaId]);
+
+  const activeCompetitor = listaCompetidores.find((c) => c.id_competidor === activeCompetitorId) ?? null;
+
+  // primer intento pendiente del ejercicio activo -> intento actual
+  const isIntentoCurrent = (ej: EjercicioLocal, it: IntentoLocal, ejIndex: number) => {
+    if (ejIndex !== currentEjercicioIndex) return false;
+    const firstPending = ej.intentos.find(i => i.estado_intento === "pendiente");
+    return !!firstPending && firstPending.intento === it.intento;
   };
 
-  // Aplicar payload de vote_update al estado local
-  const applyVoteUpdateToState = (payload: any) => {
-    const { id_competidor, id_ejercicio, intento, tally, resultadoFinal } = payload;
-    setListaCompetidores((prev) => {
-      const copy = prev.map((c) => ({
-        ...c,
-        ejercicios: c.ejercicios.map((e) => ({ ...e, intentos: e.intentos.map((it) => ({ ...it })) })),
-      }));
-      const comp = copy.find((c) => c.id_competidor === id_competidor);
-      if (!comp) return prev;
-      const ej = comp.ejercicios.find((x) => x.id_ejercicio === id_ejercicio);
-      if (!ej) return prev;
-      const it = ej.intentos.find((x) => x.intento === intento);
-      if (!it) return prev;
-
-      if (tally) it.tally = { Bueno: tally.Bueno ?? 0, Malo: tally.Malo ?? 0 };
-      if (resultadoFinal) {
-        it.resultadoFinal = resultadoFinal;
-        it.estado_intento = resultadoFinal === "Bueno" ? "realizado" : "invalidado";
-      }
-      return copy;
-    });
+  const getJudgeId = () => {
+    return (juez as any)?.id_juez ?? (juez as any)?.id ?? null;
   };
 
-  // Obtener intento objetivo (primer intentos programado/pendiente)
-  const getTargetAttempt = (competidor: CompetidorLocal | undefined) => {
-    if (!competidor) return null;
-    const ejercicio = competidor.ejercicios[currentEjercicioIndex];
-    if (!ejercicio) return null;
-    const intentoObj = ejercicio.intentos.find((it) => it.estado_intento === "programado" || it.estado_intento === "pendiente") ?? ejercicio.intentos[0];
-    return { id_ejercicio: ejercicio.id_ejercicio, intento: intentoObj.intento, peso: intentoObj.peso };
-  };
+  // envía la calificación al backend (usa la ruta ya existente)
+  async function handleJudgeAttempt(attemptId: number | null, id_competidor: number, exercise_id: number, attempt_number: number, valor: "Bueno" | "Malo") {
+    if (!competenciaId) return;
+    const judgeId = getJudgeId();
+    if (!judgeId) {
+      alert("No identificado como juez. Inicia sesión correctamente.");
+      return;
+    }
 
-  // POST de votación
-  const calificar = async (tipo: "Bueno" | "Malo") => {
-    if (!canCalificar || !isRunning) return;
-    const comp = listaCompetidores.find((c) => c.id_competidor === activeCompetitorId);
-    if (!comp) return;
-    const target = getTargetAttempt(comp);
-    if (!target) return;
+    // proteger doble envío (por attemptId)
+    if (attemptId && pendingSubmits[attemptId]) return;
+    if (attemptId) setPendingSubmits(prev => ({ ...prev, [attemptId]: true }));
 
-    setCanCalificar(false);
+    const attemptKey = getAttemptKey(attemptId, id_competidor, exercise_id, attempt_number);
+
     try {
-      const resp = await fetch(`${API_BASE}/api/competencias/${COMPETENCIA_ID}/calificaciones`, {
+      const res = await fetch(`${ATTEMPTS_API}/competencias/${competenciaId}/calificaciones`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id_competidor: comp.id_competidor,
-          id_ejercicio: target.id_ejercicio,
-          intento: target.intento,
-          id_juez: ID_JUEZ,
-          valor: tipo,
-        }),
+          id_competidor,
+          exercise_id,
+          attempt_number,
+          judge_id: judgeId,
+          valor
+        })
       });
-      const data = await resp.json();
-      if (!resp.ok) {
-        console.error("error calificar:", data);
-        setCanCalificar(true);
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        const msg = (json && (json.error || json.message)) ? (json.error || json.message) : "Error al enviar calificación";
+        alert(`Error: ${msg}`);
         return;
       }
-      // Optimistic: aumentar un conteo local (no cambia resultadoFinal)
-      setListaCompetidores((prev) => {
-        const copy = prev.map((c) => ({
-          ...c,
-          ejercicios: c.ejercicios.map((e) => ({ ...e, intentos: e.intentos.map(i => ({ ...i })) })),
-        }));
-        const c = copy.find((x) => x.id_competidor === comp.id_competidor);
-        if (!c) return prev;
-        const ej = c.ejercicios[currentEjercicioIndex];
-        const it = ej.intentos.find((i) => i.intento === target.intento);
-        if (!it) return prev;
-        it.tally = { ...(it.tally || { Bueno: 0, Malo: 0 }) };
-        it.tally[tipo] = (it.tally[tipo] || 0) + 1;
+
+      const updatedAttempt = json.attempt ?? null;
+
+      setListaCompetidores(prev => {
+        const copy = prev.map((c) => ({ ...c, ejercicios: c.ejercicios.map(e => ({ ...e, intentos: e.intentos.map(it => ({ ...it })) })) }));
+        const comp = copy.find(c => c.id_competidor === id_competidor);
+        if (!comp) return prev;
+        const ex = comp.ejercicios.find(e => e.id_ejercicio === exercise_id);
+        if (!ex) return prev;
+        const slot = attempt_number - 1;
+        if (slot < 0 || slot >= ex.intentos.length) return prev;
+
+        ex.intentos[slot].estado_intento = valor === "Bueno" ? "realizado" : "invalidado";
+        ex.intentos[slot].resultadoFinal = valor;
+        ex.intentos[slot].votedByMe = true;
+
+        if (updatedAttempt) {
+          ex.intentos[slot].attemptId = updatedAttempt.id ?? ex.intentos[slot].attemptId;
+          ex.intentos[slot].tally = parseNotesTally(updatedAttempt.notes);
+        } else {
+          ex.intentos[slot].tally = { ...(ex.intentos[slot].tally ?? { Bueno: 0, Malo: 0 }) };
+          ex.intentos[slot].tally[valor] = (ex.intentos[slot].tally[valor] ?? 0) + 1;
+        }
+
         return copy;
       });
-      // server enviará vote_update con tally definitivo
+
+      // marcar para deshabilitar localmente
+      setVotedAttempts(prev => ({ ...prev, [attemptKey]: true }));
+
+      // CONGELAMOS el intento votado para que la UI NO avance automáticamente al siguiente intento
+      setFrozenAttemptKey(attemptKey);
+
     } catch (err) {
-      console.error("calificar error:", err);
-      setCanCalificar(true);
+      console.error("handleJudgeAttempt error", err);
+      alert("Error de red al enviar la calificación");
+    } finally {
+      if (attemptId) setPendingSubmits(prev => { const cp = { ...prev }; delete cp[attemptId]; return cp; });
     }
+  }
+
+  // Helper: devuelve el intento actual (usa frozenAttemptKey si existe; si no, primer pendiente)
+  const getCurrentAttemptInfo = () => {
+    if (!activeCompetitor) return null;
+
+    // 1) si hay frozenAttemptKey, intentar devolver ese intento (aunque su estado haya cambiado localmente)
+    if (frozenAttemptKey) {
+      // buscar en ejercicios del competidor
+      for (const ej of activeCompetitor.ejercicios) {
+        for (const it of ej.intentos) {
+          const key = getAttemptKey(it.attemptId, activeCompetitor.id_competidor, ej.id_ejercicio, it.intento);
+          if (key === frozenAttemptKey) {
+            return {
+              exerciseId: ej.id_ejercicio,
+              exerciseName: ej.nombre,
+              attemptNumber: it.intento,
+              weight: it.peso,
+              attemptId: it.attemptId ?? null,
+              attemptLocal: it
+            };
+          }
+        }
+      }
+      // si no se encuentra, limpiar freeze y continuar
+      setFrozenAttemptKey(null);
+    }
+
+    // 2) si no hay frozen, devolver primer pendiente del ejercicio activo (comportamiento anterior)
+    const ej = activeCompetitor.ejercicios[currentEjercicioIndex];
+    if (!ej) return null;
+    const firstPending = ej.intentos.find(i => i.estado_intento === "pendiente");
+    if (!firstPending) return null;
+    return {
+      exerciseId: ej.id_ejercicio,
+      exerciseName: ej.nombre,
+      attemptNumber: firstPending.intento,
+      weight: firstPending.peso,
+      attemptId: firstPending.attemptId ?? null,
+      attemptLocal: firstPending
+    };
   };
 
-  // UI
-  const activeCompetitor = listaCompetidores.find((c) => c.id_competidor === activeCompetitorId) ?? null;
+  const currentAttempt = getCurrentAttemptInfo();
+
+  // estado disabled del botón global
+  const judgeButtonDisabled = (() => {
+    if (!currentAttempt) return true; // no hay intento activo
+    if (!activeCompetitor) return true;
+    // si el intento ya tiene resultado final (ya fue resuelto por backend/admin), no se puede votar
+    if (currentAttempt.attemptLocal?.resultadoFinal) return true;
+    const attemptKey = getAttemptKey(currentAttempt.attemptId, activeCompetitor.id_competidor, currentAttempt.exerciseId, currentAttempt.attemptNumber);
+    if (votedAttempts[attemptKey]) return true;
+    // Nota: No bloqueamos por isRunning; permitimos votar aunque el temporizador no haya comenzado.
+    return false;
+  })();
 
   return (
     <div className={styles.calificarScreen}>
       <div className={styles.calificarContainer}>
-        <h1 className={styles.calificarTitulo}>Calificación de Competidores</h1>
+        <h1 className={styles.calificarTitulo}>Visualización de Competidor</h1>
+
+        {competitionName && <div style={{ textAlign: "center", marginBottom: 12, color: "#345" }}><strong>{competitionName}</strong></div>}
 
         {loading ? (
-          <p>Cargando...</p>
+          <p style={{ textAlign: "center" }}>Cargando...</p>
         ) : !activeCompetitor ? (
           <div className={styles.esperandoAdmin}>
-            <p>Esperando señal del administrador para comenzar la calificación...</p>
-            <button onClick={fetchOrdenPesos}>Actualizar lista</button>
+            <p>Esperando selección del administrador...</p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 6 }}>
+              <button className={styles.smallAction} onClick={() => void fetchOrdenPesos()}>Actualizar lista</button>
+            </div>
           </div>
         ) : (
           <>
@@ -359,52 +657,111 @@ const CalificarScreen: React.FC = () => {
               Competidor #{activeCompetitor.orden} — {activeCompetitor.nombre}
             </h2>
 
-            <div className={styles.calificarTiempo}>
-              <p>Tiempo restante</p>
-              <span>{timeLeft}s</span>
-              <div><small>{isRunning ? "En curso" : "Pausado"}</small></div>
+            <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, justifyContent: "center" }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>Peso corporal</div>
+                <div style={{ minWidth: 80 }}>{activeCompetitorDetail?.peso ?? "—"} {activeCompetitorDetail?.peso != null ? "kg" : ""}</div>
+              </div>
+
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>Tiempo restante</div>
+                <div className={styles.calificarTiempo}>
+                  <span className={styles.timeBig}>{timeLeft}s</span>
+                  <div style={{ fontSize: 12, color: isRunning ? "#2e7d32" : "#9e9e9e" }}>{isRunning ? "En curso" : "Pausado"}</div>
+                </div>
+              </div>
             </div>
 
             <div className={styles.calificarListaEjercicios}>
               {activeCompetitor.ejercicios.map((ej, idx) => (
                 <div key={ej.id_ejercicio} className={`${styles.calificarEjercicio} ${idx === currentEjercicioIndex ? styles.activo : ""}`}>
-                  <h3>{ej.nombre}</h3>
-                  <div className={styles.calificarIntentos}>
-                    {ej.intentos.map((it) => (
-                      <div
-                        key={it.intento}
-                        title={`Intento ${it.intento} • Peso: ${it.peso ?? "-"} • Estado: ${it.estado_intento}`}
-                        className={`${styles.intentoCircle} ${
-                          it.resultadoFinal === "Bueno"
-                            ? styles.bueno
-                            : it.resultadoFinal === "Malo"
-                            ? styles.malo
-                            : it.estado_intento === "realizado"
-                            ? styles.bueno
-                            : it.estado_intento === "invalidado"
-                            ? styles.malo
-                            : styles.pendiente
-                        }`}
-                      >
-                        <div className={styles.intentoInfo}>
-                          <small>{it.intento}</small>
-                          <small>{it.tally ? `${it.tally.Bueno}/${(it.tally.Bueno + it.tally.Malo) || 0}` : ""}</small>
-                        </div>
-                      </div>
-                    ))}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={{ margin: 0 }}>{ej.nombre}</h3>
+                    {idx === currentEjercicioIndex && <span className={styles.tagActivo}>Activo</span>}
                   </div>
-                  {idx === currentEjercicioIndex && <p className={styles.textoActivo}>Ejercicio activo para calificación</p>}
+
+                  <div className={styles.calificarIntentos}>
+                    {ej.intentos.map((it) => {
+                      const isFinal = it.resultadoFinal === "Bueno" || it.resultadoFinal === "Malo";
+                      const isCurrent = isIntentoCurrent(ej, it, idx);
+
+                      const circleClass =
+                        it.resultadoFinal === "Bueno" ? styles.bueno :
+                        it.resultadoFinal === "Malo" ? styles.malo :
+                        it.estado_intento === "realizado" ? styles.bueno :
+                        it.estado_intento === "invalidado" ? styles.malo : styles.pendiente;
+
+                      const attemptId = it.attemptId ?? null;
+                      const submitting = attemptId ? !!pendingSubmits[attemptId] : false;
+
+                      const attemptKey = getAttemptKey(attemptId, activeCompetitor.id_competidor, ej.id_ejercicio, it.intento);
+                      const alreadyVoted = !!votedAttempts[attemptKey] || !!it.votedByMe;
+
+                      return (
+                        <div key={it.intento} className={styles.intentoBlock}>
+                          <div className={`${styles.intentoCircle} ${circleClass}`} style={isCurrent ? { boxShadow: "0 0 0 3px rgba(25,118,210,0.12)" } : undefined}>
+                            <div className={styles.intentoNumber}>{it.intento}</div>
+                            {isCurrent && <div style={{ position: "absolute", bottom: -6, fontSize: 10, color: "#1976d2" }}>ACT</div>}
+                          </div>
+
+                          <div className={styles.intentoMeta}>
+                            <div className={styles.intentoPeso}>{it.peso != null ? `${it.peso} kg` : "—"}</div>
+                            <div className={styles.intentoTally}>
+                              <small>{(it.tally?.Bueno ?? 0)}✓ / {(it.tally?.Bueno ?? 0) + (it.tally?.Malo ?? 0)}</small>
+                            </div>
+                            {isFinal && <div className={styles.finalLabel}>{it.resultadoFinal}</div>}
+                            {alreadyVoted && <div style={{ marginTop: 6, fontSize: 11, color: "#607d8b" }}>Ya votaste</div>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {idx === currentEjercicioIndex && <p className={styles.textoActivo}>Ejercicio activo (solo lectura)</p>}
                 </div>
               ))}
             </div>
 
-            <div className={styles.calificarBotones}>
-              <button className={`${styles.btnCalificar} ${styles.malo}`} onClick={() => calificar("Malo")} disabled={!canCalificar || !isRunning}>
-                <FaFlag color="white" size={22} /> <span>Malo</span>
-              </button>
-              <button className={`${styles.btnCalificar} ${styles.bueno}`} onClick={() => calificar("Bueno")} disabled={!canCalificar || !isRunning}>
-                <FaFlagCheckered color="white" size={22} /> <span>Bueno</span>
-              </button>
+            {/* FOOTER GLOBAL DE CALIFICACIÓN (debajo de toda la lista) */}
+            <div className={styles.calificarFooter}>
+              <div className={styles.calificarActionsCard}>
+                <div className={styles.calificarActionsInfo}>
+                  <div className={styles.line1}>
+                    {currentAttempt ? `Ejercicio — ${currentAttempt.exerciseName}` : "Sin intento activo"}
+                  </div>
+                  <div className={styles.line2}>
+                    {currentAttempt ? `Intento ${currentAttempt.attemptNumber} · Peso: ${currentAttempt.weight ?? "—"} kg` : "Espera al administrador para seleccionar al competidor/ejercicio."}
+                  </div>
+                </div>
+
+                <div className={styles.calificarActionsButtons}>
+                  <button
+                    className={`${styles.btnCalificar} ${styles.btnCalificarLarge} ${styles.maloBtn}`}
+                    disabled={judgeButtonDisabled}
+                    onClick={() => {
+                      if (!currentAttempt || !activeCompetitor) return;
+                      void handleJudgeAttempt(currentAttempt.attemptId, activeCompetitor.id_competidor, currentAttempt.exerciseId, currentAttempt.attemptNumber, "Malo");
+                    }}
+                  >
+                    Malo
+                  </button>
+
+                  <button
+                    className={`${styles.btnCalificar} ${styles.btnCalificarLarge} ${styles.buenoBtn}`}
+                    disabled={judgeButtonDisabled}
+                    onClick={() => {
+                      if (!currentAttempt || !activeCompetitor) return;
+                      void handleJudgeAttempt(currentAttempt.attemptId, activeCompetitor.id_competidor, currentAttempt.exerciseId, currentAttempt.attemptNumber, "Bueno");
+                    }}
+                  >
+                    Bueno
+                  </button>
+                </div>
+
+                <div className={styles.calificarActionsMeta}>
+                  <div>{judgeButtonDisabled ? "Botones deshabilitados si ya votaste o no hay intento activo." : "Botones activos — solo califica el intento activo."}</div>
+                </div>
+              </div>
             </div>
           </>
         )}

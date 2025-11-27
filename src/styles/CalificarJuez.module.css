@@ -1,108 +1,176 @@
+/* Layout principal */
 .calificarScreen {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f4f6f9;
+  background-color: #f7f9fc;
   justify-content: space-between;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #263238;
 }
 
 .calificarContainer {
   padding: 20px;
   flex: 1;
-  max-width: 800px;
+  max-width: 980px;
   margin: 0 auto;
 }
 
+/* Titulos */
 .calificarTitulo {
+  margin-top: 60px;
   text-align: center;
-  font-size: 1.8rem;
+  font-size: 1.9rem;
   font-weight: 700;
   color: #1565c0;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .calificarSubtitulo {
   text-align: center;
-  font-size: 1.1rem;
-  color: #444;
-  margin-bottom: 16px;
+  font-size: 1.05rem;
+  color: #37474f;
+  margin-bottom: 12px;
 }
 
+/* Tiempo */
 .calificarTiempo {
+  display: inline-block;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 0;
+  box-shadow: 0 1px 4px rgba(16,24,40,0.04);
+  border: 1px solid rgba(16,24,40,0.04);
+}
+
+.timeBig {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ff7043;
+  display: block;
   text-align: center;
-  background: #e3f2fd;
-  border-radius: 12px;
-  padding: 12px 0;
-  margin-bottom: 20px;
 }
 
-.calificarTiempo p {
-  color: #555;
-  margin: 0;
-  font-weight: 500;
-}
-
-.calificarTiempo span {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #ff5722;
-}
-
+/* Lista de ejercicios */
 .calificarListaEjercicios {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: 10px;
 }
 
 .calificarEjercicio {
-  background: white;
-  border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  transition: 0.3s;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(16,24,40,0.04);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  border: 1px solid rgba(16,24,40,0.03);
 }
 
 .activo {
-  background: #e3f2fd;
-  transform: scale(1.02);
-  border: 1px solid #64b5f6;
+  background: #e8f4ff;
+  transform: translateY(-2px);
+  border: 1px solid #b3e5ff;
 }
 
 .calificarEjercicio h3 {
-  color: #1976d2;
+  color: #1565c0;
   font-weight: 600;
   margin-bottom: 8px;
 }
 
+/* Intentos */
 .calificarIntentos {
   display: flex;
-  justify-content: center;
   gap: 12px;
-  margin-top: 6px;
+  margin-top: 8px;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+/* intento block: circle + meta (weight + tally) */
+.intentoBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 72px;
 }
 
 .intentoCircle {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 2px solid #bbb;
+  border: 2px solid #cfd8dc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16,24,40,0.03);
+  position: relative;
 }
 
+.intentoNumber {
+  font-weight: 700;
+  color: #37474f;
+}
+
+/* Estados visuales (fondos / bordes) */
 .bueno {
-  background: #4caf50;
-  border: none;
+  background: linear-gradient(180deg, #e8f5e9, #e8f5e9);
+  border-color: #a5d6a7;
 }
 
 .malo {
-  background: #f44336;
-  border: none;
+  background: linear-gradient(180deg, #ffebee, #ffebee);
+  border-color: #ef9a9a;
 }
 
 .pendiente {
-  background: white;
+  background: #fff;
+  border-color: #cfd8dc;
 }
 
+/* Meta del intento */
+.intentoMeta {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 12px;
+  color: #546e7a;
+}
+
+.intentoPeso {
+  font-weight: 600;
+  color: #263238;
+  min-height: 18px;
+}
+
+.intentoTally {
+  margin-top: 4px;
+  color: #7b8a90;
+}
+
+.finalLabel {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #fff;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: #607d3b;
+}
+
+/* Tag de ejercicio activo */
+.tagActivo {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* textos y botones pequeños */
 .textoActivo {
   text-align: center;
   font-size: 0.9rem;
@@ -111,43 +179,235 @@
   margin-top: 6px;
 }
 
-.calificarBotones {
-  display: flex;
-  justify-content: space-around;
-  margin: 24px 0;
+.smallAction {
+  background: #fff;
+  border: 1px solid rgba(16,24,40,0.06);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #263238;
+  box-shadow: 0 1px 2px rgba(16,24,40,0.03);
 }
 
-.btnCalificar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  border-radius: 30px;
+/* input de peso (si en un futuro se usa) */
+.pesoInput {
+  width: 84px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(16,24,40,0.08);
+  text-align: center;
   font-weight: 600;
+}
+
+/* Botones principales (calificar) */
+.btnCalificar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: 28px;
+  font-weight: 700;
   color: white;
   border: none;
   cursor: pointer;
   font-size: 1rem;
-  transition: 0.3s;
+  transition: transform 0.12s ease, opacity 0.12s ease;
 }
+
+.btnCalificar:active { transform: translateY(1px); }
 
 .btnCalificar:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
+/* Paneles nuevos para calificar (aparecen al final de cada ejercicio) */
+.calificarBotonesSection {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(16,24,40,0.04);
+}
+
+/* info del intento (peso + numero) */
+.calificarBotonesInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+/* panel de botones centrado */
+.calificarBotones {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 6px 0 0;
+  width: 100%;
+}
+
+/* texto informativo cuando está bloqueado o no hay intento */
+.judgeLockedText {
+  font-size: 12px;
+  color: #9e9e9e;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* Esperando admin (mensaje cuando no hay competidor seleccionado) */
+.esperandoAdmin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(16,24,40,0.04);
+  border: 1px solid rgba(16,24,40,0.03);
+}
+
+/* ---------- Footer de calificación (botón global al final de la sección) ---------- */
+
+.calificarFooter {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 6px 12px 28px; /* espacio inferior para separación con bottom nav */
+  box-sizing: border-box;
+}
+
+.calificarActionsCard {
+  width: 100%;
+  max-width: 980px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfeff 100%);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+  border: 1px solid rgba(16,24,40,0.04);
+  transform: translateZ(0);
+}
+
+/* Info a la izquierda: ejercicio / intento / peso */
+.calificarActionsInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.calificarActionsInfo .line1 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e88e5;
+}
+.calificarActionsInfo .line2 {
+  font-size: 0.85rem;
+  color: #607d8b;
+}
+
+/* Panel de botones a la derecha */
+.calificarActionsButtons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Botón principal (estético) grande */
+.btnCalificarLarge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 1.04rem;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  box-shadow: 0 8px 20px rgba(33,150,243,0.12), inset 0 -2px 0 rgba(0,0,0,0.03);
+  min-width: 130px;
+}
+
+/* Variantes */
+.buenoBtn { background: linear-gradient(180deg,#43a047,#2e7d32); }
+.maloBtn { background: linear-gradient(180deg,#ef5350,#d32f2f); }
+
+/* Hover / focus */
+.btnCalificarLarge:hover:not(:disabled) { transform: translateY(-3px) scale(1.01); box-shadow: 0 14px 30px rgba(33,150,243,0.14); }
+.btnCalificarLarge:focus { outline: 3px solid rgba(33,150,243,0.14); outline-offset: 2px; }
+
+/* Disabled */
+.btnCalificarLarge:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Texto pequeño debajo de botones (estado) */
+.calificarActionsMeta {
+  font-size: 12px;
+  color: #78909c;
+  text-align: right;
+}
+
+/* Sticky helper */
+.sticky {
+  position: sticky;
+  bottom: 12px;
+  z-index: 40;
+  padding-bottom: 0;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .calificarContainer {
     padding: 16px;
   }
 
+  .calificarTitulo {
+    margin-top: -60px
+  }
+  .intentoBlock {
+    width: 60px;
+  }
+  .intentoCircle { width: 40px; height: 40px; }
+  .pesoInput { width: 68px; }
+  .calificarBotones {
+    gap: 10px;
+    flex-direction: row;
+  }
   .btnCalificar {
-    padding: 8px 14px;
-    font-size: 0.9rem;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    min-width: 92px;
   }
 
-  .intentoCircle {
-    width: 28px;
-    height: 28px;
+  /* Footer mobile */
+  .calificarActionsCard {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
   }
+  .calificarActionsInfo {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .calificarActionsButtons { justify-content: center; width: 100%; }
+  .btnCalificarLarge { min-width: 120px; padding: 12px 16px; font-size: 0.98rem; }
 }

@@ -25,9 +25,7 @@ export async function assignCompetitorToModule(module_id, id_competidor, positio
   }
 }
 
-export async function removeAssignment(module_id, id_competidor) {
-  await db.query("DELETE FROM module_assignments WHERE module_id = ? AND id_competidor = ?", [module_id, id_competidor]);
-}
+
 
 export async function getAssignmentsForModule(module_id) {
   const [rows] = await db.query(
@@ -39,4 +37,10 @@ export async function getAssignmentsForModule(module_id) {
     [module_id]
   );
   return rows;
+}
+
+
+
+export async function removeAssignment(module_id, competitorId) {
+  await db.query("DELETE FROM module_assignments WHERE module_id = ? AND id_competidor = ?", [module_id, competitorId]);
 }

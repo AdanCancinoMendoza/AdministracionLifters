@@ -1,59 +1,16 @@
-// src/components/CompetitionManager.tsx
 import React, { useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
 import styles from "../../../styles/AdminOrdenYPesos.module.css";
 
-/* -----------------------
-  Tipos y constantes
-------------------------*/
+/* Types & constants */
 type Exercise = "Press banca" | "Peso muerto" | "Sentadilla";
 const EXERCISES: Exercise[] = ["Press banca", "Peso muerto", "Sentadilla"];
+const EXERCISE_NAME_TO_ID: Record<Exercise, number> = { "Press banca": 1, "Peso muerto": 2, "Sentadilla": 3 };
 
-const EXERCISE_NAME_TO_ID: Record<Exercise, number> = {
-  "Press banca": 1,
-  "Peso muerto": 2,
-  "Sentadilla": 3,
-};
-
-type Competition = {
-  id: string;
-  name: string;
-  startDate: string;
-  endDate: string;
-  eventDate?: string;
-  imageUrl?: string | null;
-  raw?: any;
-};
-
-type Competitor = {
-  id: string;
-  name: string;
-  peso?: string | null;
-  edad?: number | null;
-  categoria?: string | null;
-  id_competencia?: string | null;
-  raw?: any;
-};
-
-type ApiCompetition = {
-  id_competencia: number;
-  nombre: string;
-  foto: string | null;
-  fecha_inicio: string;
-  fecha_cierre: string;
-  fecha_evento?: string;
-  [k: string]: any;
-};
-
-type ApiCompetitor = {
-  id_competidor: number;
-  nombre: string;
-  apellidos?: string;
-  peso?: string;
-  edad?: number;
-  categoria?: string;
-  id_competencia?: number;
-  [k: string]: any;
-};
+type Competition = { id: string; name: string; startDate: string; endDate: string; imageUrl?: string | null; raw?: any; };
+type Competitor = { id: string; name: string; peso?: string | null; edad?: number | null; categoria?: string | null; id_competencia?: string | null; raw?: any; };
+type ApiCompetition = { id_competencia: number; nombre: string; foto: string | null; fecha_inicio: string; fecha_cierre: string; [k: string]: any; };
+type ApiCompetitor = { id_competidor: number; nombre: string; apellidos?: string; peso?: string; edad?: number; categoria?: string; id_competencia?: number; [k: string]: any; };
 
 const API_BASE = "http://localhost:3001";
 const COMPETITIONS_API = `${API_BASE}/api/competenciasadmin`;
@@ -61,32 +18,19 @@ const COMPETITORS_API = `${API_BASE}/api/competidor`;
 const MODULES_API = `${API_BASE}/api/modules`;
 const ATTEMPTS_API = `${API_BASE}/api/attempts`;
 
-/* -----------------------
-  Componente
-------------------------*/
+/* Component */
 export default function CompetitionManager(): JSX.Element {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [competitorsAll, setCompetitorsAll] = useState<Competitor[]>([]);
   const [loadingCompetitions, setLoadingCompetitions] = useState(false);
   const [loadingCompetitors, setLoadingCompetitors] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [selectedCompetitionId, setSelectedCompetitionId] = useState<string | null>(null);
 
-  type Card = {
-    tempId: string;
-    moduleId?: number | null;
-    title: string;
-    assigned: string[];
-    passNumber: number;
-    position?: number;
-  };
+  type Card = { tempId: string; moduleId?: number | null; title: string; assigned: string[]; passNumber: number; position?: number; };
   const uid = (prefix = "") => `${prefix}${Math.random().toString(36).slice(2, 9)}`;
   const [cards, setCards] = useState<Card[]>([]);
-
-  // originalAssignments[moduleId] = server-assigned-list (para calcular diffs)
   const [originalAssignments, setOriginalAssignments] = useState<Record<number, string[]>>({});
-
   const [weights, setWeights] = useState<Record<string, Record<Exercise, (number | null)[]>>>({});
   const [attemptsDone, setAttemptsDone] = useState<Record<string, Record<Exercise, number>>>({});
 
@@ -105,24 +49,21 @@ export default function CompetitionManager(): JSX.Element {
   const [selectedForWeights, setSelectedForWeights] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
 
-  /* -----------------------
-     Fetch inicial: competencias
-  ---------------------*/
+  const socketRef = useRef<Socket | null>(null);
+
+  /* --------------------- initial fetch --------------------- */
   useEffect(() => {
     const ac = new AbortController();
     setLoadingCompetitions(true);
-    setError(null);
     (async () => {
       try {
         const res = await fetch(COMPETITIONS_API, { signal: ac.signal });
-        if (!res.ok) throw new Error(`Error fetching competitions: ${res.status}`);
-        const data: ApiCompetition[] = await res.json();
-        const mapped: Competition[] = data.map((c) => ({
+        const data: ApiCompetition[] = res.ok ? await res.json() : [];
+        const mapped = data.map((c) => ({
           id: String(c.id_competencia),
           name: c.nombre,
           startDate: c.fecha_inicio,
           endDate: c.fecha_cierre,
-          eventDate: c.fecha_evento,
           imageUrl: c.foto ? (c.foto.startsWith("http") ? c.foto : `${API_BASE}${c.foto}`) : null,
           raw: c,
         }));
@@ -137,19 +78,14 @@ export default function CompetitionManager(): JSX.Element {
     return () => ac.abort();
   }, []);
 
-  /* -----------------------
-     Fetch inicial: competidores
-  ---------------------*/
   useEffect(() => {
     const ac = new AbortController();
     setLoadingCompetitors(true);
-    setError(null);
     (async () => {
       try {
         const res = await fetch(COMPETITORS_API, { signal: ac.signal });
-        if (!res.ok) throw new Error(`Error fetching competitors: ${res.status}`);
-        const data: ApiCompetitor[] = await res.json();
-        const mapped: Competitor[] = data.map((p) => ({
+        const data: ApiCompetitor[] = res.ok ? await res.json() : [];
+        const mapped = data.map((p) => ({
           id: String(p.id_competidor),
           name: `${p.nombre}${p.apellidos ? " " + p.apellidos : ""}`,
           peso: p.peso ?? null,
@@ -168,9 +104,7 @@ export default function CompetitionManager(): JSX.Element {
     return () => ac.abort();
   }, []);
 
-  /* -----------------------
-     Inicializar weights & attempts
-  ---------------------*/
+  /* init weights & attempts */
   useEffect(() => {
     setWeights((prev) => {
       const copy = { ...prev };
@@ -181,7 +115,6 @@ export default function CompetitionManager(): JSX.Element {
       });
       return copy;
     });
-
     setAttemptsDone((prev) => {
       const copy: Record<string, Record<Exercise, number>> = { ...prev };
       competitorsAll.forEach((c) => {
@@ -191,341 +124,296 @@ export default function CompetitionManager(): JSX.Element {
     });
   }, [competitorsAll]);
 
-  /* -----------------------
-     Cuando cambia competencia -> cargar módulos/asignaciones/attempts
-  ---------------------*/
+  /* --------------------- when competition changes: socket + load modules/attempts --------------------- */
   useEffect(() => {
-    if (!selectedCompetitionId) {
-      setCards([]);
-      setOriginalAssignments({});
-      return;
+    if (socketRef.current) {
+      try { socketRef.current.emit("leave", { id_competencia: Number(selectedCompetitionId) }); } catch {}
+      socketRef.current.disconnect();
+      socketRef.current = null;
     }
+
+    if (!selectedCompetitionId) { setCards([]); setOriginalAssignments({}); return; }
+
+    const s = io(API_BASE, { transports: ["websocket"] });
+    socketRef.current = s;
+    s.on("connect", () => { s.emit("join", { id_competencia: Number(selectedCompetitionId) }); });
+
+    s.on("competitor:selected", (p: any) => {
+      if (p?.id_competencia !== Number(selectedCompetitionId)) return;
+      const id = p.id_competidor != null ? String(p.id_competidor) : null;
+      if (!id) { setActiveCompetitorId(null); return; }
+      setActiveCompetitorId(id); setRunning(false); setSecondsLeft(defaultSeconds);
+      const card = cards.find((c) => c.assigned.includes(id));
+      if (card) {
+        setActiveCardId(card.tempId);
+        const idx = card.assigned.indexOf(id);
+        setActiveParticipantIndex(idx);
+        setAttemptRound(computeAttemptRoundForCard(card, currentExercise));
+      }
+    });
+
+    s.on("start", (p: any) => {
+      if (p?.id_competencia !== Number(selectedCompetitionId)) return;
+      const id = p.id_competidor != null ? String(p.id_competidor) : null;
+      if (id) setActiveCompetitorId(id);
+      if (typeof p.remaining === "number") { setSecondsLeft(p.remaining); setRunning(p.remaining > 0); }
+    });
+
+    s.on("resume", (p: any) => {
+      if (p?.id_competencia !== Number(selectedCompetitionId)) return;
+      if (typeof p.remaining === "number") setSecondsLeft(p.remaining);
+      setRunning(true);
+      if (p.id_competidor != null) setActiveCompetitorId(String(p.id_competidor));
+    });
+
+    s.on("pause", (p: any) => {
+      if (p?.id_competencia !== Number(selectedCompetitionId)) return;
+      if (typeof p.remaining === "number") setSecondsLeft(p.remaining);
+      setRunning(false);
+    });
+
+    s.on("next", (p: any) => {
+      if (p?.id_competencia !== Number(selectedCompetitionId)) return;
+      const nextId = p?.nextId != null ? String(p.nextId) : null;
+      setActiveCompetitorId(nextId);
+      if (typeof p.remaining === "number") { setSecondsLeft(p.remaining); setRunning(p.remaining > 0); } else setRunning(true);
+      if (nextId) {
+        const c = cards.find((card) => card.assigned.includes(nextId));
+        if (c) setActiveCardId(c.tempId);
+      }
+    });
+
+    s.on("attempt_upsert", (payload: any) => {
+      if (payload?.id_competencia !== Number(selectedCompetitionId)) return;
+      const id = payload.id_competidor != null ? String(payload.id_competidor) : null; if (!id) return;
+      const exName = (Object.keys(EXERCISE_NAME_TO_ID) as Exercise[]).find((k) => EXERCISE_NAME_TO_ID[k] === payload.exercise_id);
+      if (!exName) return;
+      setWeights((prev) => {
+        const copy = { ...prev };
+        if (!copy[id]) copy[id] = { "Press banca": [null, null, null], "Peso muerto": [null, null, null], "Sentadilla": [null, null, null] };
+        copy[id][exName][(payload.attempt_number ?? 1) - 1] = payload.weight_kg == null ? null : Number(payload.weight_kg);
+        return copy;
+      });
+      if (payload.approved) {
+        setAttemptsDone((prev) => {
+          const cur = prev[id] ?? { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 };
+          const slot = (payload.attempt_number ?? 1);
+          return { ...prev, [id]: { ...cur, [exName]: Math.min(3, Math.max(cur[exName] ?? 0, slot)) } };
+        });
+      }
+    });
+
+    s.on("attempt_created", (payload: any) => {
+      if (payload?.id_competencia !== Number(selectedCompetitionId)) return;
+      const id = payload.id_competidor != null ? String(payload.id_competidor) : null; if (!id) return;
+      const exName = (Object.keys(EXERCISE_NAME_TO_ID) as Exercise[]).find((k) => EXERCISE_NAME_TO_ID[k] === payload.exercise_id);
+      if (!exName) return;
+      setWeights((prev) => {
+        const copy = { ...prev };
+        if (!copy[id]) copy[id] = { "Press banca": [null, null, null], "Peso muerto": [null, null, null], "Sentadilla": [null, null, null] };
+        copy[id][exName][(payload.attempt_number ?? 1) - 1] = payload.weight_kg == null ? null : Number(payload.weight_kg);
+        return copy;
+      });
+      if (payload.approved) {
+        setAttemptsDone((prev) => {
+          const cur = prev[id] ?? { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 };
+          const slot = (payload.attempt_number ?? 1);
+          return { ...prev, [id]: { ...cur, [exName]: Math.min(3, Math.max(cur[exName] ?? 0, slot)) } };
+        });
+      }
+    });
+
+    s.on("vote_update", (payload: any) => {
+      if (payload?.id_competencia !== Number(selectedCompetitionId)) return;
+      const id = payload.id_competidor != null ? String(payload.id_competidor) : null; if (!id) return;
+      const exName = (Object.keys(EXERCISE_NAME_TO_ID) as Exercise[]).find((k) => EXERCISE_NAME_TO_ID[k] === payload.id_ejercicio);
+      if (!exName) return;
+      if (payload.resultadoFinal) {
+        setAttemptsDone((prev) => {
+          const cur = prev[id] ?? { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 };
+          const newVal = Math.min(3, (cur[exName] ?? 0) + 1);
+          return { ...prev, [id]: { ...cur, [exName]: newVal } };
+        });
+      }
+    });
 
     (async () => {
       try {
         const resp = await fetch(`${MODULES_API}?competition_id=${selectedCompetitionId}`);
-        if (!resp.ok) {
-          console.warn("GET /api/modules falló o no existe:", resp.status);
-          setCards([]);
-          setOriginalAssignments({});
-          await loadAllAttemptsForCompetition(Number(selectedCompetitionId));
-          return;
-        }
+        if (!resp.ok) { setCards([]); setOriginalAssignments({}); await loadAllAttemptsForCompetition(Number(selectedCompetitionId)); return; }
         const modules = await resp.json();
-        const newCards: Card[] = modules.map((m: any, idx: number) => ({
-          tempId: `module_${m.id}`,
-          moduleId: m.id ?? null,
-          title: m.title ?? `Módulo ${idx + 1}`,
-          assigned: [],
-          passNumber: m.pass_number ?? 1,
-          position: m.position ?? idx,
-        }));
+        const newCards = modules.map((m: any, idx: number) => ({ tempId: `module_${m.id}`, moduleId: m.id ?? null, title: m.title ?? `Módulo ${idx + 1}`, assigned: [], passNumber: m.pass_number ?? 1, position: m.position ?? idx }));
         setCards(newCards);
 
         const assignMap: Record<number, string[]> = {};
-        await Promise.all(
-          newCards.map(async (card) => {
-            if (!card.moduleId) return;
-            try {
-              const r = await fetch(`${MODULES_API}/${card.moduleId}/assignments`);
-              if (!r.ok) throw new Error("No assignments");
-              const assigns = await r.json();
-              const ids = assigns.map((a: any) => String(a.id_competidor));
-              assignMap[card.moduleId] = ids;
-              setCards((prev) => prev.map((c) => (c.moduleId === card.moduleId ? { ...c, assigned: ids } : c)));
-            } catch (e) {
-              console.warn("No pudo cargar assignments para módulo", card.moduleId);
-              assignMap[card.moduleId] = [];
-            }
-          })
-        );
+        await Promise.all(newCards.map(async (card) => {
+          if (!card.moduleId) return;
+          try {
+            const r = await fetch(`${MODULES_API}/${card.moduleId}/assignments`);
+            if (!r.ok) { assignMap[card.moduleId] = []; return; }
+            const assigns = await r.json();
+            const ids = assigns.map((a: any) => String(a.id_competidor));
+            assignMap[card.moduleId] = ids;
+            setCards((prev) => prev.map((c) => (c.moduleId === card.moduleId ? { ...c, assigned: ids } : c)));
+          } catch { assignMap[card.moduleId] = []; }
+        }));
         setOriginalAssignments(assignMap);
         await loadAllAttemptsForCompetition(Number(selectedCompetitionId));
-      } catch (err: any) {
-        console.warn(err);
-      }
+      } catch (e) { console.warn(e); }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCompetitionId]);
 
-  /* -----------------------
-     Cargar attempts por competidor (por competencia)
-  ---------------------*/
+    return () => { try { s.emit("leave", { id_competencia: Number(selectedCompetitionId) }); } catch {} s.disconnect(); socketRef.current = null; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCompetitionId, competitorsAll]);
+
+  /* load attempts for competition (count only approved attempts for attemptsDone) */
   async function loadAllAttemptsForCompetition(id_competencia: number) {
     const competitors = competitorsAll.filter((c) => c.id_competencia === String(id_competencia));
-    await Promise.all(
-      competitors.map(async (comp) => {
-        try {
-          const resp = await fetch(`${ATTEMPTS_API}/by-competitor?id_competencia=${id_competencia}&id_competidor=${comp.id}`);
-          if (!resp.ok) return;
-          const rows = await resp.json();
-          setWeights((prev) => {
-            const copy = { ...prev };
-            if (!copy[comp.id]) copy[comp.id] = { "Press banca": [null, null, null], "Peso muerto": [null, null, null], "Sentadilla": [null, null, null] };
-            rows.forEach((r: any) => {
-              const exName = (Object.keys(EXERCISE_NAME_TO_ID) as Exercise[]).find((k) => EXERCISE_NAME_TO_ID[k] === r.exercise_id);
-              if (exName) copy[comp.id][exName][(r.attempt_number ?? 1) - 1] = r.weight_kg == null ? null : Number(r.weight_kg);
-            });
-            return copy;
+    await Promise.all(competitors.map(async (comp) => {
+      try {
+        const resp = await fetch(`${ATTEMPTS_API}/by-competitor?id_competencia=${id_competencia}&id_competidor=${comp.id}`);
+        if (!resp.ok) return;
+        const rows = await resp.json();
+        setWeights((prev) => {
+          const copy = { ...prev };
+          if (!copy[comp.id]) copy[comp.id] = { "Press banca": [null, null, null], "Peso muerto": [null, null, null], "Sentadilla": [null, null, null] };
+          rows.forEach((r: any) => {
+            const exName = (Object.keys(EXERCISE_NAME_TO_ID) as Exercise[]).find((k) => EXERCISE_NAME_TO_ID[k] === r.exercise_id);
+            if (exName) copy[comp.id][exName][(r.attempt_number ?? 1) - 1] = r.weight_kg == null ? null : Number(r.weight_kg);
           });
+          return copy;
+        });
 
-          setAttemptsDone((prev) => {
-            const copy = { ...prev };
-            if (!copy[comp.id]) copy[comp.id] = { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 };
-            const counts: Record<number, number> = {};
-            rows.forEach((r: any) => {
-              counts[r.exercise_id] = (counts[r.exercise_id] ?? 0) + 1;
-            });
-            (Object.keys(EXERCISE_NAME_TO_ID) as Exercise[]).forEach((ex) => {
-              copy[comp.id][ex] = counts[EXERCISE_NAME_TO_ID[ex]] ?? 0;
-            });
-            return copy;
+        setAttemptsDone((prev) => {
+          const copy = { ...prev };
+          if (!copy[comp.id]) copy[comp.id] = { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 };
+          const counts: Record<number, number> = {};
+          rows.forEach((r: any) => { if (r.approved) counts[r.exercise_id] = (counts[r.exercise_id] ?? 0) + 1; });
+          (Object.keys(EXERCISE_NAME_TO_ID) as Exercise[]).forEach((ex) => {
+            copy[comp.id][ex] = counts[EXERCISE_NAME_TO_ID[ex]] ?? 0;
           });
-        } catch {
-          // ignore
-        }
-      })
-    );
+          return copy;
+        });
+      } catch {}
+    }));
   }
 
-  /* -----------------------
-     Utilitarios UI
-  ---------------------*/
-  const selectedCompetition = competitions.find((c) => c.id === selectedCompetitionId) ?? null;
-  const competitionConcluded = selectedCompetition ? new Date(selectedCompetition.endDate) < new Date() : false;
-
-  const competitorsOfSelected = competitorsAll.filter((p) => p.id_competencia === selectedCompetitionId);
-  const assignedIdsSet = new Set(cards.flatMap((c) => c.assigned));
-  const availableCompetitors = competitorsOfSelected.filter((c) => !assignedIdsSet.has(c.id));
-  const assignedCompetitors = cards.flatMap((card) => card.assigned.map((id) => ({ id, cardTitle: card.title })));
-  const nameOf = (id?: string | null) => competitorsAll.find((x) => x.id === id)?.name ?? "—";
-
-  /* -----------------------
-     Attempts helpers
-  ---------------------*/
+  /* helpers */
   const getAttempts = (competitorId: string, exercise: Exercise) => attemptsDone[competitorId]?.[exercise] ?? 0;
-
-  function computeAttemptRoundForCard(card: Card | undefined, exercise: Exercise) {
-    if (!card || card.assigned.length === 0) return 1;
+  function computeAttemptRoundForCard(card?: Card, exercise?: Exercise) {
+    if (!card || card.assigned.length === 0 || !exercise) return 1;
     const vals = card.assigned.map((id) => getAttempts(id, exercise));
     const min = Math.min(...vals);
     return Math.min(3, Math.max(1, 1 + min));
   }
-
-  function findFirstParticipantNeedingAttempt(card: Card | undefined, exercise: Exercise) {
-    if (!card) return null;
-    for (let i = 0; i < card.assigned.length; i++) {
-      const id = card.assigned[i];
-      if (getAttempts(id, exercise) < 3) return i;
-    }
+  function findFirstParticipantNeedingAttempt(card?: Card, exercise?: Exercise) {
+    if (!card || !exercise) return null;
+    for (let i = 0; i < card.assigned.length; i++) if (getAttempts(card.assigned[i], exercise) < 3) return i;
     return null;
   }
 
-  /* -----------------------
-     Timer
-  ---------------------*/
-  useEffect(() => {
-    setSecondsLeft(defaultSeconds);
-  }, [defaultSeconds]);
-
+  /* Timer */
+  useEffect(() => { setSecondsLeft(defaultSeconds); }, [defaultSeconds]);
   useEffect(() => {
     if (running) {
       timerRef.current = window.setInterval(() => {
         setSecondsLeft((s) => {
-          if (s <= 1) {
-            clearInterval(timerRef.current ?? undefined);
-            timerRef.current = null;
-            setRunning(false);
-            return 0;
-          }
+          if (s <= 1) { clearInterval(timerRef.current ?? undefined); timerRef.current = null; setRunning(false); return 0; }
           return s - 1;
         });
       }, 1000) as unknown as number;
     }
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; } };
   }, [running]);
 
   useEffect(() => {
     const card = cards.find((c) => c.tempId === activeCardId);
-    if (card && card.assigned.length > 0) {
-      const newRound = computeAttemptRoundForCard(card, currentExercise);
-      setAttemptRound(newRound);
-      const idx = findFirstParticipantNeedingAttempt(card, currentExercise);
-      if (idx != null) {
-        setActiveParticipantIndex(idx);
-        setActiveCompetitorId(card.assigned[idx]);
-      } else {
-        const nextExerciseIndex = EXERCISES.indexOf(currentExercise) + 1;
-        if (nextExerciseIndex < EXERCISES.length) {
-          setCurrentExercise(EXERCISES[nextExerciseIndex]);
-        } else {
-          setActiveCompetitorId(null);
-          setActiveParticipantIndex(0);
-        }
-      }
-    } else {
-      setAttemptRound(1);
-      setActiveParticipantIndex(0);
-      setActiveCompetitorId(null);
+    if (!card || card.assigned.length === 0) { setAttemptRound(1); setActiveParticipantIndex(0); setActiveCompetitorId(null); setRunning(false); setSecondsLeft(defaultSeconds); return; }
+    if (activeCompetitorId && card.assigned.includes(activeCompetitorId) && getAttempts(activeCompetitorId, currentExercise) < 3) {
+      setActiveParticipantIndex(card.assigned.indexOf(activeCompetitorId));
+      setAttemptRound(computeAttemptRoundForCard(card, currentExercise));
+      setRunning(false);
+      setSecondsLeft(defaultSeconds);
+      return;
     }
-    setRunning(false);
-    setSecondsLeft(defaultSeconds);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentExercise, activeCardId, attemptsDone]);
+    const idx = findFirstParticipantNeedingAttempt(card, currentExercise);
+    if (idx != null) { setActiveParticipantIndex(idx); setActiveCompetitorId(card.assigned[idx]); setAttemptRound(computeAttemptRoundForCard(card, currentExercise)); } else { setActiveCompetitorId(null); setActiveParticipantIndex(0); setAttemptRound(computeAttemptRoundForCard(card, currentExercise)); }
+    setRunning(false); setSecondsLeft(defaultSeconds);
+  }, [activeCardId, attemptsDone, cards, currentExercise]);
 
-  /* -----------------------
-     CRUD helpers backend
-  ---------------------*/
+  useEffect(() => {
+    const card = cards.find((c) => c.tempId === activeCardId); if (!card) { setAttemptRound(1); return; }
+    setAttemptRound(computeAttemptRoundForCard(card, currentExercise));
+    if (activeCompetitorId) {
+      const attemptsForNew = getAttempts(activeCompetitorId, currentExercise);
+      if (attemptsForNew >= 3) {
+        const idx = findFirstParticipantNeedingAttempt(card, currentExercise);
+        if (idx != null) { setActiveParticipantIndex(idx); setActiveCompetitorId(card.assigned[idx]); } else { setActiveCompetitorId(null); setActiveParticipantIndex(0); }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExercise]);
+
+  /* CRUD helpers */
   async function createModuleOnServer(title = "Módulo", pass_number = 1) {
     if (!selectedCompetitionId) return null;
     try {
-      const resp = await fetch(`${MODULES_API}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_competencia: Number(selectedCompetitionId), title, pass_number }),
-      });
-      if (!resp.ok) {
-        console.warn("POST /api/modules falló:", resp.status);
-        return null;
-      }
-      const json = await resp.json();
-      return json.id as number;
-    } catch (err) {
-      console.error("createModule error", err);
-      return null;
-    }
+      const resp = await fetch(`${MODULES_API}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id_competencia: Number(selectedCompetitionId), title, pass_number }) });
+      if (!resp.ok) return null;
+      const json = await resp.json(); return json.id as number;
+    } catch { return null; }
   }
-
   async function patchModuleOnServer(moduleId: number, payload: { title?: string; pass_number?: number; position?: number }) {
-    try {
-      await fetch(`${MODULES_API}/${moduleId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch {
-      // ignore
-    }
+    try { await fetch(`${MODULES_API}/${moduleId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); } catch {}
   }
 
-  /* -----------------------
-     Acciones UI: crear / asignar / quitar
-     —> ahora persistimos al asignar/quitar si moduleId existe
-  ---------------------*/
+  /* Add/assign/remove cards */
   async function addCard() {
     if (selectedCompetitionId) {
       const moduleId = await createModuleOnServer(`Módulo ${cards.length + 1}`, 1);
       const temp = moduleId ? `module_${moduleId}` : uid("card_");
       setCards((prev) => [...prev, { tempId: temp, moduleId: moduleId ?? null, title: `Módulo ${prev.length + 1}`, assigned: [], passNumber: 1, position: prev.length }]);
       if (moduleId) setOriginalAssignments((o) => ({ ...o, [moduleId]: [] }));
-    } else {
-      setCards((prev) => [...prev, { tempId: uid("card_"), moduleId: null, title: `Módulo ${prev.length + 1}`, assigned: [], passNumber: 1, position: prev.length }]);
-    }
+    } else setCards((prev) => [...prev, { tempId: uid("card_"), moduleId: null, title: `Módulo ${prev.length + 1}`, assigned: [], passNumber: 1, position: prev.length }]);
   }
 
-  async function removeCard(cardTempId: string) {
-    const card = cards.find((c) => c.tempId === cardTempId);
-    if (card?.moduleId) {
-      try {
-        await fetch(`${MODULES_API}/${card.moduleId}`, { method: "DELETE" });
-      } catch {
-        console.warn("DELETE /api/modules/:id falló (opcional)");
-      }
-      setOriginalAssignments((o) => {
-        const copy = { ...o };
-        delete copy[card.moduleId as number];
-        return copy;
-      });
-    }
-    setCards((prev) => prev.filter((c) => c.tempId !== cardTempId));
-    if (activeCardId === cardTempId) {
-      setActiveCardId(null);
-      setActiveCompetitorId(null);
-    }
-  }
-
-  // Asignar competidor al card (persistir si moduleId existe)
   async function assignCompetitorToCard(cardTempId: string, competitorId: string) {
-    // actualizar UI primero
     setCards((prev) => prev.map((c) => (c.tempId === cardTempId ? { ...c, assigned: c.assigned.includes(competitorId) ? c.assigned : [...c.assigned, competitorId] } : c)));
-
-    // persistir si moduleId existe
     const card = cards.find((c) => c.tempId === cardTempId);
     if (card?.moduleId) {
       try {
-        const resp = await fetch(`${MODULES_API}/${card.moduleId}/assign`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id_competidor: Number(competitorId) }),
-        });
-        if (!resp.ok) {
-          console.warn("assign failed", await resp.text());
-        } else {
-          // actualizar originalAssignments y recargar assignments oficiales
+        const resp = await fetch(`${MODULES_API}/${card.moduleId}/assign`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id_competidor: Number(competitorId) }) });
+        if (resp.ok) {
           const r2 = await fetch(`${MODULES_API}/${card.moduleId}/assignments`);
-          if (r2.ok) {
-            const assigns = await r2.json();
-            const ids = assigns.map((a: any) => String(a.id_competidor));
-            setCards((prev) => prev.map((c) => (c.moduleId === card.moduleId ? { ...c, assigned: ids } : c)));
-            setOriginalAssignments((o) => ({ ...o, [card.moduleId as number]: ids }));
-          }
+          if (r2.ok) { const assigns = await r2.json(); const ids = assigns.map((a: any) => String(a.id_competidor)); setCards((prev) => prev.map((c) => (c.moduleId === card.moduleId ? { ...c, assigned: ids } : c))); setOriginalAssignments((o) => ({ ...o, [card.moduleId as number]: ids })); }
         }
-      } catch (err) {
-        console.warn("Error assigning to module on server", err);
-      }
+      } catch (err) { console.warn(err); }
     }
   }
 
-  // Quitar competidor (persistir si moduleId existe)
   async function removeCompetitorFromCard(cardTempId: string, competitorId: string) {
-    setCards((prev) => prev.map((c) => (c.tempId === cardTempId ? { ...c, assigned: c.assigned.filter((id) => id !== competitorId) } : c)));
-    if (selectedForWeights === competitorId) setSelectedForWeights(null);
-    if (activeCompetitorId === competitorId) {
-      setActiveCompetitorId(null);
-      setActiveCardId(null);
-    }
-
     const card = cards.find((c) => c.tempId === cardTempId);
-    if (card?.moduleId) {
+    if (!card) {
+      setCards((prev) => prev.map((c) => (c.tempId === cardTempId ? { ...c, assigned: c.assigned.filter((id) => id !== competitorId) } : c)));
+      return;
+    }
+    if (card.moduleId) {
       try {
         await fetch(`${MODULES_API}/${card.moduleId}/assign/${competitorId}`, { method: "DELETE" });
-        // recargar assignments
         const r = await fetch(`${MODULES_API}/${card.moduleId}/assignments`);
-        if (r.ok) {
-          const assigns = await r.json();
-          const ids = assigns.map((a: any) => String(a.id_competidor));
-          setCards((prev) => prev.map((c) => (c.moduleId === card.moduleId ? { ...c, assigned: ids } : c)));
-          setOriginalAssignments((o) => ({ ...o, [card.moduleId as number]: ids }));
-        } else {
-          // actualizar original local
-          setOriginalAssignments((o) => ({ ...o, [card.moduleId as number]: (o[card.moduleId as number] ?? []).filter((id) => id !== competitorId) }));
-        }
-      } catch (err) {
-        console.warn("Error removing assignment", err);
-      }
-    }
+        if (r.ok) { const assigns = await r.json(); const ids = assigns.map((a: any) => String(a.id_competidor)); setCards((prev) => prev.map((c) => (c.moduleId === card.moduleId ? { ...c, assigned: ids } : c))); setOriginalAssignments((o) => ({ ...o, [card.moduleId as number]: ids })); }
+        else setCards((prev) => prev.map((c) => (c.tempId === cardTempId ? { ...c, assigned: c.assigned.filter((id) => id !== competitorId) } : c)));
+      } catch (err) { console.warn(err); setCards((prev) => prev.map((c) => (c.tempId === cardTempId ? { ...c, assigned: c.assigned.filter((id) => id !== competitorId) } : c))); }
+    } else setCards((prev) => prev.map((c) => (c.tempId === cardTempId ? { ...c, assigned: c.assigned.filter((id) => id !== competitorId) } : c)));
+    if (selectedForWeights === competitorId) setSelectedForWeights(null);
+    if (activeCompetitorId === competitorId) { setActiveCompetitorId(null); setActiveCardId(null); }
   }
 
-  function setPassNumber(cardTempId: string, n: number) {
-    setCards((prev) => prev.map((c) => (c.tempId === cardTempId ? { ...c, passNumber: Math.max(1, n) } : c)));
-  }
-
+  /* weight inputs & save */
   function setWeightForAttempt(competitorId: string, exercise: Exercise, attemptIndex: number, value: number | null) {
-    setWeights((prev) => ({
-      ...prev,
-      [competitorId]: {
-        ...prev[competitorId],
-        [exercise]: prev[competitorId][exercise].map((v, i) => (i === attemptIndex ? value : v)),
-      },
-    }));
+    setWeights((prev) => ({ ...prev, [competitorId]: { ...prev[competitorId], [exercise]: prev[competitorId][exercise].map((v, i) => (i === attemptIndex ? value : v)) } }));
   }
 
-  /* onBlur persist individual */
   async function saveWeightToServer(id_competidor: string, exercise: Exercise, attemptIndex: number, value: number | null) {
     if (!selectedCompetitionId) return;
     const exercise_id = EXERCISE_NAME_TO_ID[exercise];
@@ -539,25 +427,12 @@ export default function CompetitionManager(): JSX.Element {
           exercise_id,
           attempt_number: attemptIndex + 1,
           weight_kg: value,
-          module_id: (() => {
-            const card = cards.find((c) => c.assigned.includes(id_competidor));
-            return card?.moduleId ?? null;
-          })(),
+          module_id: (() => { const card = cards.find((c) => c.assigned.includes(id_competidor)); return card?.moduleId ?? null; })(),
         }),
       });
-      if (!resp.ok) {
-        console.warn("Error saving weight:", await resp.text());
-      } else {
-        setAttemptsDone((prev) => {
-          const cur = prev[id_competidor] ?? { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 };
-          const prevSlot = (weights[id_competidor]?.[exercise]?.[attemptIndex] ?? null);
-          const increment = prevSlot == null && value != null ? 1 : 0;
-          return { ...prev, [id_competidor]: { ...cur, [exercise]: Math.min(3, (cur[exercise] ?? 0) + increment) } };
-        });
-      }
-    } catch (err) {
-      console.error("saveWeightToServer error", err);
-    }
+      if (!resp.ok) console.warn("Error saving weight:", await resp.text());
+      // server emits attempt_created/upsert or vote_update when final.
+    } catch (err) { console.error("saveWeightToServer error", err); }
   }
 
   function handleAttemptInputBlur(competitorId: string, exercise: Exercise, attemptIndex: number) {
@@ -565,134 +440,87 @@ export default function CompetitionManager(): JSX.Element {
     saveWeightToServer(competitorId, exercise, attemptIndex, val);
   }
 
-  /* -----------------------
-     Seleccionar competidor manualmente
-  ---------------------*/
-  function selectCompetitorToCompete(cardTempId: string, competitorId: string) {
-    const card = cards.find((c) => c.tempId === cardTempId);
-    if (!card) return;
-    const idx = card.assigned.indexOf(competitorId);
-    if (idx < 0) return;
-    setActiveCardId(cardTempId);
-    setActiveCompetitorId(competitorId);
-    setActiveParticipantIndex(idx);
+  /* select competitor */
+  async function selectCompetitorToCompete(cardTempId: string, competitorId: string) {
+    const card = cards.find((c) => c.tempId === cardTempId); if (!card) return;
+    const idx = card.assigned.indexOf(competitorId); if (idx < 0) return;
+    setActiveCardId(cardTempId); setActiveCompetitorId(competitorId); setActiveParticipantIndex(idx); setAttemptRound(computeAttemptRoundForCard(card, currentExercise)); setSecondsLeft(defaultSeconds); setRunning(false);
 
-    const newRound = computeAttemptRoundForCard(card, currentExercise);
-    setAttemptRound(newRound);
-
-    setSecondsLeft(defaultSeconds);
-    setRunning(false);
-  }
-
-  function selectCompetitorForWeights(competitorId: string | null) {
-    setSelectedForWeights(competitorId);
-  }
-
-  /* -----------------------
-     Iniciar bloque: ahora consultamos endpoint /:id/next si moduleId existe
-  ---------------------*/
-  async function startBlock(cardTempId: string) {
-    const card = cards.find((c) => c.tempId === cardTempId);
-    if (!card || card.assigned.length === 0) return alert("El card no tiene participantes asignados");
-    setActiveCardId(cardTempId);
-
-    // Si moduleId existe, preguntamos al servidor por el siguiente participante (mejor fuente de verdad)
     if (card.moduleId) {
       try {
-        const exercise_id = EXERCISE_NAME_TO_ID[currentExercise];
-        const r = await fetch(`${MODULES_API}/${card.moduleId}/next?exercise_id=${exercise_id}`);
+        const resp = await fetch(`${MODULES_API}/${card.moduleId}/select`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null,
+            id_competidor: Number(competitorId),
+            id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise],
+            source: "admin_ui",
+            timestamp: Date.now(),
+          }),
+        });
+        if (!resp.ok) {
+          try { socketRef.current?.emit("competitor:selected", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, id_competidor: Number(competitorId), id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], source: "admin_ui_fallback", timestamp: Date.now() }); } catch {}
+        }
+      } catch (err) {
+        console.warn("select API failed, fallback to socket", err);
+        try { socketRef.current?.emit("competitor:selected", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, id_competidor: Number(competitorId), id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], source: "admin_ui_fallback", timestamp: Date.now() }); } catch {}
+      }
+    } else {
+      try { socketRef.current?.emit("competitor:selected", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, id_competidor: Number(competitorId), id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], source: "admin_ui", timestamp: Date.now() }); } catch {}
+    }
+  }
+
+  /* start block */
+  async function startBlock(cardTempId: string) {
+    const card = cards.find((c) => c.tempId === cardTempId); if (!card || card.assigned.length === 0) return alert("El card no tiene participantes asignados");
+    setActiveCardId(cardTempId);
+    let chosenCompetitorId: string | null = null;
+    if (card.moduleId) {
+      try {
+        const r = await fetch(`${MODULES_API}/${card.moduleId}/next?exercise_id=${EXERCISE_NAME_TO_ID[currentExercise]}`);
         if (r.ok) {
           const json = await r.json();
           const next = json?.next ?? null;
           if (next && next.id_competidor != null) {
             const idStr = String(next.id_competidor);
-            const idx = card.assigned.indexOf(idStr);
-            if (idx >= 0) {
-              setActiveParticipantIndex(idx);
+            if (card.assigned.includes(idStr)) {
+              setActiveParticipantIndex(card.assigned.indexOf(idStr));
               setActiveCompetitorId(idStr);
-            } else {
-              // si el servidor devolvió un competidor no en la lista (raro), fallback al primer participante que necesita intento
-              const idx2 = findFirstParticipantNeedingAttempt(card, currentExercise);
-              if (idx2 != null) {
-                setActiveParticipantIndex(idx2);
-                setActiveCompetitorId(card.assigned[idx2]);
-              } else {
-                setActiveParticipantIndex(0);
-                setActiveCompetitorId(card.assigned[0]);
-              }
-            }
-          } else {
-            // server returned null -> fallback local
-            const idx = findFirstParticipantNeedingAttempt(card, currentExercise);
-            if (idx != null) {
-              setActiveParticipantIndex(idx);
-              setActiveCompetitorId(card.assigned[idx]);
-            } else {
-              setActiveParticipantIndex(0);
-              setActiveCompetitorId(card.assigned[0]);
+              chosenCompetitorId = idStr;
             }
           }
-        } else {
-          // fallback local if endpoint missing
-          const idx = findFirstParticipantNeedingAttempt(card, currentExercise);
-          if (idx != null) {
-            setActiveParticipantIndex(idx);
-            setActiveCompetitorId(card.assigned[idx]);
-          } else {
-            setActiveParticipantIndex(0);
-            setActiveCompetitorId(card.assigned[0]);
-          }
         }
-      } catch (err) {
-        console.warn("Error fetching next participant:", err);
-        const idx = findFirstParticipantNeedingAttempt(card, currentExercise);
-        if (idx != null) {
-          setActiveParticipantIndex(idx);
-          setActiveCompetitorId(card.assigned[idx]);
-        } else {
-          setActiveParticipantIndex(0);
-          setActiveCompetitorId(card.assigned[0]);
-        }
-      }
-    } else {
-      // no moduleId -> comportamiento local
+      } catch (err) { console.warn("Error fetching next:", err); }
+    }
+    if (!chosenCompetitorId) {
       const idx = findFirstParticipantNeedingAttempt(card, currentExercise);
-      if (idx != null) {
-        setActiveParticipantIndex(idx);
-        setActiveCompetitorId(card.assigned[idx]);
-      } else {
-        setActiveParticipantIndex(0);
-        setActiveCompetitorId(card.assigned[0]);
-      }
+      if (idx != null) { setActiveParticipantIndex(idx); setActiveCompetitorId(card.assigned[idx]); chosenCompetitorId = card.assigned[idx]; }
+      else { setActiveParticipantIndex(0); setActiveCompetitorId(card.assigned[0]); chosenCompetitorId = card.assigned[0]; }
     }
+    const newRound = computeAttemptRoundForCard(card, currentExercise); setAttemptRound(newRound); setSecondsLeft(defaultSeconds); setRunning(false);
 
-    const newRound = computeAttemptRoundForCard(card, currentExercise);
-    setAttemptRound(newRound);
-    setSecondsLeft(defaultSeconds);
-    setRunning(false);
-
-    // opcional: iniciar run en server si existe endpoint
     if (card.moduleId) {
-      fetch(`${MODULES_API}/${card.moduleId}/start`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_competencia: Number(selectedCompetitionId) }),
-      }).catch(() => {});
+      try {
+        const r = await fetch(`${MODULES_API}/${card.moduleId}/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id_competencia: Number(selectedCompetitionId), id_competidor: chosenCompetitorId ? Number(chosenCompetitorId) : null, id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], started_by: null, remaining: defaultSeconds }),
+        });
+        if (!r.ok) {
+          console.warn("POST /start returned", r.status, await r.text().catch(() => ""));
+          try { socketRef.current?.emit("start", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, id_competidor: chosenCompetitorId ? Number(chosenCompetitorId) : null, id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], remaining: defaultSeconds, source: "admin_ui_fallback", timestamp: Date.now() }); } catch {}
+        }
+      } catch (err) { console.warn("start API failed, fallback to socket", err); try { socketRef.current?.emit("start", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, id_competidor: chosenCompetitorId ? Number(chosenCompetitorId) : null, id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], remaining: defaultSeconds, source: "admin_ui_fallback", timestamp: Date.now() }); } catch {} }
+    } else {
+      try { socketRef.current?.emit("start", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, id_competidor: chosenCompetitorId ? Number(chosenCompetitorId) : null, id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], remaining: defaultSeconds, source: "admin_ui", timestamp: Date.now() }); } catch {}
     }
   }
 
-  /* -----------------------
-     Avanzar flujo (siguiente participante)
-  ---------------------*/
-  function snapshotDefaultFor(id: string) {
-    const cur = attemptsDone[id] ?? { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 };
-    return cur;
-  }
-
+  /* next participant/round/exercise */
   function goToNextParticipantOrRound() {
     if (!activeCardId || !activeCompetitorId) return;
-    const card = cards.find((c) => c.tempId === activeCardId);
-    if (!card) return;
+    const card = cards.find((c) => c.tempId === activeCardId); if (!card) return;
 
     setAttemptsDone((prev) => {
       const current = prev[activeCompetitorId] ?? { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 };
@@ -703,43 +531,30 @@ export default function CompetitionManager(): JSX.Element {
 
     const snapshot: Record<string, Record<Exercise, number>> = {};
     Object.keys(attemptsDone).forEach((k) => (snapshot[k] = { ...attemptsDone[k] } as any));
-    const cur = snapshotDefaultFor(activeCompetitorId);
-    snapshot[activeCompetitorId] = { ...cur, [currentExercise]: Math.min(3, (cur[currentExercise] ?? 0) + 1) };
+    const cur = snapshot[activeCompetitorId] ?? { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 };
+    snapshot[activeCompetitorId] = { ...cur, [currentExercise]: Math.min(3, (cur as any)[currentExercise] + 1) };
 
     const getSnapAttempts = (competitorId: string) => snapshot[competitorId]?.[currentExercise] ?? 0;
     const total = card.assigned.length;
     let foundIdx: number | null = null;
-    for (let i = activeParticipantIndex + 1; i < total; i++) {
-      if (getSnapAttempts(card.assigned[i]) < 3) { foundIdx = i; break; }
-    }
-    if (foundIdx == null) {
-      for (let i = 0; i <= activeParticipantIndex; i++) {
-        if (getSnapAttempts(card.assigned[i]) < 3) { foundIdx = i; break; }
-      }
-    }
+    for (let i = activeParticipantIndex + 1; i < total; i++) if (getSnapAttempts(card.assigned[i]) < 3) { foundIdx = i; break; }
+    if (foundIdx == null) for (let i = 0; i <= activeParticipantIndex; i++) if (getSnapAttempts(card.assigned[i]) < 3) { foundIdx = i; break; }
 
     if (foundIdx != null) {
-      setActiveParticipantIndex(foundIdx);
-      setActiveCompetitorId(card.assigned[foundIdx]);
-      setSecondsLeft(defaultSeconds);
-      setRunning(false);
-      const vals = card.assigned.map((id) => snapshot[id]?.[currentExercise] ?? 0);
-      const min = Math.min(...vals);
-      setAttemptRound(Math.min(3, Math.max(1, 1 + min)));
+      setActiveParticipantIndex(foundIdx); setActiveCompetitorId(card.assigned[foundIdx]); setSecondsLeft(defaultSeconds); setRunning(false);
+      const vals = card.assigned.map((id) => snapshot[id]?.[currentExercise] ?? 0); const min = Math.min(...vals); setAttemptRound(Math.min(3, Math.max(1, 1 + min)));
+      if (card.moduleId) { try { fetch(`${MODULES_API}/${card.moduleId}/next?exercise_id=${EXERCISE_NAME_TO_ID[currentExercise]}`).catch(() => {}); } catch {} }
+      try { socketRef.current?.emit("next", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, nextId: Number(card.assigned[foundIdx]), id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], remaining: defaultSeconds, source: "admin_ui", timestamp: Date.now() }); } catch {}
       return;
     }
 
-    const valsAfter = card.assigned.map((id) => snapshot[id]?.[currentExercise] ?? 0);
-    const minAfter = Math.min(...valsAfter);
+    const valsAfter = card.assigned.map((id) => snapshot[id]?.[currentExercise] ?? 0); const minAfter = Math.min(...valsAfter);
     if (minAfter < 3) {
-      const newRound = Math.min(3, 1 + minAfter);
-      setAttemptRound(newRound);
+      const newRound = Math.min(3, 1 + minAfter); setAttemptRound(newRound);
       const firstIdx = card.assigned.findIndex((id) => snapshot[id]?.[currentExercise] < 3);
       if (firstIdx >= 0) {
-        setActiveParticipantIndex(firstIdx);
-        setActiveCompetitorId(card.assigned[firstIdx]);
-        setSecondsLeft(defaultSeconds);
-        setRunning(false);
+        setActiveParticipantIndex(firstIdx); setActiveCompetitorId(card.assigned[firstIdx]); setSecondsLeft(defaultSeconds); setRunning(false);
+        try { socketRef.current?.emit("next", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, nextId: Number(card.assigned[firstIdx]), id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], remaining: defaultSeconds, source: "admin_ui", timestamp: Date.now() }); } catch {}
         return;
       }
     }
@@ -747,61 +562,151 @@ export default function CompetitionManager(): JSX.Element {
     const nextExerciseIndex = EXERCISES.indexOf(currentExercise) + 1;
     if (nextExerciseIndex < EXERCISES.length) {
       setCurrentExercise(EXERCISES[nextExerciseIndex]);
+      try { socketRef.current?.emit("order_update", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, id_ejercicio: EXERCISE_NAME_TO_ID[EXERCISES[nextExerciseIndex]], source: "admin_ui", timestamp: Date.now() }); } catch {}
       return;
     }
 
     alert("Bloque completado: todos los ejercicios e intentos terminados.");
-    setActiveCardId(null);
-    setActiveCompetitorId(null);
-    setRunning(false);
+    setActiveCardId(null); setActiveCompetitorId(null); setRunning(false);
+    try { socketRef.current?.emit("next", { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, nextId: null, id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], remaining: 0, source: "admin_ui", timestamp: Date.now() }); } catch {}
   }
 
-  function handleNextFromBottom() {
-    setRunning(false);
-    goToNextParticipantOrRound();
-  }
+  function handleNextFromBottom() { setRunning(false); goToNextParticipantOrRound(); }
 
-  function handleStart() {
-    if (!activeCompetitorId) return alert("Selecciona primero un competidor para competir");
-    if (secondsLeft <= 0) setSecondsLeft(defaultSeconds);
-    setRunning(true);
-  }
-  function handlePause() {
-    setRunning(false);
-  }
-  function handleResetTimer() {
-    setRunning(false);
-    setSecondsLeft(defaultSeconds);
-  }
-
-  useEffect(() => {
-    setSecondsLeft(defaultSeconds);
-    setRunning(false);
-  }, [activeCompetitorId, defaultSeconds]);
-
-  /* -----------------------
-     Guardar TODO: módulos/asignaciones/pesos (botón)
-  ---------------------*/
-  async function saveAllToServer() {
-    if (!selectedCompetitionId) {
-      alert("Selecciona una competencia antes de guardar.");
-      return;
+  /* ---------------------
+     tryModulePost: try multiple candidate endpoints quietly (no spam 404)
+  --------------------- */
+  async function tryModulePost(moduleId: number | null, pathCandidates: string[], payload: any) {
+    if (!moduleId) return { ok: false, details: ["no moduleId"] };
+    const details: Array<{ url: string; status?: number; text?: string; error?: any }> = [];
+    for (const p of pathCandidates) {
+      const url = `${MODULES_API}/${moduleId}/${p}`;
+      try {
+        const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const text = await r.text().catch(() => "");
+        if (r.ok) return { ok: true, url, text };
+        // treat 404 as "not implemented" quietly (do not spam console)
+        details.push({ url, status: r.status, text });
+      } catch (err) {
+        details.push({ url, error: err });
+      }
     }
+    // none succeeded
+    return { ok: false, details };
+  }
+
+  /* ---------------------
+     START: try /resume first then /start then socket fallback
+  --------------------- */
+  async function handleStart() {
+    if (!activeCompetitorId) return alert("Selecciona primero un competidor para competir");
+
+    // compute remaining deterministically (avoid race with setState)
+    const remainingSeconds = secondsLeft > 0 ? secondsLeft : defaultSeconds;
+
+    // mark running immediately (timer effect reads `running`)
+    setRunning(true);
+
+    const card = cards.find((c) => c.tempId === activeCardId);
+    const payload = { id_competencia: selectedCompetitionId ? Number(selectedCompetitionId) : null, id_competidor: activeCompetitorId ? Number(activeCompetitorId) : null, id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], remaining: remainingSeconds, source: "admin_ui", timestamp: Date.now() };
+
+    if (card?.moduleId) {
+      // try resume first (prefer resume semantics)
+      const tryResume = await tryModulePost(card.moduleId, ["resume"], payload);
+      if (tryResume.ok) return;
+      // then try start
+      const tryStart = await tryModulePost(card.moduleId, ["start"], payload);
+      if (tryStart.ok) return;
+      // fallback socket emit 'resume' (judges expect resume to resume timer)
+      try { socketRef.current?.emit("resume", payload); } catch (e) { console.warn("socket emit resume fallback failed", e); }
+    } else {
+      try { socketRef.current?.emit("resume", payload); } catch (e) { console.warn("socket emit resume failed", e); }
+    }
+  }
+
+  /* ---------------------
+     PAUSE: try reset first (since your server exposes reset), then pause/stop/end -> fallback socket
+  --------------------- */
+  async function handlePause() {
+    setRunning(false);
+    const card = cards.find((c) => c.tempId === activeCardId);
+    const payload = { id_competencia: Number(selectedCompetitionId), id_competidor: activeCompetitorId ? Number(activeCompetitorId) : null, id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], remaining: secondsLeft, source: "admin_ui", timestamp: Date.now() };
+
+    const candidates = ["reset", "pause", "stop", "end"];
+    if (card?.moduleId) {
+      const resp = await tryModulePost(card.moduleId, candidates, payload);
+      if (resp.ok) {
+        try { socketRef.current?.emit("pause", payload); } catch (e) { /* best-effort */ }
+        return;
+      } else {
+        // none of the endpoints exist/ok: fallback to socket (single concise log)
+        console.info("Ningún endpoint de pause/reset respondió OK — usando socket fallback.");
+        try { socketRef.current?.emit("pause", { ...payload, source: "admin_ui_fallback" }); } catch (e) { console.warn("socket emit pause fallback failed", e); }
+        return;
+      }
+    }
+    try { socketRef.current?.emit("pause", payload); } catch (e) { console.warn("socket emit pause failed", e); }
+  }
+
+  /* ---------------------
+     RESET timer (reiniciar): try reset then pause fallback
+  --------------------- */
+  async function handleResetTimer() {
+    setRunning(false);
+    setSecondsLeft(defaultSeconds);
+    const card = cards.find((c) => c.tempId === activeCardId);
+    const payload = { id_competencia: Number(selectedCompetitionId), id_competidor: activeCompetitorId ? Number(activeCompetitorId) : null, id_ejercicio: EXERCISE_NAME_TO_ID[currentExercise], remaining: defaultSeconds, source: "admin_ui", timestamp: Date.now() };
+
+    const candidates = ["reset", "pause", "stop", "end"];
+    if (card?.moduleId) {
+      const resp = await tryModulePost(card.moduleId, candidates, payload);
+      if (resp.ok) {
+        try { socketRef.current?.emit("pause", payload); } catch {}
+        return;
+      } else {
+        console.info("Ningún endpoint de reset/pause respondió OK — usando socket fallback.");
+        try { socketRef.current?.emit("pause", { ...payload, source: "admin_ui_fallback" }); } catch {}
+        return;
+      }
+    }
+    try { socketRef.current?.emit("pause", payload); } catch {}
+  }
+
+  /* reset all attempts (server) */
+  async function resetAllAttempts() {
+    if (!selectedCompetitionId) return alert("Selecciona una competencia primero");
+    if (!confirm("¿Seguro quieres reiniciar TODOS los intentos de esta competencia?")) return;
+    try {
+      const resp = await fetch(`${ATTEMPTS_API}/reset`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id_competencia: Number(selectedCompetitionId) }) });
+      if (!resp.ok) { alert("No se pudo reiniciar los intentos en el servidor."); return; }
+      const competitors = competitorsAll.filter((c) => c.id_competencia === selectedCompetitionId).map((c) => c.id);
+      setWeights((prev) => {
+        const copy = { ...prev };
+        competitors.forEach((id) => { copy[id] = { "Press banca": [null, null, null], "Peso muerto": [null, null, null], "Sentadilla": [null, null, null] }; });
+        return copy;
+      });
+      setAttemptsDone((prev) => {
+        const copy = { ...prev };
+        competitors.forEach((id) => { copy[id] = { "Press banca": 0, "Peso muerto": 0, "Sentadilla": 0 }; });
+        return copy;
+      });
+      alert("Intentos reiniciados correctamente.");
+    } catch (err) { console.error(err); alert("Ocurrió un error al reiniciar intentos."); }
+  }
+
+  /* save all (modules/assignments/weights) - unchanged logic (trimmed here but same behaviour) */
+  async function saveAllToServer() {
+    if (!selectedCompetitionId) return alert("Selecciona una competencia antes de guardar.");
     setSaving(true);
     try {
+      // ensure modules exist & patch them, sync assignments and upsert weights
       const updatedCards = [...cards];
       for (let i = 0; i < updatedCards.length; i++) {
         const c = updatedCards[i];
         if (!c.moduleId) {
           const createdId = await createModuleOnServer(c.title, c.passNumber);
-          if (createdId) {
-            c.moduleId = createdId;
-            c.tempId = `module_${createdId}`;
-            setOriginalAssignments((o) => ({ ...o, [createdId]: [] }));
-          }
-        } else {
-          await patchModuleOnServer(c.moduleId, { title: c.title, pass_number: c.passNumber, position: c.position ?? i });
-        }
+          if (createdId) { c.moduleId = createdId; c.tempId = `module_${createdId}`; setOriginalAssignments((o) => ({ ...o, [createdId]: [] })); }
+        } else await patchModuleOnServer(c.moduleId, { title: c.title, pass_number: c.passNumber, position: c.position ?? i });
       }
       setCards(updatedCards);
 
@@ -812,37 +717,17 @@ export default function CompetitionManager(): JSX.Element {
         const localList = card.assigned;
         const toAdd = localList.filter((id) => !serverList.includes(id));
         const toRemove = serverList.filter((id) => !localList.includes(id));
-
-        await Promise.all(toRemove.map(async (competitorId) => {
-          try { await fetch(`${MODULES_API}/${mid}/assign/${competitorId}`, { method: "DELETE" }); } catch {}
-        }));
-
+        await Promise.all(toRemove.map(async (competitorId) => { try { await fetch(`${MODULES_API}/${mid}/assign/${competitorId}`, { method: "DELETE" }); } catch {} }));
         for (const competitorId of toAdd) {
-          try {
-            await fetch(`${MODULES_API}/${mid}/assign`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id_competidor: Number(competitorId) }),
-            });
-          } catch {}
+          try { await fetch(`${MODULES_API}/${mid}/assign`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id_competidor: Number(competitorId) }) }); } catch {}
         }
-
         try {
           const r = await fetch(`${MODULES_API}/${mid}/assignments`);
-          if (r.ok) {
-            const assigns = await r.json();
-            const ids = assigns.map((a: any) => String(a.id_competidor));
-            setCards((prev) => prev.map((c) => (c.moduleId === mid ? { ...c, assigned: ids } : c)));
-            setOriginalAssignments((o) => ({ ...o, [mid]: ids }));
-          } else {
-            setOriginalAssignments((o) => ({ ...o, [mid]: [...localList] }));
-          }
-        } catch {
-          setOriginalAssignments((o) => ({ ...o, [mid]: [...localList] }));
-        }
+          if (r.ok) { const assigns = await r.json(); const ids = assigns.map((a: any) => String(a.id_competidor)); setCards((prev) => prev.map((c) => (c.moduleId === mid ? { ...c, assigned: ids } : c))); setOriginalAssignments((o) => ({ ...o, [mid]: ids })); }
+          else setOriginalAssignments((o) => ({ ...o, [mid]: [...localList] }));
+        } catch { setOriginalAssignments((o) => ({ ...o, [mid]: [...localList] })); }
       }
 
-      // Guardar pesos
       for (const competitorId of Object.keys(weights)) {
         const exercises = weights[competitorId];
         for (const ex of Object.keys(exercises) as Exercise[]) {
@@ -854,17 +739,7 @@ export default function CompetitionManager(): JSX.Element {
                 await fetch(`${ATTEMPTS_API}/upsert-weight`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    id_competencia: Number(selectedCompetitionId),
-                    id_competidor: Number(competitorId),
-                    exercise_id: EXERCISE_NAME_TO_ID[ex],
-                    attempt_number: i + 1,
-                    weight_kg: val,
-                    module_id: (() => {
-                      const card = cards.find((c) => c.assigned.includes(competitorId));
-                      return card?.moduleId ?? null;
-                    })(),
-                  }),
+                  body: JSON.stringify({ id_competencia: Number(selectedCompetitionId), id_competidor: Number(competitorId), exercise_id: EXERCISE_NAME_TO_ID[ex], attempt_number: i + 1, weight_kg: val, module_id: (() => { const card = cards.find((c) => c.assigned.includes(competitorId)); return card?.moduleId ?? null; })() }),
                 });
               } catch {}
             }
@@ -874,31 +749,30 @@ export default function CompetitionManager(): JSX.Element {
 
       await loadAllAttemptsForCompetition(Number(selectedCompetitionId));
       alert("Guardado completado.");
-    } catch (err) {
-      console.error("saveAllToServer error", err);
-      alert("Ocurrió un error al guardar. Revisa la consola.");
-    } finally {
-      setSaving(false);
-    }
+    } catch (err) { console.error("saveAllToServer error", err); alert("Ocurrió un error al guardar. Revisa la consola."); } finally { setSaving(false); }
   }
 
-  /* -----------------------
-     Render
-  ---------------------*/
-  const formatDate = (iso?: string | null) =>
-    !iso ? "—" : new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(iso));
+  /* small render utils */
+  const selectedCompetition = competitions.find((c) => c.id === selectedCompetitionId) ?? null;
+  const competitionConcluded = selectedCompetition ? new Date(selectedCompetition.endDate) < new Date() : false;
+  const competitorsOfSelected = competitorsAll.filter((p) => p.id_competencia === selectedCompetitionId);
+  const assignedIdsSet = new Set(cards.flatMap((c) => c.assigned));
+  const availableCompetitors = competitorsOfSelected.filter((c) => !assignedIdsSet.has(c.id));
+  const assignedCompetitors = cards.flatMap((card) => card.assigned.map((id) => ({ id, cardTitle: card.title })));
+  const nameOf = (id?: string | null) => competitorsAll.find((x) => x.id === id)?.name ?? "—";
+  const formatDate = (iso?: string | null) => !iso ? "—" : new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(iso));
 
+  /* render (igual estructura) */
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>Gestión de Competencia</h2>
 
       <div className={styles.controlsRow}>
         <label className={styles.label}>Seleccionar competencia:</label>
-
         <select className={styles.select} value={selectedCompetitionId ?? ""} onChange={(e) => setSelectedCompetitionId(e.target.value || null)} disabled={loadingCompetitions}>
           {loadingCompetitions && <option value="">Cargando competencias...</option>}
           {!loadingCompetitions && competitions.length === 0 && <option value="">Sin competencias</option>}
-          {competitions.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
+          {competitions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
 
         {loadingCompetitors && <div className={styles.hint}>Cargando competidores...</div>}
@@ -907,6 +781,7 @@ export default function CompetitionManager(): JSX.Element {
         <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
           <button className={styles.addBtn} onClick={() => addCard()} disabled={!selectedCompetitionId}>+ Añadir card</button>
           <button className={styles.primaryBtn} onClick={saveAllToServer} disabled={saving || !selectedCompetitionId}>{saving ? "Guardando..." : "Guardar cambios"}</button>
+          <button className={styles.smallBtn} onClick={resetAllAttempts} disabled={!selectedCompetitionId}>Reiniciar intentos</button>
         </div>
       </div>
 
@@ -920,7 +795,6 @@ export default function CompetitionManager(): JSX.Element {
             <div style={{ fontWeight: 800 }}>{selectedCompetition.name}</div>
             <div style={{ color: "var(--muted)", fontSize: 13 }}>Inicio: <strong>{formatDate(selectedCompetition.startDate)}</strong></div>
             <div style={{ color: "var(--muted)", fontSize: 13 }}>Cierre: <strong>{formatDate(selectedCompetition.endDate)}</strong></div>
-            {selectedCompetition.eventDate && <div style={{ color: "var(--muted)", fontSize: 13 }}>Evento: <strong>{formatDate(selectedCompetition.eventDate)}</strong></div>}
             <div style={{ marginTop: 6 }}>{competitionConcluded ? <span className={styles.concluded}>Competencia ya concluida</span> : <span style={{ color: "var(--muted)", fontSize: 13 }}>Competencia activa / próxima</span>}</div>
           </div>
         </div>
@@ -938,8 +812,8 @@ export default function CompetitionManager(): JSX.Element {
                     <input className={styles.cardTitle} value={card.title} onChange={(e) => setCards((prev) => prev.map((c) => (c.tempId === card.tempId ? { ...c, title: e.target.value } : c)))} />
                     <div className={styles.cardActions}>
                       <label>Pasarán:</label>
-                      <input type="number" min={1} value={card.passNumber} onChange={(e) => setPassNumber(card.tempId, Math.max(1, Number(e.target.value || 1)))} className={styles.smallNumber} />
-                      <button className={styles.smallBtn} onClick={() => removeCard(card.tempId)}>Eliminar</button>
+                      <input type="number" min={1} value={card.passNumber} onChange={(e) => setCards((prev) => prev.map((c) => (c.tempId === card.tempId ? { ...c, passNumber: Math.max(1, Number(e.target.value || 1)) } : c)))} className={styles.smallNumber} />
+                      <button className={styles.smallBtn} onClick={() => setCards((prev) => prev.filter((c) => c.tempId !== card.tempId))}>Eliminar</button>
                       <button className={styles.primaryBtn} onClick={() => startBlock(card.tempId)}>Iniciar bloque</button>
                     </div>
                   </div>
@@ -980,7 +854,6 @@ export default function CompetitionManager(): JSX.Element {
 
           <div className={styles.rightCol}>
             <h3>Competidores disponibles en "{selectedCompetition?.name ?? "—"}"</h3>
-
             <ul className={styles.availableList}>
               {availableCompetitors.map((p) => (
                 <li key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
@@ -1030,7 +903,6 @@ export default function CompetitionManager(): JSX.Element {
             <div className={styles.timerSetup}>
               <label>Segundos por participante:</label>
               <input type="number" min={10} value={defaultSeconds} onChange={(e) => setDefaultSeconds(Math.max(10, Number(e.target.value || 60)))} className={styles.smallNumber} />
-
               <div className={styles.exerciseSelector}>
                 <label>Ejercicio actual:</label>
                 <select value={currentExercise} onChange={(e) => setCurrentExercise(e.target.value as Exercise)}>{EXERCISES.map((ex) => <option key={ex} value={ex}>{ex}</option>)}</select>
@@ -1066,3 +938,5 @@ export default function CompetitionManager(): JSX.Element {
     </div>
   );
 }
+
+/* fin del archivo */

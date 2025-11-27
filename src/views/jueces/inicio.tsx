@@ -1,3 +1,4 @@
+// src/views/jueces/InicioJueces.tsx
 import React, { useEffect, useState } from "react";
 import styles from "../../styles/InicioJueces.module.css";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral.tsx";
@@ -14,7 +15,7 @@ interface Juez {
 interface Competencia {
   id_competencia: number;
   nombre: string;
-  foto: string;
+  foto?: string | null;
   fecha_inicio: string;
   fecha_cierre: string;
 }
@@ -22,110 +23,140 @@ interface Competencia {
 interface Competidor {
   id_competidor: number;
   nombre: string;
-  apellidos: string;
-  peso: string;
-  categoria: string;
+  apellidos?: string;
+  peso?: string | null;
+  categoria?: string | null;
   id_competencia: number;
+  [k: string]: any;
 }
 
-const CATEGORIAS_TABLA = [
-  "Mosca",
-  "Pluma",
-  "Ligero",
-  "Medio",
-  "Semipesado",
-  "Pesado",
-  "Superpesado"
-];
+interface ModuleItem {
+  id: number;
+  id_competencia: number;
+  title: string;
+  pass_number?: number;
+  position?: number;
+  meta?: any;
+}
 
-const nombresHombre = [
-  "adan","adrian","agustin","alberto","alejandro","alex","alonso","andres","angel",
-  "antonio","armando","arturo","benjamin","bruno","carlos","cesar","cristian","daniel",
-  "david","diego","eduardo","emilio","enrique","ernesto","esteban","fernando","francisco",
-  "gabriel","gerardo","guillermo","hector","hugo","ignacio","isaac","ivan","jaime","javier",
-  "jesus","jorge","jose","juan","julio","kevin","leonardo","luis","manuel","marco","mario",
-  "miguel","nicolas","omar","oscar","pablo","pedro","rafael","ramiro","raul","ricardo",
-  "roberto","rodrigo","ruben","salvador","samuel","santiago","sergio","tomas","vicente",
-  "victor","alan","emmanuel"
-];
-
-const nombresMujer = [
-  "abril","adriana","alejandra","alicia","alma","amanda","ana","andrea","angela","araceli",
-  "beatriz","brenda","camila","carla","carmen","carolina","cecilia","claudia","cristina",
-  "daniela","diana","elena","elizabeth","erika","fernanda","gabriela","guadalupe","isabel",
-  "jessica","jimena","karina","laura","liliana","lorena","lucia","maria","martha","melissa",
-  "monserrat","natalia","patricia","paola","rebeca","rocio","sandra","sara","sofia","susana",
-  "teresa","valentina","valeria","veronica","victoria","yesenia","yolanda"
-];
-
-const detectarGenero = (nombre: string): string => {
-  const nombreLimpio = nombre.toLowerCase().split(" ")[0].trim();
-  if (nombresHombre.includes(nombreLimpio)) return "Hombre";
-  if (nombresMujer.includes(nombreLimpio)) return "Mujer";
-  return "No determinado";
-};
+const API_BASE = "http://localhost:3001";
+const COMPETITIONS_API = `${API_BASE}/api/competenciasadmin`;
+const COMPETITORS_API = `${API_BASE}/api/competidor`;
+const MODULES_API = `${API_BASE}/api/modules`;
+const ATTEMPTS_API = `${API_BASE}/api/attempts`;
 
 const InicioJueces: React.FC<{ userJuez: Juez | null; setUserJuez: (j: Juez | null) => void }> = ({
   userJuez,
   setUserJuez,
 }) => {
   const navigate = useNavigate();
+
   const [juez, setJuez] = useState<Juez | null>(userJuez);
   const [competencia, setCompetencia] = useState<Competencia | null>(null);
   const [competidores, setCompetidores] = useState<Competidor[]>([]);
+  const [modules, setModules] = useState<ModuleItem[]>([]);
+  const [assignments, setAssignments] = useState<Record<number, string[]>>({});
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userJuez) {
       navigate("/jueces/login");
       return;
     }
-
     setJuez(userJuez);
-
-    fetch(`http://localhost:3001/api/competenciasadmin/${userJuez.id_competencia}`)
-      .then((res) => res.json())
-      .then((data: Competencia) => setCompetencia(data))
-      .catch((err) => console.error("Error al obtener competencia:", err));
-
-    fetch("http://localhost:3001/api/competidor")
-      .then((res) => res.json())
-      .then((data: Competidor[]) => {
-        const filtrados = data.filter((c) => c.id_competencia === userJuez.id_competencia);
-        setCompetidores(filtrados);
-      })
-      .catch((err) => console.error("Error al obtener competidores:", err));
   }, [userJuez, navigate]);
 
-  if (!juez || !competencia) return <p>Cargando información...</p>;
+  useEffect(() => {
+    if (!juez) return;
+    const ac = new AbortController();
+    setLoading(true);
+    setError(null);
 
-  const hombres = competidores.filter((c) => detectarGenero(c.nombre) === "Hombre");
-  const mujeres = competidores.filter((c) => detectarGenero(c.nombre) === "Mujer");
-  const totalCompetidores = competidores.length;
-  const totalHombres = hombres.length;
-  const totalMujeres = mujeres.length;
+    (async () => {
+      try {
+        // competencia vinculada al juez
+        const compResp = await fetch(`${COMPETITIONS_API}/${juez.id_competencia}`, { signal: ac.signal });
+        if (!compResp.ok) throw new Error("No se pudo obtener la competencia");
+        const compJson: Competencia = await compResp.json();
+        setCompetencia(compJson);
 
-  const categorias: Record<string, Competidor[]> = {};
-  CATEGORIAS_TABLA.forEach(cat => categorias[cat] = []);
-  competidores.forEach(c => {
-    const cat = c.categoria || "Sin categoría";
-    if (!categorias[cat]) categorias[cat] = [];
-    categorias[cat].push(c);
-  });
+        // competidores (filtramos por competencia)
+        const competsResp = await fetch(COMPETITORS_API, { signal: ac.signal });
+        if (!competsResp.ok) throw new Error("No se pudieron obtener competidores");
+        const competsJson: Competidor[] = await competsResp.json();
+        const filtered = competsJson.filter((c) => Number(c.id_competencia) === Number(juez.id_competencia));
+        setCompetidores(filtered);
 
-  const imagenCompetencia = competencia.foto.startsWith("/uploads/")
-    ? `http://localhost:3001${competencia.foto}`
-    : competencia.foto;
+        // módulos
+        const modsResp = await fetch(`${MODULES_API}?competition_id=${juez.id_competencia}`, { signal: ac.signal });
+        if (!modsResp.ok) {
+          setModules([]);
+          setAssignments({});
+          setLoading(false);
+          return;
+        }
+        const modsJson: ModuleItem[] = await modsResp.json();
+        setModules(modsJson);
+
+        // assignments por módulo
+        const assignMap: Record<number, string[]> = {};
+        await Promise.all(
+          modsJson.map(async (m) => {
+            try {
+              const r = await fetch(`${MODULES_API}/${m.id}/assignments`, { signal: ac.signal });
+              if (!r.ok) {
+                assignMap[m.id] = [];
+                return;
+              }
+              const a = await r.json();
+              assignMap[m.id] = (a || []).map((x: any) => String(x.id_competidor));
+            } catch {
+              assignMap[m.id] = [];
+            }
+          })
+        );
+        setAssignments(assignMap);
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error(err);
+          setError(err.message ?? "Error al cargar datos");
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    return () => ac.abort();
+  }, [juez]);
+
+  const formatPeso = (p?: string | null) => (p == null || p === "" ? "—" : `${Number(p).toFixed(2)} kg`);
+  const nameOf = (c?: Competidor | null) => (!c ? "—" : `${c.nombre}${c.apellidos ? " " + c.apellidos : ""}`);
+
+  if (!juez) return <p style={{ color: "#666" }}>Redirigiendo a login...</p>;
+  if (loading) return <p style={{ color: "#666" }}>Cargando datos...</p>;
+  if (error) return <p style={{ color: "#b91c1c" }}>Error: {error}</p>;
+  if (!competencia) return <p style={{ color: "#666" }}>Competencia no encontrada</p>;
+
+  const imagenCompetencia =
+    competencia.foto && (competencia.foto.startsWith("/uploads/") || competencia.foto.startsWith("/"))
+      ? `http://localhost:3001${competencia.foto}`
+      : competencia.foto || "";
 
   return (
-    
-    
     <div className={styles.inicioJuezContainer}>
       <h1 className={styles.inicioJuezBienvenida}>
         Bienvenido, {juez.nombre} {juez.apellidos}
       </h1>
 
       <div className={styles.inicioJuezBanner}>
-        <img src={imagenCompetencia} alt={competencia.nombre} />
+        {imagenCompetencia ? (
+          <img src={imagenCompetencia} alt={competencia.nombre} />
+        ) : (
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#7b8794" }}>
+            Sin imagen
+          </div>
+        )}
         <div className={styles.overlay}>
           <h2>{competencia.nombre}</h2>
           <p>
@@ -135,30 +166,42 @@ const InicioJueces: React.FC<{ userJuez: Juez | null; setUserJuez: (j: Juez | nu
         </div>
       </div>
 
-      <div className={styles.inicioJuezTotalCard}>Total competidores: {totalCompetidores}</div>
+      <div className={styles.inicioJuezTotalCard}>Total competidores: {competidores.length}</div>
 
-      <div className={styles.inicioJuezResumen}>
-        <div className={`${styles.inicioJuezCard} ${styles.hombres}`}>♂ Hombres: {totalHombres}</div>
-        <div className={`${styles.inicioJuezCard} ${styles.mujeres}`}>♀ Mujeres: {totalMujeres}</div>
+      {/* Módulos: mostramos cada módulo con los competidores asignados (sin botones) */}
+      <h3 className={styles.inicioJuezSubtitulo} style={{ marginTop: 20 }}>Módulos de la competencia</h3>
+      {modules.length === 0 && <p style={{ color: "#666", marginBottom: 12 }}>No se han creado módulos para esta competencia.</p>}
+
+      <div style={{ width: "100%", maxWidth: 900 }}>
+        {modules.map((m) => {
+          const assignedIds = assignments[m.id] ?? [];
+          return (
+            <div key={m.id} className={styles.inicioJuezCategoria} style={{ marginBottom: 16 }}>
+              <h4>{m.title ?? `Módulo ${m.id}`}</h4>
+
+              {assignedIds.length === 0 ? (
+                <p style={{ color: "#666", paddingLeft: 12 }}>No hay competidores asignados a este módulo</p>
+              ) : (
+                <div style={{ marginTop: 8 }}>
+                  {assignedIds.map((idStr) => {
+                    const comp = competidores.find((c) => String(c.id_competidor) === idStr) ?? null;
+                    return (
+                      <div key={idStr} className={styles.inicioJuezCompetidor}>
+                        <div>
+                          <strong>{nameOf(comp)}</strong>
+                        </div>
+                        <div style={{ textAlign: "right", color: "#555" }}>
+                          ID: {idStr} — Peso: <strong>{formatPeso(comp?.peso)}</strong> • Cat: <strong>{comp?.categoria ?? "—"}</strong>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-
-      <h3 className={styles.inicioJuezSubtitulo}>Categorías de Peso</h3>
-      {CATEGORIAS_TABLA.map((categoria) => (
-        <div key={categoria} className={styles.inicioJuezCategoria}>
-          <h4>{categoria}</h4>
-          {categorias[categoria].length > 0 ? (
-            categorias[categoria].map((c) => (
-              <div key={c.id_competidor} className={styles.inicioJuezCompetidor}>
-                <span>{c.nombre} {c.apellidos}</span>
-                <span>{detectarGenero(c.nombre)}</span>
-                <span>{c.peso} kg</span>
-              </div>
-            ))
-          ) : (
-            <p>No hay competidores dentro de esta categoría</p>
-          )}
-        </div>
-      ))}
 
       <BottomNavigationMenuCentral selected="inicio" />
     </div>

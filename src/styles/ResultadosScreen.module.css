@@ -1,161 +1,302 @@
+/* src/styles/ResultadosScreen.module.css */
+
+/* --------------------------
+   Mobile-first: tarjetas (por defecto)
+   -------------------------- */
+
 .resultadosScreen {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background: #f9f9f9;
-  justify-content: space-between;
-  font-family: "Inter", sans-serif;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #263238;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .resultadosContainer {
   flex: 1;
-  padding: 24px;
-  max-width: 1200px;
+  padding: 18px;
+  max-width: 1100px;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
+/* Solo mostrar el título centralmente: "Resultados de competidores" */
 .resultadosTitulo {
+  margin-top: 60px;
   text-align: center;
-  font-size: 2rem;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #0d47a1;
+  color: #1565c0;
   margin-bottom: 6px;
 }
 
+/* Ocultar descripción textual (eliminada según pedido) */
 .resultadosDescripcion {
-  text-align: center;
-  color: #616161;
-  margin-bottom: 20px;
-  font-size: 1rem;
+  display: none;
 }
 
+/* Leyenda (colores de estado) */
 .resultadosLeyenda {
   display: flex;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin: 10px 0 14px;
 }
 
 .leyendaItem {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.9rem;
+  gap: 8px;
+  font-size: 0.92rem;
   color: #424242;
 }
 
 .leyendaColor {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 4px;
+  display: inline-block;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.08) inset;
 }
 
-.aprobado {
-  background-color: #4caf50;
-}
+/* colores */
+.aprobado { background-color: #4caf50; }
+.reprobado { background-color: #f44336; }
+.pendiente { background-color: #03a9f4; }
 
-.reprobado {
-  background-color: #f44336;
-}
-
-.pendiente {
-  background-color: #03a9f4;
-}
-
+/* Contenedor principal de resultados: tarjetas móviles por defecto */
 .resultadosTablaContainer {
+  width: 100%;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+/* MOBILE: lista de tarjetas (visible por defecto) */
+.mobileList {
+  display: block;
+}
+
+/* Tarjeta por competidor */
+.mobileCard {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(16,24,40,0.04);
+  box-shadow: 0 6px 18px rgba(16,24,40,0.04);
+}
+
+/* Cabecera de la tarjeta: nombre y meta */
+.mobileCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.mobileName {
+  font-weight: 700;
+  color: #1565c0;
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.mobileMeta {
+  color: #607d8b;
+  font-size: 0.9rem;
+  text-align: right;
+}
+
+/* Bloque por ejercicio */
+.mobileExercise {
+  margin-top: 10px;
+}
+
+.mobileExerciseTitle {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #37474f;
+  margin-bottom: 8px;
+}
+
+/* Repeticiones dentro del ejercicio */
+.mobileReps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mobileRep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f6f9ff;
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.mobileRepLabel {
+  font-weight: 700;
+  width: 36px;
+  color: #455a64;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.mobileRepValue {
+  font-weight: 800;
+  color: #263238;
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+.mobileRepState {
+  font-size: 0.82rem;
+  color: #455a64;
+  white-space: nowrap;
+  padding-left: 6px;
+}
+
+/* cinto de color a la izquierda para visual rápida (aplica inline style border-left en TSX) */
+.mobileRep[style] {}
+
+/* pequeño separador final */
+.mobileCard + .mobileCard {
+  margin-top: 10px;
+}
+
+/* --------------------------
+   Tabla (desktop): se muestra en pantallas anchas
+   -------------------------- */
+
+/* Ocultar la tabla en mobile (tabla se activará en media query) */
+.resultadosTabla {
+  display: none;
+}
+
+/* Estilos para cuando la tabla se muestre (large screens) */
+.resultadosTablaContainer.tableView {
   overflow-x: auto;
   border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  padding: 8px;
 }
 
+/* tabla base (se activará en >= 820px) */
 .resultadosTabla {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px;
+  min-width: 820px;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
+/* encabezados */
 .resultadosTabla th {
   background: linear-gradient(120deg, #e3f2fd, #bbdefb);
   color: #0d47a1;
   font-weight: 600;
-  padding: 10px;
+  padding: 10px 8px;
   font-size: 0.95rem;
   text-align: center;
-  border-bottom: 2px solid #bbdefb;
-}
-
-.resultadosTabla td {
-  padding: 10px;
-  text-align: center;
-  font-size: 0.9rem;
-  color: #212121;
-  border: 1px solid #eeeeee;
-  transition: transform 0.2s;
-}
-
-.resultadosTabla td:hover {
-  transform: scale(1.05);
-}
-
-.celdaResultado {
-  color: white;
-  font-weight: 600;
-  border-radius: 8px;
-}
-
-.filaPar {
-  background-color: #fafafa;
-}
-
-.filaImpar {
-  background-color: #ffffff;
+  border-bottom: 2px solid #e8f5ff;
 }
 
 .subHeader th {
-  background: #bbdefb;
+  background: #e8f6ff;
   font-weight: 500;
+  font-size: 0.85rem;
+  color: #455a64;
 }
 
-@media (max-width: 1024px) {
-  .resultadosTabla {
-    min-width: 700px;
-  }
+/* celdas */
+.resultadosTabla td {
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 0.92rem;
+  color: #212121;
+  border-bottom: 1px solid #f1f5f9;
 }
 
-@media (max-width: 768px) {
-  .resultadosContainer {
-    padding: 16px;
-  }
-
-  .resultadosTabla th,
-  .resultadosTabla td {
-    padding: 6px;
-    font-size: 0.8rem;
-  }
-
-  .resultadosTabla {
-    min-width: 600px;
-  }
+/* celdas con estado (color de fondo aplicado inline desde TSX) */
+.celdaResultado {
+  color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 68px;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.08);
 }
 
-@media (max-width: 480px) {
-  .resultadosTabla {
-    min-width: 500px;
-  }
+/* zebra rows */
+.filaPar { background-color: #ffffff; }
+.filaImpar { background-color: #fbfdff; }
 
-  .resultadosTitulo {
-    font-size: 1.5rem;
-  }
+/* nombre y categoría en tabla */
+.cellName { font-weight: 700; padding-right: 12px; color: #1565c0; text-align: left; }
+.cellCategoria { color: #607d8b; font-size: 0.9rem; text-align: left; }
 
-  .resultadosDescripcion {
-    font-size: 0.85rem;
-  }
+/* --------------------------
+   Oculta banner/imágenes/meta (pedido del usuario)
+   -------------------------- */
 
-  .celdaResultado {
-    font-size: 0.8rem;
-    padding: 6px;
-  }
+/* Si en el TSX se renderiza el banner o meta, los ocultamos mediante CSS para asegurar que solo quede el título. */
+.bannerRow,
+.bannerImage,
+.bannerOverlay,
+.bannerText,
+.bannerDates,
+.metaPanel,
+.resultadosDescripcion {
+  display: none !important;
 }
+
+/* --------------------------
+   Accesibilidad y toques
+   -------------------------- */
+
+.resultadosContainer button,
+.resultadosContainer a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0,0,0,0.06);
+}
+
+/* --------------------------
+   Breakpoints: mostrar tabla en pantallas anchas (desktop/tablet landscape)
+   -------------------------- */
+
+@media (min-width: 820px) {
+  /* ocultar lista móvil y mostrar tabla */
+  .mobileList { display: none; }
+  .resultadosTabla { display: table; }
+  .resultadosTablaContainer { overflow-x: auto; }
+  .resultadosTablaContainer.tableView { overflow-x: auto; }
+}
+
+@media (min-width: 1024px) {
+  .resultadosContainer { padding: 22px; }
+  .resultadosTitulo { font-size: 1.8rem; }
+  .resultadosTabla th, .resultadosTabla td { padding: 12px 10px; font-size: 0.95rem; }
+}
+
+/* --------------------------
+   Small improvements for really small screens
+   -------------------------- */
+@media (max-width: 420px) {
+  .resultadosContainer { padding: 14px; }
+  .mobileRep { padding: 8px; }
+  .mobileRepValue { font-size: 0.92rem; }
+  .mobileName { font-size: 0.98rem; }
+  .mobileMeta { font-size: 0.82rem; }
+  .resultadosTitulo { font-size: 1.35rem; margin-top: 8px; }
+}
+
+/* --------------------------
+   Utilities (no tocar)
+   -------------------------- */
+.resultadosTablaContainer code { background: rgba(0,0,0,0.03); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }

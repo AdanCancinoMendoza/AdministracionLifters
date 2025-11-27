@@ -12,12 +12,12 @@
 }
 
 .inicioJuezBienvenida {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111827;
+  margin-top: 60px;
   text-align: center;
-  margin: 16px 0 24px;
-  letter-spacing: -0.5px;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: #1565c0;
+  margin-bottom: 6px;
 }
 
 .inicioJuezBanner {
@@ -154,6 +154,11 @@
 }
 
 @media (max-width: 768px) {
+  .inicioJuezBienvenida{
+    margin-top: -60px;
+    font-size: large;
+  }
+
   .inicioJuezContainer {
     padding: 14px;
   }
@@ -193,4 +198,5 @@
   .screenContainer {
     padding-top: calc(var(--height-desktop) + 12px); /* modular y ajustable */
   }
+  
 }

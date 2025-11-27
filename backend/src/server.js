@@ -13,13 +13,12 @@ import publicacionAdminRoutes from "./routes/publicacionAdminRoutes.js";
 import competidorRoutes from "./routes/competidorRoutes.js";
 import juezRoutes from "./routes/juezAdminRoutes.js";
 import liveStreamRoutes from "./routes/liveStreamRoutes.js";
-import calificacionesRoutes from "./routes/calificacionesRoutes.js"; 
 import modulesRoutes from "./routes/modulesRoutes.js";
 import attemptsRoutes from "./routes/attemptsRoutes.js";
 
-
 import path from "path";
 import { fileURLToPath } from "url";
+import os from "os";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,10 +31,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Carpeta de uploads accesible públicamente
+// Carpeta de uploads accesible públicamente
 app.use("/uploads", express.static(path.resolve("src/uploads")));
 
-// ✅ Rutas principales
+// Rutas principales
 app.use("/api/inicio", inicioRouter);
 app.use("/api/categorias", categoriasRouter);
 app.use("/api/poster", posterRouter);
@@ -47,11 +46,6 @@ app.use("/api/juez", juezRoutes);
 app.use("/api/lives", liveStreamRoutes);
 app.use("/api/modules", modulesRoutes);
 app.use("/api/attempts", attemptsRoutes);
-
-
-// Montar rutas de calificaciones bajo /api/competencias
-// POST /api/competencias/:id/calificaciones
-app.use("/api/competencias", calificacionesRoutes);
 
 /*
   SOCKET.IO SETUP
@@ -100,5 +94,34 @@ io.on("connection", (socket) => {
   });
 });
 
-// ✅ Servidor activo (usamos server en vez de app.listen para soportar socket.io)
-server.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
+// Helper: obtener IPs IPv4 no internas
+function getLocalIPv4Addresses() {
+  const nets = os.networkInterfaces();
+  const results = [];
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] || []) {
+      // IPv4 only and not internal (exclude 127.0.0.1 and internal adapters)
+      if (net.family === "IPv4" && !net.internal) {
+        results.push({ iface: name, address: net.address });
+      }
+    }
+  }
+  return results;
+}
+
+// Escuchar en 0.0.0.0 para exponer el servidor en la LAN
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Servidor backend escuchando en el puerto ${PORT}`);
+  console.log(` - Local:   http://localhost:${PORT}`);
+
+  const addrs = getLocalIPv4Addresses();
+  if (addrs.length === 0) {
+    console.log(" - Network: no se detectaron IPs de red (revisa tu conexión).");
+  } else {
+    for (const a of addrs) {
+      console.log(` - Network (${a.iface}): http://${a.address}:${PORT}`);
+    }
+  }
+
+  console.log("Nota: asegúrate de permitir el puerto en el firewall si tu móvil no puede acceder.");
+});

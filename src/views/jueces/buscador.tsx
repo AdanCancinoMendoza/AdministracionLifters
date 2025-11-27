@@ -1,60 +1,247 @@
+// src/views/jueces/Buscador.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import styles from "../../styles/BuscadorJuez.module.css";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
 import { FaSearch } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-type Ejercicio = {
-  nombre: string;
-  resultados: string[];
-  tiempos: number[];
+type Attempt = {
+  id: number;
+  id_competencia: number;
+  id_competidor: number;
+  exercise_id: number;
+  module_id: number | null;
+  attempt_number: number;
+  weight_kg: string | null;
+  approved: number | null;
+  judge_id: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
-type CompetidorDetalle = {
+type Competidor = {
   id_competidor: number;
   nombre: string;
-  apellidos: string;
-  peso: string;
-  categoria: string;
-  ejercicios: Ejercicio[];
+  apellidos?: string;
+  peso?: string | null;
+  categoria?: string | null;
+  id_competencia: number;
+  [k: string]: any;
 };
 
-const CATEGORIAS = ["Todos", "Peso Pluma", "Ligero", "Medio", "Pesado", "Superpesado"];
-const NOMBRES_EJERCICIOS = ["Press Banca", "Peso Muerto", "Sentadilla"];
+const API_BASE = "http://localhost:3001";
+const COMPETITORS_API = `${API_BASE}/api/competidor`;
+const MODULES_API = `${API_BASE}/api/modules`;
+const ATTEMPTS_API = `${API_BASE}/api/attempts`;
+const COMPETITIONS_API = `${API_BASE}/api/competenciasadmin`;
 
-const Buscador: React.FC = () => {
-  const [competidores, setCompetidores] = useState<CompetidorDetalle[]>([]);
+const EXERCISE_ID_TO_NAME: Record<number, string> = { 1: "Press Banca", 2: "Peso Muerto", 3: "Sentadilla" };
+
+type Props = {
+  userJuez?: any | null; // si tu app pasa userJuez por props, se usará primero
+  setUserJuez?: (j: any | null) => void;
+};
+
+const Buscador: React.FC<Props> = ({ userJuez: propUserJuez, setUserJuez: propSetUserJuez }) => {
+  const navigate = useNavigate();
+
+  const [userJuez, setUserJuez] = useState<any | null>(propUserJuez ?? null);
+  const [competition, setCompetition] = useState<any | null>(null);
+
+  const [competidores, setCompetidores] = useState<Competidor[]>([]);
+  const [modules, setModules] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<Record<number, string[]>>({});
+
   const [query, setQuery] = useState("");
-  const [filtroCategoria, setFiltroCategoria] = useState("Todos");
-  const [selected, setSelected] = useState<CompetidorDetalle | null>(null);
+  const [moduleFilter, setModuleFilter] = useState<string>("Todos");
 
+  const [selectedCompetitor, setSelectedCompetitor] = useState<Competidor | null>(null);
+  const [attemptsForSelected, setAttemptsForSelected] = useState<Attempt[] | null>(null);
+  const [loadingAttempts, setLoadingAttempts] = useState<boolean>(false);
+
+  const [loadingData, setLoadingData] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // inicializar userJuez: primero props, si no existe usar localStorage
   useEffect(() => {
-    fetch("http://localhost:3001/api/competidor")
-      .then((res) => res.json())
-      .then((data) => {
-        const mapped: CompetidorDetalle[] = data.map((c: any) => ({
-          id_competidor: c.id_competidor,
-          nombre: c.nombre,
-          apellidos: c.apellidos,
-          peso: c.peso + "kg",
-          categoria: c.categoria,
-          ejercicios: NOMBRES_EJERCICIOS.map((ej) => ({
-            nombre: ej,
-            resultados: ["Faltante", "Faltante", "Faltante"],
-            tiempos: [0, 0, 0],
-          })),
-        }));
-        setCompetidores(mapped);
-      })
-      .catch((err) => console.error(err));
-  }, []);
+    if (propUserJuez) {
+      setUserJuez(propUserJuez);
+      return;
+    }
+    try {
+      const raw = localStorage.getItem("userJuez");
+      if (!raw) {
+        navigate("/jueces/login");
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      setUserJuez(parsed);
+      // opcional: propSetUserJuez si existe (sincronicemos)
+      if (propSetUserJuez) propSetUserJuez(parsed);
+    } catch (err) {
+      navigate("/jueces/login");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propUserJuez]);
 
+  // Cargar datos relacionados a la competencia del juez
+  useEffect(() => {
+    if (!userJuez) return;
+    const ac = new AbortController();
+    let mounted = true;
+    setLoadingData(true);
+    setError(null);
+
+    (async () => {
+      try {
+        const compId = Number(userJuez.id_competencia);
+        // obtener info de competencia (opcional)
+        try {
+          const respC = await fetch(`${COMPETITIONS_API}/${compId}`, { signal: ac.signal });
+          if (respC.ok) {
+            const jsonC = await respC.json();
+            if (mounted) setCompetition(jsonC);
+          }
+        } catch {
+          // ignore
+        }
+
+        // competidores
+        const resp = await fetch(COMPETITORS_API, { signal: ac.signal });
+        if (!resp.ok) throw new Error("No se pudieron obtener competidores");
+        const allCompetidores: Competidor[] = await resp.json();
+        const filtered = allCompetidores.filter((c) => Number(c.id_competencia) === compId);
+        if (mounted) setCompetidores(filtered);
+
+        // módulos
+        const respM = await fetch(`${MODULES_API}?competition_id=${compId}`, { signal: ac.signal });
+        if (!respM.ok) {
+          if (mounted) {
+            setModules([]);
+            setAssignments({});
+          }
+        } else {
+          const mods = await respM.json();
+          if (mounted) setModules(mods);
+
+          // assignments por módulo
+          const assignMap: Record<number, string[]> = {};
+          await Promise.all(
+            mods.map(async (m: any) => {
+              try {
+                const r = await fetch(`${MODULES_API}/${m.id}/assignments`, { signal: ac.signal });
+                if (!r.ok) {
+                  assignMap[m.id] = [];
+                  return;
+                }
+                const a = await r.json();
+                assignMap[m.id] = (a || []).map((x: any) => String(x.id_competidor));
+              } catch {
+                assignMap[m.id] = [];
+              }
+            })
+          );
+          if (mounted) setAssignments(assignMap);
+        }
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error(err);
+          if (mounted) setError(err.message ?? "Error cargando datos");
+        }
+      } finally {
+        if (mounted) setLoadingData(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+      ac.abort();
+    };
+  }, [userJuez, navigate]);
+
+  // Lista filtrada por búsqueda y por módulo
   const resultados = useMemo(() => {
-    return competidores.filter(
+    let base = competidores;
+
+    if (moduleFilter && moduleFilter !== "Todos") {
+      const mid = Number(moduleFilter);
+      const assigned = assignments[mid] ?? [];
+      base = base.filter((c) => assigned.includes(String(c.id_competidor)));
+    }
+
+    if (!query || query.trim() === "") return base;
+
+    const q = query.trim().toLowerCase();
+    return base.filter(
       (c) =>
-        (filtroCategoria === "Todos" || c.categoria === filtroCategoria) &&
-        c.nombre.toLowerCase().includes(query.trim().toLowerCase())
+        (c.nombre || "").toLowerCase().includes(q) ||
+        ((c.apellidos || "").toLowerCase().includes(q)) ||
+        ((c.peso || "") + "").toLowerCase().includes(q) ||
+        ((c.categoria || "") + "").toLowerCase().includes(q)
     );
-  }, [competidores, query, filtroCategoria]);
+  }, [competidores, moduleFilter, query, assignments]);
+
+  // Al seleccionar un competidor -> cargar attempts
+  useEffect(() => {
+    if (!selectedCompetitor || !userJuez) {
+      setAttemptsForSelected(null);
+      return;
+    }
+
+    let mounted = true;
+    setLoadingAttempts(true);
+    setAttemptsForSelected(null);
+
+    const compId = Number(userJuez.id_competencia);
+    const competitorId = Number(selectedCompetitor.id_competidor);
+
+    (async () => {
+      try {
+        const url = `${ATTEMPTS_API}/by-competitor?id_competencia=${compId}&id_competidor=${competitorId}`;
+        const resp = await fetch(url);
+        if (!resp.ok) {
+          if (mounted) setAttemptsForSelected([]);
+          return;
+        }
+        const arr: Attempt[] = await resp.json();
+        if (mounted) setAttemptsForSelected(arr);
+      } catch (err) {
+        console.error("Error al cargar attempts:", err);
+        if (mounted) setAttemptsForSelected([]);
+      } finally {
+        if (mounted) setLoadingAttempts(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedCompetitor, userJuez]);
+
+  const formatPeso = (p?: string | null) => (p == null || p === "" ? "—" : `${Number(p).toFixed(2)} kg`);
+  const nameOf = (c?: Competidor | null) => (!c ? "—" : `${c.nombre}${c.apellidos ? " " + c.apellidos : ""}`);
+
+  // organizar attempts por exercise
+  const attemptsByExercise = (() => {
+    if (!attemptsForSelected) return null;
+    const map: Record<number, (Attempt | null)[]> = {};
+    [1, 2, 3].forEach((exId) => (map[exId] = [null, null, null]));
+    attemptsForSelected.forEach((a) => {
+      const arr = map[a.exercise_id] ?? [null, null, null];
+      arr[a.attempt_number - 1] = a;
+      map[a.exercise_id] = arr;
+    });
+    return map;
+  })();
+
+  if (!userJuez) return null;
+  if (loadingData) return <div className={styles.root}><main className={styles.main}><p>Cargando...</p></main></div>;
+  if (error) return <div className={styles.root}><main className={styles.main}><p style={{ color: "red" }}>{error}</p></main></div>;
+
+  // header: mostrar nombre de competencia si existe, o "ID <número>" (nunca undefined)
+  const compIdToShow = userJuez?.id_competencia ? String(userJuez.id_competencia) : "—";
+  const compLabel = competition?.nombre ? competition.nombre : `ID ${compIdToShow}`;
 
   return (
     <div className={styles.root}>
@@ -62,7 +249,7 @@ const Buscador: React.FC = () => {
         <header className={styles.header}>
           <h1 className={styles.title}>Buscador de Competidores</h1>
           <p className={styles.subtitle}>
-            Busca por nombre al competidor y filtra por categoría.
+            Competencia: <strong>{compLabel}</strong>
           </p>
         </header>
 
@@ -71,7 +258,7 @@ const Buscador: React.FC = () => {
             <FaSearch className={styles.searchIcon} />
             <input
               type="search"
-              placeholder="Buscar competidor por nombre"
+              placeholder="Buscar competidor por nombre, peso o categoría"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Buscar competidor"
@@ -80,12 +267,13 @@ const Buscador: React.FC = () => {
 
           <select
             className={styles.selectCategoria}
-            value={filtroCategoria}
-            onChange={(e) => setFiltroCategoria(e.target.value)}
+            value={moduleFilter}
+            onChange={(e) => setModuleFilter(e.target.value)}
           >
-            {CATEGORIAS.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+            <option value="Todos">Todos los módulos</option>
+            {modules.map((m) => (
+              <option key={m.id} value={String(m.id)}>
+                {m.title ?? `Módulo ${m.id}`}
               </option>
             ))}
           </select>
@@ -101,9 +289,9 @@ const Buscador: React.FC = () => {
                 className={styles.item}
                 role="button"
                 tabIndex={0}
-                onClick={() => setSelected(c)}
+                onClick={() => setSelectedCompetitor(c)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") setSelected(c);
+                  if (e.key === "Enter" || e.key === " ") setSelectedCompetitor(c);
                 }}
               >
                 <div className={styles.itemLeft}>
@@ -121,7 +309,7 @@ const Buscador: React.FC = () => {
                     {c.nombre} {c.apellidos}
                   </div>
                   <div className={styles.itemMeta}>
-                    {c.peso} — {c.categoria}
+                    {formatPeso(c.peso)} — {c.categoria ?? "—"}
                   </div>
                 </div>
                 <div className={styles.itemAction}>Detalles →</div>
@@ -131,49 +319,79 @@ const Buscador: React.FC = () => {
         </section>
       </main>
 
-      {selected && (
+      {/* Modal */}
+      {selectedCompetitor && (
         <div
           className={styles.modalOverlay}
           role="dialog"
           aria-modal="true"
-          aria-label={`Detalles de ${selected.nombre}`}
-          onClick={() => setSelected(null)}
+          aria-label={`Detalles de ${selectedCompetitor.nombre}`}
+          onClick={() => { setSelectedCompetitor(null); setAttemptsForSelected(null); }}
         >
           <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="document">
             <header className={styles.modalHeader}>
-              <h2>{selected.nombre} {selected.apellidos}</h2>
-              <button className={styles.modalClose} onClick={() => setSelected(null)} aria-label="Cerrar">
+              <h2>{selectedCompetitor.nombre} {selectedCompetitor.apellidos}</h2>
+              <button className={styles.modalClose} onClick={() => { setSelectedCompetitor(null); setAttemptsForSelected(null); }} aria-label="Cerrar">
                 ✕
               </button>
             </header>
+
             <div className={styles.modalBody}>
               <div className={styles.modalMeta}>
                 <span className={styles.modalPeso}>
-                  Peso: {selected.peso} — {selected.categoria}
+                  Peso: {formatPeso(selectedCompetitor.peso)} — {selectedCompetitor.categoria ?? "—"}
                 </span>
               </div>
+
               <div className={styles.ejercicios}>
-                {selected.ejercicios.map((ej) => (
-                  <div key={ej.nombre} className={styles.ejercicioCard}>
-                    <div className={styles.ejercicioTitle}>{ej.nombre}</div>
-                    <ul className={styles.ejercicioList}>
-                      {ej.resultados.map((res, i) => {
-                        const tiempo = ej.tiempos[i];
-                        const estado = tiempo > 60 ? "Reprobado (tiempo > 1 min)" : res;
-                        return (
-                          <li key={i} className={styles.ejercicioItem}>
-                            <strong>R{i + 1}:</strong> {estado} —{" "}
-                            <span className={styles.ejercicioTiempo}>{tiempo}s</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                ))}
+                {loadingAttempts && <p>Cargando intentos...</p>}
+
+                {!loadingAttempts && attemptsForSelected && (
+                  <>
+                    {([1, 2, 3] as number[]).map((exerciseId) => {
+                      const attemptsArr = attemptsByExercise ? attemptsByExercise[exerciseId] : [null, null, null];
+                      const exName = EXERCISE_ID_TO_NAME[exerciseId] ?? `Ejercicio ${exerciseId}`;
+                      return (
+                        <div key={exerciseId} className={styles.ejercicioCard}>
+                          <div className={styles.ejercicioTitle}>{exName}</div>
+                          <ul className={styles.ejercicioList}>
+                            {attemptsArr.map((a, idx) => {
+                              if (!a) {
+                                return (
+                                  <li key={idx} className={styles.ejercicioItem}>
+                                    <strong>R{idx + 1}:</strong> — (sin registro)
+                                  </li>
+                                );
+                              }
+                              const approvedLabel = a.approved === 1 ? "Aprobado" : a.approved === 0 ? "Reprobado" : "Pendiente";
+                              return (
+                                <li key={idx} className={styles.ejercicioItem}>
+                                  <strong>R{a.attempt_number}:</strong> {a.weight_kg ?? "—"} kg — <em>{approvedLabel}</em>
+                                  <div style={{ fontSize: 12, color: "#666" }}>{new Date(a.updated_at).toLocaleString()}</div>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+
+                {!loadingAttempts && attemptsForSelected && attemptsForSelected.length === 0 && (
+                  <div className={styles.empty}>No hay intentos registrados para este competidor</div>
+                )}
+
+                {!loadingAttempts && attemptsForSelected === null && (
+                  <div className={styles.empty}>Selecciona un competidor para ver sus intentos</div>
+                )}
               </div>
             </div>
+
             <footer className={styles.modalFooter}>
-              <button className={styles.btnCerrar} onClick={() => setSelected(null)}>Cerrar</button>
+              <button className={styles.btnCerrar} onClick={() => { setSelectedCompetitor(null); setAttemptsForSelected(null); }}>
+                Cerrar
+              </button>
             </footer>
           </div>
         </div>

@@ -1,17 +1,13 @@
-// backend/src/routes/attemptsRoutes.js
 import express from "express";
-import {
-  upsertWeightHandler,
-  createAttemptHandler,
-  approveAttemptHandler,
-  getAttemptsByCompetitorHandler
-} from "../controllers/attemptsController.js";
-
+import * as attemptsController from "../controllers/attemptsController.js";
+import { postVoteHandler } from "../controllers/votesController.js";
 const router = express.Router();
 
-router.post("/upsert-weight", upsertWeightHandler);
-router.post("/create", createAttemptHandler);
-router.patch("/:id/approve", approveAttemptHandler);
-router.get("/by-competitor", getAttemptsByCompetitorHandler);
+router.post("/upsert-weight", attemptsController.upsertWeightHandler);
+router.post("/create", attemptsController.createAttemptHandler);
+router.post("/reset", attemptsController.resetAttemptsHandler); 
+router.patch("/:id/approve", attemptsController.approveAttemptHandler);
+router.get("/by-competitor", attemptsController.getAttemptsByCompetitorHandler);
+router.post("/competencias/:id/calificaciones", postVoteHandler);
 
 export default router;
