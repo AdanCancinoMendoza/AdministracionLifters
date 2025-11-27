@@ -1,5 +1,6 @@
+// src/views/users/VerCompetidores.tsx
 import { useEffect, useState } from "react";
-import { Edit, Trash2, FileText, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { Edit, Trash2, FileText, Users, ChevronDown, ChevronUp, Download, X } from "lucide-react";
 import styles from "../../../styles/VerCompetidores.module.css";
 import axios from "axios";
 import LoadingModal from "../../../components/common/LoadingModal";
@@ -33,6 +34,7 @@ export default function VerCompetidores() {
   const [competidores, setCompetidores] = useState<Competidor[]>([]);
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
   const [baucherUrl, setBaucherUrl] = useState<string | null>(null);
+  const [baucherType, setBaucherType] = useState<"image" | "pdf" | "other" | null>(null);
   const [competidorEditar, setCompetidorEditar] = useState<Competidor | null>(null);
   const [competidorEliminar, setCompetidorEliminar] = useState<Competidor | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -110,6 +112,29 @@ export default function VerCompetidores() {
     }
   };
 
+  // --- Helpers para abrir modal de archivo (imagen o pdf) ---
+  const detectFileType = (url: string | null) => {
+    if (!url) return "other";
+    const u = url.toLowerCase();
+    if (u.match(/\.pdf($|\?)/i)) return "pdf";
+    if (u.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)($|\?)/i)) return "image";
+    // si es data url o empieza con blob:
+    if (u.startsWith("data:image") || u.startsWith("blob:")) return "image";
+    return "other";
+  };
+
+  const openFileModal = (url?: string | null) => {
+    if (!url) return;
+    const type = detectFileType(url);
+    setBaucherUrl(url);
+    setBaucherType(type as any);
+  };
+
+  const closeFileModal = () => {
+    setBaucherUrl(null);
+    setBaucherType(null);
+  };
+
   return (
     <div className={styles.container}>
       <LoadingModal open={loading || submitting} title={submitting ? "Procesando..." : undefined} message={submitting ? "Aplicando cambios..." : "Cargando datos..."} />
@@ -167,14 +192,18 @@ export default function VerCompetidores() {
                             <td>{c.correo}</td>
                             <td className={styles.acciones}>
                               {c.comprobante_pago && (
-                                <button className={styles.verBaucher} onClick={() => setBaucherUrl(`http://localhost:3001${c.comprobante_pago}`)}>
+                                <button
+                                  title="Ver comprobante"
+                                  className={styles.verBaucher}
+                                  onClick={() => openFileModal(c.comprobante_pago)}
+                                >
                                   <FileText size={16} />
                                 </button>
                               )}
-                              <button className={styles.editar} onClick={() => setCompetidorEditar(c)}>
+                              <button title="Editar" className={styles.editar} onClick={() => setCompetidorEditar(c)}>
                                 <Edit size={16} />
                               </button>
-                              <button className={styles.eliminar} onClick={() => setCompetidorEliminar(c)}>
+                              <button title="Eliminar" className={styles.eliminar} onClick={() => setCompetidorEliminar(c)}>
                                 <Trash2 size={16} />
                               </button>
                             </td>
@@ -190,17 +219,9 @@ export default function VerCompetidores() {
         })}
       </div>
 
-      {/* Modal para ver baucher */}
-      {baucherUrl && (
-        <div className={styles.modalOverlay} onClick={() => setBaucherUrl(null)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h3 className={styles.modalTitle}>Baucher de Pago</h3>
-            <img src={baucherUrl} alt="Baucher" className={styles.modalImagen} />
-            <button className={styles.modalCerrar} onClick={() => setBaucherUrl(null)}>
-              Cerrar
-            </button>
-          </div>
-        </div>
+      {/* Viewer modal (imagen / pdf / other) */}
+      {baucherUrl && baucherType && (
+        <ViewFileModal url={baucherUrl} type={baucherType} onClose={closeFileModal} />
       )}
 
       {/* Modal editar competidor */}
@@ -238,6 +259,75 @@ export default function VerCompetidores() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ===========================
+   Component: ViewFileModal
+   Muestra imagen o PDF y ofrece descarga / abrir en nueva pestaña
+   =========================== */
+function ViewFileModal({ url, type, onClose }: { url: string; type: "image" | "pdf" | "other"; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // Extra seguridad: si la URL comienza con "//" o es relativa, conviértela en absoluta si necesitas.
+  const safeUrl = url;
+
+  const fileNameFromUrl = (u: string) => {
+    try {
+      const parts = u.split("/").pop();
+      return parts || "archivo";
+    } catch {
+      return "archivo";
+    }
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalContent} onClick={(e) => e.stopPropagation()} style={{ maxWidth: 1000, width: "95%" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+          <h3 className={styles.modalTitle}>Comprobante de pago</h3>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <a href={safeUrl} target="_blank" rel="noreferrer" title="Abrir en nueva pestaña" className={styles.modalAction}>
+              Abrir
+            </a>
+            <a href={safeUrl} download={fileNameFromUrl(safeUrl)} title="Descargar" className={styles.modalAction} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <Download size={16} /> Descargar
+            </a>
+            <button onClick={onClose} title="Cerrar" className={styles.modalCloseBtn} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          {type === "image" && (
+            <img src={safeUrl} alt="Comprobante" style={{ width: "100%", height: "auto", borderRadius: 8 }} />
+          )}
+
+          {type === "pdf" && (
+            // iframe para visualizar pdf; si falla, el usuario puede descargar
+            <iframe
+              src={safeUrl}
+              title="Comprobante PDF"
+              style={{ width: "100%", height: "70vh", border: "none", borderRadius: 8 }}
+            />
+          )}
+
+          {type === "other" && (
+            <div style={{ padding: 20, borderRadius: 8, background: "#f8fafc" }}>
+              <p>Tipo de archivo no reconocido para vista previa. Puedes descargarlo o abrirlo en una nueva pestaña.</p>
+              <p style={{ fontSize: 13, color: "#6b7280" }}>{safeUrl}</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -4,7 +4,6 @@ import styles from "../../styles/UsersInicio.module.css";
 import sentadilla from "../../assets/sentadilla.png";
 import press from "../../assets/press.png";
 import pesomuerto from "../../assets/kill.png";
-import ChatBot from "../../components/chatbot/chatbot";
 
 // MEDALLAS
 import oro from "../../assets/oro.png";
@@ -189,8 +188,7 @@ const InicioUsuarios: React.FC = () => {
             <div className={styles.scrollIndicator}></div>
           </section>
 
-          {/* Chat flotante */}
-          <ChatBot />
+
 
           {/* POWERLIFTING INFO */}
           <section ref={powerliftingRef} className={styles.powerliftingInfo}>

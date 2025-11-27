@@ -4,6 +4,7 @@ import { FaUser, FaUsers, FaCalendarAlt, FaMoneyBillAlt } from "react-icons/fa";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
 import styles from "../../styles/InformacionScreen.module.css";
 import { useNavigate } from "react-router-dom";
+import LoadingModalJuez from "./LoadingModalJuez";
 
 interface JuezProp {
   id_juez: number;
@@ -62,20 +63,29 @@ const InformacionScreen: React.FC<{ userJuez: JuezProp | null; setUserJuez: (j: 
       try {
         // 1) Competencia del juez (por id)
         const compRes = await fetch(`${API_BASE}/api/competenciasadmin/${userJuez.id_competencia}`, { signal: ac.signal });
-        if (!compRes.ok) throw new Error("No se pudo obtener la información de la competencia");
-        const compJson: CompetenciaApi = await compRes.json();
-        if (!mounted) return;
-        setCompetencia(compJson);
+        if (compRes.ok) {
+          const compJson: CompetenciaApi = await compRes.json();
+          if (mounted) setCompetencia(compJson);
+        } else {
+          // si falla dejamos competencia en null para mostrar placeholder en UI
+          if (mounted) setCompetencia(null);
+        }
 
         // 2) Jueces: traer todos y filtrar por id_competencia
         const jRes = await fetch(`${API_BASE}/api/juez`, { signal: ac.signal });
-        if (!jRes.ok) throw new Error("No se pudo obtener la lista de jueces");
-        const jJson: JuezApi[] = await jRes.json();
-        if (!mounted) return;
-        const filtered = (jJson || []).filter(j => Number(j.id_competencia) === Number(userJuez.id_competencia));
-        setJuecesActivos(filtered);
+        if (jRes.ok) {
+          const jJson: JuezApi[] = await jRes.json();
+          if (mounted) {
+            const filtered = (jJson || []).filter(j => Number(j.id_competencia) === Number(userJuez.id_competencia));
+            setJuecesActivos(filtered);
+          }
+        } else {
+          if (mounted) setJuecesActivos([]);
+        }
       } catch (err: any) {
-        if (err.name !== "AbortError") setError(err?.message ?? "Error cargando datos");
+        if (err.name !== "AbortError") {
+          if (mounted) setError(err?.message ?? "Error cargando datos");
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -109,17 +119,22 @@ const InformacionScreen: React.FC<{ userJuez: JuezProp | null; setUserJuez: (j: 
   };
 
   if (!userJuez) return <p style={{ color: "#666" }}>Redirigiendo a login...</p>;
-  if (loading) return <p style={{ color: "#666" }}>Cargando información...</p>;
   if (error) return <p style={{ color: "#b91c1c" }}>Error: {error}</p>;
-  if (!competencia) return <p style={{ color: "#666" }}>Competencia no encontrada</p>;
+
+  // Modal abierto mientras carga (datos generales o específicos)
+  const modalOpen = loading;
+  const modalMessage = "Cargando información...";
 
   return (
     <div className={styles.informacionScreen}>
+      {/* Modal de carga global */}
+      <LoadingModalJuez open={modalOpen} message={modalMessage} variant="spinner" />
+
       <div className={styles.informacionContainer}>
         <h1 className={styles.informacionTitulo}>Información del Evento</h1>
 
         {/* Imagen de la competencia si existe */}
-        {competencia.foto ? (
+        {competencia && competencia.foto ? (
           <div className={styles.infoImagenContainer}>
             <img src={getImageUrl(competencia.foto)} alt={competencia.nombre} className={styles.infoImagen} />
           </div>
@@ -133,7 +148,9 @@ const InformacionScreen: React.FC<{ userJuez: JuezProp | null; setUserJuez: (j: 
             <div className={styles.cardContent}>
               <p className={styles.cardLabel}>Usuario</p>
               <p className={styles.cardText}>{userJuez.nombre} {userJuez.apellidos}</p>
-              <p style={{ fontSize: 12, opacity: 0.85 }}>Competencia: <strong>{competencia.nombre}</strong></p>
+              <p style={{ fontSize: 12, opacity: 0.85 }}>
+                Competencia: <strong>{competencia ? competencia.nombre : "—"}</strong>
+              </p>
             </div>
 
             <div style={{ marginLeft: 12 }}>
@@ -177,26 +194,28 @@ const InformacionScreen: React.FC<{ userJuez: JuezProp | null; setUserJuez: (j: 
           )}
         </div>
 
-        {/* Tarjeta Competencia: detalles reales (ubicación removida) */}
+        {/* Tarjeta Competencia: detalles reales (muestra placeholders si no hay datos) */}
         <div className={`${styles.infoCard} ${styles.cardCompetencia}`}>
           <div className={styles.cardHeader}>
             <FaCalendarAlt className={styles.cardHeaderIcon} />
-            <p className={styles.cardHeaderTitle}>{competencia.nombre}</p>
+            <p className={styles.cardHeaderTitle}>{competencia ? competencia.nombre : "—"}</p>
           </div>
 
           <div className={styles.cardFecha}>
             <FaCalendarAlt />
-            <span>Inicio: {formatDate(competencia.fecha_inicio)}</span>
+            <span>Inicio: {competencia ? formatDate(competencia.fecha_inicio) : "—"}</span>
           </div>
 
           <div className={styles.cardFecha}>
             <FaCalendarAlt />
-            <span>Cierre: {formatDate(competencia.fecha_cierre)}</span>
+            <span>Cierre: {competencia ? formatDate(competencia.fecha_cierre) : "—"}</span>
           </div>
 
           <div className={styles.cardFecha}>
             <FaMoneyBillAlt />
-            <span>{competencia.costo ? `${Number(competencia.costo).toFixed(2)} MXN` : "Costo no especificado"}</span>
+            <span>
+              {competencia && competencia.costo ? `${Number(competencia.costo).toFixed(2)} MXN` : "Costo no especificado"}
+            </span>
           </div>
         </div>
       </div>

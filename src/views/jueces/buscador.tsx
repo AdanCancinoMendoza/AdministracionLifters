@@ -4,6 +4,7 @@ import styles from "../../styles/BuscadorJuez.module.css";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
 import { FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import LoadingModalJuez from "./LoadingModalJuez"; // <-- modal reutilizable
 
 type Attempt = {
   id: number;
@@ -39,7 +40,7 @@ const COMPETITIONS_API = `${API_BASE}/api/competenciasadmin`;
 const EXERCISE_ID_TO_NAME: Record<number, string> = { 1: "Press Banca", 2: "Peso Muerto", 3: "Sentadilla" };
 
 type Props = {
-  userJuez?: any | null; // si tu app pasa userJuez por props, se usará primero
+  userJuez?: any | null;
   setUserJuez?: (j: any | null) => void;
 };
 
@@ -77,7 +78,6 @@ const Buscador: React.FC<Props> = ({ userJuez: propUserJuez, setUserJuez: propSe
       }
       const parsed = JSON.parse(raw);
       setUserJuez(parsed);
-      // opcional: propSetUserJuez si existe (sincronicemos)
       if (propSetUserJuez) propSetUserJuez(parsed);
     } catch (err) {
       navigate("/jueces/login");
@@ -235,8 +235,9 @@ const Buscador: React.FC<Props> = ({ userJuez: propUserJuez, setUserJuez: propSe
     return map;
   })();
 
+  // Si no hay user (redirigir ya), mostramos null
   if (!userJuez) return null;
-  if (loadingData) return <div className={styles.root}><main className={styles.main}><p>Cargando...</p></main></div>;
+  // Mantengo el return de error temprano (para no intentar renderizar UI normal si hay error severo)
   if (error) return <div className={styles.root}><main className={styles.main}><p style={{ color: "red" }}>{error}</p></main></div>;
 
   // header: mostrar nombre de competencia si existe, o "ID <número>" (nunca undefined)
@@ -245,6 +246,9 @@ const Buscador: React.FC<Props> = ({ userJuez: propUserJuez, setUserJuez: propSe
 
   return (
     <div className={styles.root}>
+      {/* Modal de carga global (reemplaza el texto Cargando...) */}
+      <LoadingModalJuez open={loadingData} message="Cargando datos de la competencia..." variant="spinner" />
+
       <main className={styles.main}>
         <header className={styles.header}>
           <h1 className={styles.title}>Buscador de Competidores</h1>
@@ -319,7 +323,7 @@ const Buscador: React.FC<Props> = ({ userJuez: propUserJuez, setUserJuez: propSe
         </section>
       </main>
 
-      {/* Modal */}
+      {/* Modal de detalles del competidor - ahora usa variante pequeña (modalSmall) */}
       {selectedCompetitor && (
         <div
           className={styles.modalOverlay}
@@ -328,7 +332,7 @@ const Buscador: React.FC<Props> = ({ userJuez: propUserJuez, setUserJuez: propSe
           aria-label={`Detalles de ${selectedCompetitor.nombre}`}
           onClick={() => { setSelectedCompetitor(null); setAttemptsForSelected(null); }}
         >
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()} role="document">
+          <div className={styles.modalSmall} onClick={(e) => e.stopPropagation()} role="document">
             <header className={styles.modalHeader}>
               <h2>{selectedCompetitor.nombre} {selectedCompetitor.apellidos}</h2>
               <button className={styles.modalClose} onClick={() => { setSelectedCompetitor(null); setAttemptsForSelected(null); }} aria-label="Cerrar">

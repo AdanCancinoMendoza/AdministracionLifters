@@ -4,6 +4,7 @@ import { io, Socket } from "socket.io-client";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral";
 import styles from "../../styles/ResultadosScreen.module.css";
 import { useNavigate } from "react-router-dom";
+import LoadingModalJuez from "./LoadingModalJuez"; // <-- modal reutilizable
 
 interface Juez {
   id_juez: number;
@@ -21,7 +22,7 @@ interface AttemptApi {
   module_id?: number;
   attempt_number: number;
   weight_kg: string | null;
-  approved: number | null; // en tu API viene 1 | 0 | null
+  approved: number | null;
   judge_id?: number | null;
   notes?: any;
   created_at?: string;
@@ -74,7 +75,7 @@ const ResultadosScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => 
   const [competidores, setCompetidores] = useState<Competidor[]>([]);
   const [modules, setModules] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<Record<number, string[]>>({});
-  const [resultsMap, setResultsMap] = useState<Record<number, Record<number, Repeticion[]>>>({}); // id_competidor -> exercise_id -> [3 reps]
+  const [resultsMap, setResultsMap] = useState<Record<number, Record<number, Repeticion[]>>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingAttempts, setLoadingAttempts] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,9 +98,13 @@ const ResultadosScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => 
       setError(null);
       try {
         const compRes = await fetch(`${COMPETITIONS_API}/${juez.id_competencia}`, { signal: ac.signal });
-        if (!compRes.ok) throw new Error("No se pudo obtener la competencia");
-        const compJson = await compRes.json();
-        setCompetencia(compJson);
+        if (compRes.ok) {
+          const compJson = await compRes.json();
+          setCompetencia(compJson);
+        } else {
+          // si API falla, dejamos competencia en null (mostramos placeholder en UI)
+          setCompetencia(null);
+        }
 
         const competsResp = await fetch(COMPETITORS_API, { signal: ac.signal });
         if (!competsResp.ok) throw new Error("No se pudieron obtener competidores");
@@ -200,16 +205,13 @@ const ResultadosScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => 
       try { s.emit("join", { id_competencia: juez.id_competencia }); } catch {}
     });
 
-    // event when a single attempt is updated (vote or admin update)
     s.on("attempt_update", (payload: any) => {
       if (!payload) return;
-      // payload may include the attempt object under payload.attempt or payload directly
       const att: AttemptApi = payload.attempt ?? payload;
       if (!att || Number(att.id_competencia) !== Number(juez.id_competencia)) return;
       handleAttemptUpdate(att);
     });
 
-    // sometimes backend emits 'vote_update' like in other screens
     s.on("vote_update", (payload: any) => {
       if (!payload) return;
       const att: AttemptApi = payload.attempt ?? payload;
@@ -217,11 +219,7 @@ const ResultadosScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => 
       handleAttemptUpdate(att);
     });
 
-    // optionally, react to admin selecting competitor or next to refresh whole list
     s.on("competitor:selected", () => {
-      // refresh all attempts for current competitor list
-      // re-trigger load by calling the fetch for all competidores
-      // (simple approach: re-fetch attempts for all competidores)
       (async () => {
         try {
           if (!juez) return;
@@ -294,12 +292,17 @@ const ResultadosScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => 
   const nameOf = (c?: Competidor | null) => (!c ? "—" : `${c!.nombre}${c!.apellidos ? " " + c!.apellidos : ""}`);
 
   if (!juez) return <p style={{ color: "#666" }}>Redirigiendo a login...</p>;
-  if (loading) return <p style={{ color: "#666" }}>Cargando datos de la competencia...</p>;
   if (error) return <p style={{ color: "#b91c1c" }}>Error: {error}</p>;
-  if (!competencia) return <p style={{ color: "#666" }}>Competencia no encontrada</p>;
+
+  // mensaje del modal dependiendo si se están cargando datos o intentos
+  const modalOpen = loading || loadingAttempts;
+  const modalMessage = loading ? "Cargando datos de la competencia..." : "Cargando resultados...";
 
   return (
     <div className={styles.resultadosScreen}>
+      {/* Modal de carga global */}
+      <LoadingModalJuez open={modalOpen} message={modalMessage} variant="spinner" />
+
       <div className={styles.resultadosContainer}>
         {/* TITULO SOLAMENTE */}
         <h1 className={styles.resultadosTitulo}>Resultados de Competidores</h1>
@@ -391,7 +394,7 @@ const ResultadosScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => 
           )}
         </div>
 
-        {loadingAttempts && <p style={{ color: "#666", marginTop: 12 }}>Cargando resultados...</p>}
+        {/* removed the textual 'Cargando resultados...' — handled by the modal overlay */}
       </div>
 
       <BottomNavigationMenuCentral selected="resultados" />

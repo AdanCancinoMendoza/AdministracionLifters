@@ -345,3 +345,103 @@
     font-size: 0.9rem;
   }
 }
+
+
+/* VerCompetidores.module.css
+   Estilos para los botones del modal de lectura (imagen / pdf)
+   -------------------------
+   Clases utilizadas en el componente:
+   - .modalAction      -> enlaces "Abrir" y "Descargar"
+   - .modalCloseBtn    -> botón de cerrar con icono
+*/
+
+/* botón enlace principal (Abrir / Descargar) */
+.modalAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 8px;
+  text-decoration: none;
+  background-color: #0f172a; /* color oscuro base */
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.08);
+  transition: transform .08s ease, box-shadow .12s ease, background-color .12s ease;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+/* Variante ligera (si quieres link transparente, usa .modalAction--ghost) */
+.modalAction--ghost {
+  background: transparent;
+  color: #0f172a;
+  border: 1px solid rgba(15,23,42,0.06);
+  box-shadow: none;
+}
+
+/* hover / focus */
+.modalAction:hover,
+.modalAction:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(15,23,42,0.12);
+  background-color: #0b1220;
+  outline: none;
+}
+
+/* estado activo / pulsado */
+.modalAction:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(15,23,42,0.12);
+}
+
+/* estilo pequeño (por si quieres botones compactos) */
+.modalAction.sm {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+/* botón de cerrar (icono) */
+.modalCloseBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid rgba(17,24,39,0.06);
+  cursor: pointer;
+  transition: background-color .12s ease, transform .08s ease, box-shadow .12s ease;
+  color: #111827;
+}
+
+/* hover / focus del icono */
+.modalCloseBtn:hover,
+.modalCloseBtn:focus {
+  background: #111827;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(17,24,39,0.12);
+  outline: none;
+}
+
+/* variante transparente para mobile (quita borde) */
+@media (max-width: 640px) {
+  .modalAction {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  .modalCloseBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+  }
+}
+
+/* accesibilidad: enfoque con teclado visible */
+.modalAction:focus-visible,
+.modalCloseBtn:focus-visible {
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.18);
+  outline: none;
+}

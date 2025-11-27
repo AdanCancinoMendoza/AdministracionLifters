@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import styles from "../../styles/InicioJueces.module.css";
 import BottomNavigationMenuCentral from "../../components/jueces/BottomNavigationMenuCentral.tsx";
 import { useNavigate } from "react-router-dom";
+import LoadingModalJuez from "./LoadingModalJuez";
 
 interface Juez {
   id_juez: number;
@@ -134,41 +135,41 @@ const InicioJueces: React.FC<{ userJuez: Juez | null; setUserJuez: (j: Juez | nu
   const nameOf = (c?: Competidor | null) => (!c ? "—" : `${c.nombre}${c.apellidos ? " " + c.apellidos : ""}`);
 
   if (!juez) return <p style={{ color: "#666" }}>Redirigiendo a login...</p>;
-  if (loading) return <p style={{ color: "#666" }}>Cargando datos...</p>;
   if (error) return <p style={{ color: "#b91c1c" }}>Error: {error}</p>;
-  if (!competencia) return <p style={{ color: "#666" }}>Competencia no encontrada</p>;
+  // <-- ya no retornamos si no hay competencia; mostramos placeholders en su lugar
 
   const imagenCompetencia =
-    competencia.foto && (competencia.foto.startsWith("/uploads/") || competencia.foto.startsWith("/"))
+    competencia && competencia.foto && (competencia.foto.startsWith("/uploads/") || competencia.foto.startsWith("/"))
       ? `http://localhost:3001${competencia.foto}`
-      : competencia.foto || "";
+      : (competencia && competencia.foto) || "";
 
   return (
     <div className={styles.inicioJuezContainer}>
+      <LoadingModalJuez open={loading} message="Cargando datos de la competencia..." variant="spinner" />
+
       <h1 className={styles.inicioJuezBienvenida}>
         Bienvenido, {juez.nombre} {juez.apellidos}
       </h1>
 
       <div className={styles.inicioJuezBanner}>
         {imagenCompetencia ? (
-          <img src={imagenCompetencia} alt={competencia.nombre} />
+          <img src={imagenCompetencia} alt={competencia ? competencia.nombre : "Competencia"} />
         ) : (
           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#7b8794" }}>
-            Sin imagen
+            {competencia ? "Sin imagen" : "Competencia cargada próximamente"}
           </div>
         )}
         <div className={styles.overlay}>
-          <h2>{competencia.nombre}</h2>
+          <h2>{competencia ? competencia.nombre : "—"}</h2>
           <p>
-            {new Date(competencia.fecha_inicio).toLocaleDateString()} -{" "}
-            {new Date(competencia.fecha_cierre).toLocaleDateString()}
+            {competencia ? new Date(competencia.fecha_inicio).toLocaleDateString() : "—"} -{" "}
+            {competencia ? new Date(competencia.fecha_cierre).toLocaleDateString() : "—"}
           </p>
         </div>
       </div>
 
       <div className={styles.inicioJuezTotalCard}>Total competidores: {competidores.length}</div>
 
-      {/* Módulos: mostramos cada módulo con los competidores asignados (sin botones) */}
       <h3 className={styles.inicioJuezSubtitulo} style={{ marginTop: 20 }}>Módulos de la competencia</h3>
       {modules.length === 0 && <p style={{ color: "#666", marginBottom: 12 }}>No se han creado módulos para esta competencia.</p>}
 

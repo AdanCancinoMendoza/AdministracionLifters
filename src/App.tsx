@@ -1,5 +1,9 @@
-import { useState } from "react";
+// src/App.tsx
+import { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import usePwaJueces from "./hooks/usePwaJueces";
+import { useInstallPrompt } from "./hooks/useInstallPrompt";
+
 import MenuAdmin from "./components/menu";
 import MenuUsuario from "./components/users/menu.tsx";
 
@@ -40,7 +44,46 @@ import InformacionScreen from "./views/jueces/perfil";
 import PrivateRoute from "../backend/src/private/privateJuez.tsx";
 import NotFound from "./views/NotFound";
 
-// Wrapper para controlar cuándo mostrar el menú admin
+// ----------------- PwaManager (MUST be inside Router) -----------------
+// Gestiona inyección del manifest, registro del SW y mostrar el prompt UNA VEZ tras login.
+function PwaManager({ userJuez }: { userJuez: any }) {
+  // Inyecta manifest y registra SW (solo cuando location.pathname empieza con /jueces y hay session)
+  usePwaJueces(!!userJuez);
+
+  // Hook que captura beforeinstallprompt y expone showPrompt()
+  const { showPrompt } = useInstallPrompt();
+
+  // Ref para asegurar que intentamos mostrar el prompt como máximo una vez por sesión
+  const shownRef = useRef(false);
+
+  useEffect(() => {
+    if (!userJuez) return;
+    if (shownRef.current) return;
+
+    let mounted = true;
+    // Pequeña espera para dar tiempo a que beforeinstallprompt ocurra / SW se registre
+    const t = setTimeout(async () => {
+      if (!mounted) return;
+      try {
+        const res = await showPrompt();
+        console.log("showPrompt result after login:", res);
+      } catch (err) {
+        console.error("Error calling showPrompt:", err);
+      }
+      // Marcar que ya intentamos mostrar (aceptado o no, no insistiremos más)
+      shownRef.current = true;
+    }, 700);
+
+    return () => {
+      mounted = false;
+      clearTimeout(t);
+    };
+  }, [userJuez, showPrompt]);
+
+  return null;
+}
+// -----------------------------------------------------------------------
+
 function AdminLayout() {
   const location = useLocation();
 
@@ -86,10 +129,14 @@ function App() {
   const [userJuez, setUserJuez] = useState<any>(() => {
     const stored = localStorage.getItem("userJuez");
     if (stored) {
-      const parsed = JSON.parse(stored);
-      if (new Date().getTime() < parsed.expire) {
-        return parsed.data;
-      } else {
+      try {
+        const parsed = JSON.parse(stored);
+        if (new Date().getTime() < parsed.expire) {
+          return parsed.data;
+        } else {
+          localStorage.removeItem("userJuez");
+        }
+      } catch {
         localStorage.removeItem("userJuez");
       }
     }
@@ -98,6 +145,9 @@ function App() {
 
   return (
     <Router>
+      {/* PwaManager está dentro del Router y puede usar useLocation */}
+      <PwaManager userJuez={userJuez} />
+
       <Routes>
         {/* -------------------- USUARIOS -------------------- */}
         <Route path="/usuario" element={<MenuUsuario />}>
@@ -113,7 +163,22 @@ function App() {
         </Route>
 
         {/* -------------------- JUECES -------------------- */}
-        <Route path="/jueces/login" element={<LoginJueces onLoginSuccess={setUserJuez} />} />
+        <Route
+          path="/jueces/login"
+          element={
+            <LoginJueces
+              onLoginSuccess={(juez: any) => {
+                // Solo guardamos userJuez aquí; PwaManager detectará el cambio y mostrará prompt UNA VEZ
+                setUserJuez(juez);
+                const expireTime = new Date().getTime() + 24 * 60 * 60 * 1000;
+                localStorage.setItem(
+                  "userJuez",
+                  JSON.stringify({ data: juez, expire: expireTime })
+                );
+              }}
+            />
+          }
+        />
         <Route
           path="/jueces/inicio"
           element={
