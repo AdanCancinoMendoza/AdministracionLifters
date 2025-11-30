@@ -1,53 +1,35 @@
-// src/components/StoryCard.tsx
+import React from 'react';
 import styles from '../../styles/UsersStoryCard.module.css';
 
-type Story = {
+type Props = {
   image: string;
   title: string;
   description: string;
   category: 'Noticia' | 'Testimonio' | 'Logro';
   date: string;
-  type?: 'imagen' | 'youtube'; // Nuevo campo opcional
+  type: 'imagen' | 'youtube';
 };
 
-const categoryColors: Record<string, string> = {
-  Noticia: '#e3f2fd',
-  Testimonio: '#fce4ec',
-  Logro: '#f3e5f5',
-};
-
-const StoryCard = ({ image, title, description, category, date, type = 'imagen' }: Story) => {
+const StoryCard: React.FC<Props> = ({ image, title, description, category, date, type }) => {
   return (
-    <div className={styles.storyCard}>
-      <div className={styles.storyMedia}>
-        {type === 'youtube' ? (
-          <iframe
-            src={image}
-            title={title}
-            width="100%"
-            height="200"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        ) : (
-          <img src={image} alt={title} className={styles.storyImage} />
-        )}
+    <article className={styles.card} aria-label={title}>
+      <div className={styles.media}>
+        {/* thumbnail always as img (you use embed only in modal) */}
+        <img src={image} alt={title} loading="lazy" className={styles.thumb} />
       </div>
-      <div className={styles.storyContent}>
-        <h3 dangerouslySetInnerHTML={{ __html: title }} />
-        <p>{description}</p>
-        <div className={styles.storyMeta}>
-          <span
-            className={styles.categoryBadge}
-            style={{ backgroundColor: categoryColors[category] }}
-          >
+
+      <div className={styles.content}>
+        <h3 className={styles.cardTitle}>{title}</h3>
+        <p className={styles.cardText}>{description}</p>
+
+        <div className={styles.meta}>
+          <span className={`${styles.badge} ${category === 'Noticia' ? styles.noticia : category === 'Logro' ? styles.logro : styles.testimonio}`}>
             {category}
           </span>
-          <span className={styles.date}>Publicado: {date}</span>
+          <small className={styles.date}>{date}</small>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

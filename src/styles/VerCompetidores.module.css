@@ -445,3 +445,161 @@
   box-shadow: 0 0 0 4px rgba(59,130,246,0.18);
   outline: none;
 }
+
+
+/* --- estilos nuevos / mejorados para modal editar y selects --- */
+
+/* Edit modal specific */
+.editModal {
+  max-width: 900px;
+  width: 95%;
+  padding: 18px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  box-shadow: 0 24px 60px rgba(10, 20, 40, 0.18);
+  border: 1px solid rgba(10,20,40,0.06);
+}
+
+/* header dentro del modal de editar */
+.editModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.modalSub {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+/* Form grid: 2 columnas y responsive */
+.editFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+/* Agrupador de campo con label */
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Label */
+.label {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* Inputs / select coherentes con estilo */
+.input,
+.select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e6e7eb;
+  background: #fff;
+  color: #111827;
+  font-size: 14px;
+  outline: none;
+  transition: box-shadow .12s ease, border-color .12s ease, transform .08s;
+  box-shadow: 0 4px 18px rgba(12,18,30,0.04);
+}
+
+.input:focus,
+.select:focus {
+  border-color: var(--primary, #0d47a1);
+  box-shadow: 0 8px 28px rgba(13,71,161,0.12);
+  transform: translateY(-2px);
+}
+
+/* Placeholder color */
+.input::placeholder {
+  color: #9ca3af;
+}
+
+/* Select specific: flecha a la derecha */
+.select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, #6b7280 50%), linear-gradient(135deg, #6b7280 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 36px; /* espacio para la flecha */
+}
+
+/* Botones del modal */
+.modalButtons {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+/* Primary and ghost styles (reuso guardar/cancelar existentes) */
+.guardar {
+  background: var(--primary, #0d47a1);
+  color: white;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform .08s ease, box-shadow .12s ease;
+}
+
+.guardar:active { transform: translateY(1px); }
+.guardar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.cancelar {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  color: #111827;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Ajustes responsive: single column en <720px */
+@media (max-width: 720px) {
+  .editFormGrid {
+    grid-template-columns: 1fr;
+  }
+  .modalButtons {
+    justify-content: center;
+  }
+}
+
+/* Asegurar botón cerrar visible */
+.modalCloseBtn {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid rgba(17,24,39,0.06);
+  cursor: pointer;
+  transition: transform .08s ease, box-shadow .12s ease;
+}
+
+.modalCloseBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(17,24,39,0.08);
+}
+
+/* pequeño ajuste para la tabla dentro del modal activo (evita overflow) */
+.activeCard .tabla {
+  overflow: visible;
+}
+
+/* --- Fin de secciones añadidas --- */

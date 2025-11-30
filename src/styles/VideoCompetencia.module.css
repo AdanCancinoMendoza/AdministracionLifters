@@ -205,14 +205,14 @@
 }
 
 .cancelarBtn {
-  background: #9e9e9e;
+  background: #ff0b0b;
 }
 .cancelarBtn:hover {
   background: #757575;
 }
 
 .guardarBtn {
-  background: #4caf50;
+  background: #01f809;
 }
 .guardarBtn:hover {
   background: #388e3c;

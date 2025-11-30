@@ -13,6 +13,7 @@
 }
 
 .title {
+  text-align: center;
   font-size: 2rem;
   font-weight: 700;
   color: #2c3e50;
@@ -20,6 +21,7 @@
 }
 
 .subtitle {
+  text-align: center;
   font-size: 1rem;
   color: #7f8c8d;
   margin-bottom: 1.5rem;
@@ -294,4 +296,213 @@
 
 .btnCrear:active {
   transform: scale(0.96);
+}
+
+
+/* ===== Modal overlay/dialog moderno y scrollable ===== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 25, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  z-index: 1200;
+}
+
+/* Dialog principal: columna (header / body scroll / footer sticky) */
+.modalDialog {
+  width: min(980px, 96%);
+  max-height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg,#ffffff,#fbfdff);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(8,18,40,0.28);
+  border: 1px solid rgba(10,20,40,0.06);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Header: título + close (alineados) */
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eef2f6;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,250,252,0.9));
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #111827;
+}
+
+.modalSub {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* Icon button (cerrar) */
+.iconBtn {
+  background: transparent;
+  border: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  color: #374151;
+  transition: transform .08s ease, box-shadow .12s ease, background-color .12s;
+}
+
+.iconBtn:hover {
+  transform: translateY(-3px);
+  background: #f3f4f6;
+  box-shadow: 0 8px 20px rgba(12,18,30,0.06);
+}
+
+/* Body: scrollable para contenido (imagen grande no empuja footer) */
+.modalBody {
+  padding: 18px 20px;
+  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 120px;
+}
+
+/* Footer: sticky con botones siempre visibles */
+.modalFooter {
+  padding: 12px 20px;
+  border-top: 1px solid #eef2f6;
+  background: linear-gradient(180deg,#ffffff,#fafcff);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Botones (primario/ghost/danger) */
+.btnPrimary {
+  background: linear-gradient(135deg,#007ee6,#005bb5);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 26px rgba(3,82,144,0.16);
+}
+
+.btnGhost {
+  background: transparent;
+  border: 1px solid #e6e8eb;
+  color: #374151;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btnDanger {
+  background: linear-gradient(135deg,#e04b3c,#c62828);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Form inside modal */
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Type selector kept as before but slightly adjusted */
+.typeSelector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.typeSelector button {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+  background: #f8fafc;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+}
+
+.typeSelector button.activo {
+  background: linear-gradient(90deg,#007ee6,#005bb5);
+  color: white;
+  border-color: #005bb5;
+}
+
+/* Preview area limited in height and scroll safe */
+.preview {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f3f6f9;
+  border: 1px solid #e6eef7;
+  padding: 8px;
+}
+
+/* ensure preview media don't grow unbounded — this prevents pushing footer out of view */
+.preview img,
+.preview video,
+.preview iframe {
+  width: 100%;
+  max-height: 50vh;
+  object-fit: contain;
+  display: block;
+  border-radius: 8px;
+}
+
+/* Inputs / textarea / select */
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e6e6e6;
+  font-size: 0.95rem;
+  outline: none;
+  background: #fff;
+}
+
+.textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Modal actions container (right-aligned inside footer) */
+.modalActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 880px) {
+  .modalDialog {
+    width: 96%;
+    max-height: calc(100vh - 40px);
+  }
+  .preview img, .preview video, .preview iframe {
+    max-height: 40vh;
+  }
 }

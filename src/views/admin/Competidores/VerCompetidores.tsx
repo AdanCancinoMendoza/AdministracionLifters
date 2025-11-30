@@ -1,4 +1,3 @@
-// src/views/users/VerCompetidores.tsx
 import { useEffect, useState } from "react";
 import { Edit, Trash2, FileText, Users, ChevronDown, ChevronUp, Download, X } from "lucide-react";
 import styles from "../../../styles/VerCompetidores.module.css";
@@ -118,7 +117,6 @@ export default function VerCompetidores() {
     const u = url.toLowerCase();
     if (u.match(/\.pdf($|\?)/i)) return "pdf";
     if (u.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)($|\?)/i)) return "image";
-    // si es data url o empieza con blob:
     if (u.startsWith("data:image") || u.startsWith("blob:")) return "image";
     return "other";
   };
@@ -224,21 +222,102 @@ export default function VerCompetidores() {
         <ViewFileModal url={baucherUrl} type={baucherType} onClose={closeFileModal} />
       )}
 
-      {/* Modal editar competidor */}
+      {/* Modal editar competidor (mejorado con select de categorias) */}
       {competidorEditar && (
         <div className={styles.modalOverlay} onClick={() => setCompetidorEditar(null)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h3 className={styles.modalTitle}>Editar Competidor</h3>
-            <form onSubmit={handleUpdate} className={styles.modalForm}>
-              <input type="text" value={competidorEditar.nombre} onChange={(e) => setCompetidorEditar({ ...competidorEditar, nombre: e.target.value })} />
-              <input type="text" value={competidorEditar.apellidos} onChange={(e) => setCompetidorEditar({ ...competidorEditar, apellidos: e.target.value })} />
-              <input type="text" value={competidorEditar.peso} onChange={(e) => setCompetidorEditar({ ...competidorEditar, peso: e.target.value })} />
-              <input type="number" value={competidorEditar.edad} onChange={(e) => setCompetidorEditar({ ...competidorEditar, edad: Number(e.target.value) })} />
-              <input type="text" value={competidorEditar.categoria} onChange={(e) => setCompetidorEditar({ ...competidorEditar, categoria: e.target.value })} />
-              <input type="tel" value={competidorEditar.telefono} onChange={(e) => setCompetidorEditar({ ...competidorEditar, telefono: e.target.value })} />
-              <input type="email" value={competidorEditar.correo} onChange={(e) => setCompetidorEditar({ ...competidorEditar, correo: e.target.value })} />
+          <div className={`${styles.modalContent} ${styles.editModal}`} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.editModalHeader}>
+              <div>
+                <h3 className={styles.modalTitle}>Editar Competidor</h3>
+                <p className={styles.modalSub}>ID #{competidorEditar.id_competidor} — {competidorEditar.nombre} {competidorEditar.apellidos}</p>
+              </div>
+              <button className={styles.modalCloseBtn} onClick={() => setCompetidorEditar(null)} aria-label="Cerrar">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdate} className={styles.editFormGrid}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Nombre</label>
+                <input
+                  className={styles.input}
+                  type="text"
+                  value={competidorEditar.nombre}
+                  onChange={(e) => setCompetidorEditar(prev => prev ? { ...prev, nombre: e.target.value } : prev)}
+                  required
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Apellidos</label>
+                <input
+                  className={styles.input}
+                  type="text"
+                  value={competidorEditar.apellidos}
+                  onChange={(e) => setCompetidorEditar(prev => prev ? { ...prev, apellidos: e.target.value } : prev)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Peso (kg)</label>
+                <input
+                  className={styles.input}
+                  type="number"
+                  step="0.1"
+                  value={competidorEditar.peso}
+                  onChange={(e) => setCompetidorEditar(prev => prev ? { ...prev, peso: e.target.value } : prev)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Edad</label>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={competidorEditar.edad}
+                  onChange={(e) => setCompetidorEditar(prev => prev ? { ...prev, edad: Number(e.target.value) } : prev)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Categoría</label>
+                <select
+                  className={styles.select}
+                  value={competidorEditar.categoria}
+                  onChange={(e) => setCompetidorEditar(prev => prev ? { ...prev, categoria: e.target.value } : prev)}
+                  required
+                >
+                  <option value="">-- Seleccione categoría --</option>
+                  <option value="Ligero">Ligero</option>
+                  <option value="Mediano">Mediano</option>
+                  <option value="Pesado">Pesado</option>
+                  <option value="Super pesado">Super pesado</option>
+                  <option value="Ultra Pesado">Ultra Pesado</option>
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Teléfono</label>
+                <input
+                  className={styles.input}
+                  type="tel"
+                  value={competidorEditar.telefono}
+                  onChange={(e) => setCompetidorEditar(prev => prev ? { ...prev, telefono: e.target.value } : prev)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Correo</label>
+                <input
+                  className={styles.input}
+                  type="email"
+                  value={competidorEditar.correo}
+                  onChange={(e) => setCompetidorEditar(prev => prev ? { ...prev, correo: e.target.value } : prev)}
+                />
+              </div>
+
               <div className={styles.modalButtons}>
-                <button type="submit" className={styles.guardar} disabled={submitting}>Guardar</button>
+                <button type="submit" className={styles.guardar} disabled={submitting}>Guardar cambios</button>
                 <button type="button" className={styles.cancelar} onClick={() => setCompetidorEditar(null)}>Cancelar</button>
               </div>
             </form>
@@ -264,8 +343,7 @@ export default function VerCompetidores() {
 }
 
 /* ===========================
-   Component: ViewFileModal
-   Muestra imagen o PDF y ofrece descarga / abrir en nueva pestaña
+   Component: ViewFileModal (no cambios funcionales)
    =========================== */
 function ViewFileModal({ url, type, onClose }: { url: string; type: "image" | "pdf" | "other"; onClose: () => void }) {
   useEffect(() => {
@@ -276,7 +354,6 @@ function ViewFileModal({ url, type, onClose }: { url: string; type: "image" | "p
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Extra seguridad: si la URL comienza con "//" o es relativa, conviértela en absoluta si necesitas.
   const safeUrl = url;
 
   const fileNameFromUrl = (u: string) => {
@@ -312,7 +389,6 @@ function ViewFileModal({ url, type, onClose }: { url: string; type: "image" | "p
           )}
 
           {type === "pdf" && (
-            // iframe para visualizar pdf; si falla, el usuario puede descargar
             <iframe
               src={safeUrl}
               title="Comprobante PDF"

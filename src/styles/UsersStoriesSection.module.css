@@ -1,194 +1,321 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
-
-/* ---------- ICONOS SVG ---------- */
-.filterButtons button svg {
-  color: #a1a1a1; /* Gris claro */
-  transition: transform .25s ease, color .25s ease;
+:root{
+  --bg: #f6f9fb;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --primary: #0b63d6;
+  --accent: #0ea5e9;
+  --glass: rgba(255,255,255,0.7);
+  --radius: 12px;
+  --shadow: 0 10px 30px rgba(13,38,77,0.06);
 }
 
-.filterButtons button:hover svg {
-  transform: scale(1.15);
-}
-
-/* SVG cuando el botón está activo */
-.filterButtons button.active svg {
-  color: #000000; /* Negro */
-}
-
-/* ---------- SECCIÓN PRINCIPAL ---------- */
-.storiesSection {
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  padding: 40px 20px;
+.storiesSection{
   max-width: 1200px;
-  margin: auto;
-  color: #111;
-  text-align: center;
+  margin: 28px auto;
+  padding: 20px;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  border-radius: 14px;
+  color: #0f1724;
 }
 
-.storiesSection h2 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  margin-bottom: 20px;
-  background: linear-gradient(135deg, #000000, #000000);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* header */
+.headerRow{
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
-/* ---------- BOTONES FILTRO ---------- */
-.filterButtons {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 30px;
+.title{
+  margin:0;
+  font-size: 1.6rem;
+  font-weight: 700;
 }
 
-.filterButtons button {
-  background: rgba(0, 102, 255, 0);
-  border: 2px solid rgba(0, 102, 255, 0.541);
-  border-radius: 12px;
-  padding: 10px 18px;
+.lead{
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* filtros */
+.filterButtons{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.filterBtn{
+  background: white;
+  border: 1px solid rgba(15,23,42,0.06);
+  padding: 8px 12px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
-  color: #a1a1a1; /* Gris claro */
-  transition: .25s ease;
+  color: var(--muted);
+  transition: transform .12s ease, box-shadow .12s ease, background .12s;
+  display:flex;
+  align-items:center;
 }
 
-.filterButtons button:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 28px rgba(15,23,42,0.16);
+.filterBtn:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(11,99,214,0.06);
 }
 
-/* ---------- BOTÓN ACTIVO ---------- */
-.filterButtons button.active {
-  background: linear-gradient(90deg, #f74d4d75, #ff2b2b56);
-  color: #000000;
-  border: 2px solid #ff2b2b81;
-  box-shadow: 0 12px 30px rgba(2,6,23,.20);
-  transform: translateY(-4px);
+.filterInner{
+  display:flex;
+  gap:8px;
+  align-items:center;
 }
 
-/* ---------- GRID DE HISTORIAS ---------- */
-.storyGrid {
-  display: grid;
-  gap: 22px;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+/* activo */
+.active{
+  background: linear-gradient(90deg,var(--primary),var(--accent));
+  color: white !important;
+  border: none;
+  box-shadow: 0 10px 26px rgba(11,99,214,0.12);
 }
 
-/* Tarjetas */
-.storyGrid > div {
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.07);
-  transition: 0.28s ease;
-  backdrop-filter: blur(8px);
+/* grid */
+.storyGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+  gap: 16px;
+  margin-top: 14px;
 }
 
-.storyGrid > div:hover {
+.cardWrap{
+  position: relative;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s;
+  border-radius: 12px;
+  overflow: visible;
+  background: transparent;
+  padding-bottom: 6px;
+}
+
+.cardWrap:hover{
   transform: translateY(-6px);
-  box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+  box-shadow: var(--shadow);
 }
 
-/* Ajustes para las imágenes dentro del StoryCard */
-.storyGrid img {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
+/* play overlay on card */
+.playOverlay{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform: translate(-50%,-50%);
+  background: rgba(0,0,0,0.45);
+  color: white;
+  padding: 10px;
+  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events: none;
+  z-index: 10;
 }
 
-/* ---------- MODAL ---------- */
-.modalOverlay {
+/* empty fallback */
+.empty{
+  padding: 40px;
+  text-align:center;
+  color: var(--muted);
+  grid-column: 1 / -1;
+}
+
+/* modal overlay (centra el modal) */
+.modalOverlay{
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(6px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  animation: fadeOverlay .25s ease forwards;
-  padding: 14px;
-  z-index: 5000;
-}
-
-.modalContent {
-  background: white;
-  max-width: 600px;
-  width: 100%;
+  background: rgba(2,6,23,0.55);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index: 1100;
   padding: 22px;
-  border-radius: 18px;
-  text-align: left;
-  animation: popIn .25s ease forwards;
-  box-shadow: 0 20px 45px rgba(0,0,0,.25);
 }
 
-.modalContent img,
-.modalContent iframe {
-  width: 100%;
-  max-height: 380px;
-  object-fit: contain;
-  border-radius: 12px;
+/* modal: column layout so video stays fixed and text scrolls */
+.modalContent{
+  width: min(980px, 98%);
+  max-height: calc(100vh - 64px);
+  background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(250,250,250,0.99));
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(2,6,23,0.4);
+  padding: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* main container doesn't scroll; inner part will */
 }
 
-.modalContent h3 {
-  margin-top: 16px;
-  font-size: 1.3rem;
-  font-weight: 800;
-}
-
-.modalContent .category {
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: #2b6cff;
-  margin-bottom: 6px;
-}
-
-.modalContent p {
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.modalContent button {
-  width: 100%;
-  margin-top: 12px;
-  background: #e63946;
-  color: white;
+/* close button */
+.closeBtn{
+  position: absolute;
+  right: 12px;
+  top: 12px;
   border: none;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: 700;
+  background: rgba(255,255,255,0.9);
+  padding: 8px 10px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: .2s;
+  font-weight: 700;
+  z-index: 30;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.08);
 }
 
-.modalContent button:hover {
-  background: #c72e3a;
+/* video wrapper: responsive ratio and limited height */
+.embedWrapper{
+  width: 100%;
+  flex: 0 0 auto;
+  max-height: 70vh; /* won't exceed viewport */
+  background: #000;
+  position: relative;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  overflow: hidden;
 }
 
-/* ---------- ANIMACIONES ---------- */
-@keyframes popIn {
-  from { opacity: 0; transform: scale(.85); }
-  to { opacity: 1; transform: scale(1); }
+/* 16:9 inside */
+.embedWrapper::before{
+  content: "";
+  display: block;
+  padding-top: 56.25%;
 }
 
-@keyframes fadeOverlay {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.embedWrapper iframe{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
-/* ---------- RESPONSIVE ---------- */
-@media (max-width: 600px) {
+/* image preview */
+.modalImage{
+  width:100%;
+  max-height: 60vh;
+  object-fit: cover;
+  display:block;
+}
 
-  .storiesSection h2 {
-    font-size: 1.6rem;
-  }
+/* modal textual body: becomes scrollable if content exceeds available height */
+.modalBody{
+  padding: 18px;
+  overflow: auto;
+  flex: 1 1 auto;
+}
 
-  .modalContent {
-    padding: 16px;
-  }
+/* textual styles */
+.modalTitle{
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
 
-  .modalContent img,
-  .modalContent iframe {
-    max-height: 240px;
-  }
+.modalCategory{
+  margin:0 0 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.modalDesc{
+  color: #111827;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* fallback */
+.noEmbed{
+  padding: 26px;
+  text-align:center;
+  color: var(--muted);
+}
+
+/* --------- Fix: eliminar scrollbars y forzar ratio/recorte de medias ---------- */
+
+/* Asegura que el contenedor visual de la card no produzca scroll */
+.cardWrap,
+.cardWrap img,
+.cardWrap video,
+.cardWrap iframe {
+  overflow: hidden !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Forzar una altura uniforme de preview en las cards y recortar contenido */
+.cardWrap .media {
+  height: 220px;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  display: block;
+}
+
+/* Miniaturas y videos llenan el contenedor y se recortan (no generan scroll) */
+.cardWrap img,
+.cardWrap video,
+.cardWrap iframe {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block;
+  border: 0;
+}
+
+/* Ocultar scrollbars que a veces aparecen en WebKit/Blink dentro de thumbs */
+.cardWrap::-webkit-scrollbar,
+.cardWrap .media::-webkit-scrollbar,
+.modalContent::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+/* Firefox: quitar scrollbar reservado */
+.cardWrap,
+.cardWrap .media,
+.modalContent {
+  scrollbar-width: none;
+}
+
+/* Asegura que el wrapper del embed en modal no produzca scroll y mantenga ratio */
+.embedWrapper {
+  overflow: hidden !important;
+  max-height: 70vh;
+}
+
+/* Evitar bordes o offsets extra que creen barras por colapsos */
+.modalContent,
+.modalOverlay {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Si StoryCard es componente externo que pone su propio wrapper .media, compatibilidad */
+.storyCardMedia,
+.story-card__media {
+  height: 220px;
+  overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px){
+  .embedWrapper::before{ padding-top: 56.25%; }
+  .embedWrapper{ max-height: 58vh; }
+  .modalImage{ max-height: 45vh; }
+  .cardWrap .media { height: 160px; }
+}
+
+@media (max-width: 520px){
+  .headerRow{ flex-direction: column; align-items: flex-start; gap: 12px; }
+  .filterButtons{ width:100%; overflow-x:auto; padding-bottom:6px; }
+  .modalContent{ width: 100%; max-height: calc(100vh - 24px); border-radius: 10px; }
+  .closeBtn{ right: 8px; top: 8px; }
+  .embedWrapper{ max-height: 50vh; }
+  .modalBody{ padding: 14px; }
+  .cardWrap .media { height: 130px; }
 }
