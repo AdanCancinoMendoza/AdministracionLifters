@@ -14,7 +14,7 @@ import LiveResultsSection from "./views/users/resultadosLive.tsx";
 import RegistroCompetidor from "./views/users/inscripciones.tsx";
 import Competencias from "./views/users/competencias.tsx";
 
-// Admin
+// Admin views (ya existentes)
 import Dashboard from "./views/admin/Dashboard";
 import EditarInicio from "./views/admin/Inicio/Editar";
 import Ganadores from "./views/admin/Inicio/Ganadores";
@@ -25,12 +25,10 @@ import VerCompetidores from "./views/admin/Competidores/VerCompetidores";
 import CrearCompetencia from "./views/admin/Competencias/CrearCompetencia";
 import ListaCompetencias from "./views/admin/Competencias/ListaCompetencias";
 import AsignarJueces from "./views/admin/Competencias/AsignarJueces";
-import CrearInforme from "./views/admin/Informacion/Crear";
 import VerInformes from "./views/admin/Informacion/Ver";
 import Resultados from "./views/admin/Resultados";
 import Lives from "./views/admin/Envivos/AdminLivePanel";
 import TiemposyPesos from "./views/admin/Envivos/OrdenCompetidorTiempos";
-import LoginAdmin from "./views/admin/lodin.tsx";
 
 // Jueces
 import LoginJueces from "./views/jueces/login";
@@ -43,6 +41,9 @@ import InformacionScreen from "./views/jueces/perfil";
 // Componentes extra
 import PrivateRoute from "../backend/src/private/privateJuez.tsx";
 import NotFound from "./views/NotFound";
+
+// Admin login & guard
+import AdminModule, { AdminAuthGuard } from "./views/admin/AdminModule";
 
 // ----------------- PwaManager (MUST be inside Router) -----------------
 // Gestiona inyección del manifest, registro del SW y mostrar el prompt UNA VEZ tras login.
@@ -106,16 +107,14 @@ function AdminLayout() {
           <Route path="/competencias/crearcompetencia" element={<CrearCompetencia />} />
           <Route path="/competencias/listacompetencias" element={<ListaCompetencias />} />
           <Route path="/competencias/asignarjueces" element={<AsignarJueces />} />
-          <Route path="/informacion/crear" element={<CrearInforme />} />
           <Route path="/informacion/ver" element={<VerInformes />} />
           <Route path="/resultados" element={<Resultados />} />
           <Route path="/lives" element={<Lives />} />
           <Route path="/gestionlives" element={<TiemposyPesos />} />
-          <Route path="/loginAdmin" element={<LoginAdmin />} />
           <Route path="/404" element={<NotFound />} />
 
-          {/* Redirección por defecto */}
-          <Route path="/" element={<Navigate to="/usuario/inicio" replace />} />
+          {/* Redirección por defecto dentro del admin */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           {/* Error 404 dentro del admin */}
           <Route path="*" element={<Navigate to="/404" replace />} />
@@ -221,7 +220,18 @@ function App() {
         />
 
         {/* -------------------- ADMINISTRADOR -------------------- */}
-        <Route path="/*" element={<AdminLayout />} />
+        {/* Login admin (componente con diseño + guarda 24h) */}
+        <Route path="/loginAdmin" element={<AdminModule />} />
+
+        {/* Todas las rutas admin quedan protegidas por AdminAuthGuard */}
+        <Route
+          path="/*"
+          element={
+            <AdminAuthGuard>
+              <AdminLayout />
+            </AdminAuthGuard>
+          }
+        />
 
         {/* -------------------- ERROR GLOBAL -------------------- */}
         <Route path="*" element={<Navigate to="/404" replace />} />

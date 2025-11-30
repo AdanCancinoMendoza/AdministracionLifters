@@ -274,9 +274,9 @@
 }
 
 /* ---------------- PRÓXIMA COMPETENCIA (2x2) ---------------- */
-.usersInicio .videosSection{ background: linear-gradient(135deg, rgba(159,184,255,0.07), rgba(255,255,255,0.95)); }
+.usersInicio .videosSection{ background: linear-gradient(135deg, rgba(0, 68, 255, 0.07), rgba(255,255,255,0.95)); }
 .usersInicio .card{ display:grid; gap:16px; grid-template-columns: 1fr; align-items:start; padding:18px; border-radius:12px; }
-.usersInicio .cardCompetencia{ background: var(--card-bg); --comp-height:260px; --comp-gap:16px; padding:18px; box-shadow: var(--shadow-sm); }
+.usersInicio .cardCompetencia{ background: var(--card-bg); --comp-height:260px; --comp-gap:16px; padding:18px;  box-shadow: var(--shadow-sm); }
 
 /* Desktop grid unchanged */
 @media (min-width: 980px) {
@@ -314,9 +314,10 @@
   .usersInicio .imagenCompetencia{
     width:100%;
     height:auto;
-    max-height:380px;
+    max-height:50px;
     object-fit: contain;   /* muestra imagen completa en móvil */
     display:block;
+    background-color: #000;
     border-radius:12px;
     box-shadow: var(--shadow-sm);
   }
@@ -349,14 +350,14 @@
 .usersInicio .calendario{ background: white; padding:10px; border-radius:10px; box-shadow: var(--shadow-sm); display:flex; flex-direction:column; height: calc(var(--comp-height) - 12px); overflow:hidden; }
 
 /* Rects container */
-.usersInicio .eventRects{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; justify-content:flex-start; }
+.usersInicio .eventRects{ display:flex; gap:5px; flex-wrap:wrap; align-items:flex-start; justify-content:flex-start; }
 
 /* Each rect: allow multiline and prevent overflow */
 .usersInicio .eventRect{
   display:flex;
   gap:12px;
   align-items:flex-start; /* important: allow multiline date text */
-  padding:16px 18px;
+  padding:10px 18px;
   border-radius:10px;
   flex: 1 1 0;
   min-width: var(--rect-min-width);
@@ -425,7 +426,7 @@
   .usersInicio .rectLabel{ font-size:0.96rem; }
   .usersInicio .rectDate{ font-size:0.86rem; }
   .usersInicio .rectIcon{ width:42px; height:42px; }
-  .usersInicio .eventRect{ padding:12px 14px; min-width: 100%; flex: 1 1 100%; }
+  .usersInicio .eventRect{ padding:1px;  min-width: 100%; flex: 1 1 100%; }
 }
 
 /* ---------------- UBICACION / MAP ---------------- */

@@ -1,35 +1,58 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
+/* ---------------- Variables y base ---------------- */
+:root{
+  --bg-header: rgba(255, 255, 255, 0.85); /* tu color original */
+  --header-shadow: 0 4px 25px rgba(0,0,0,0.1);
+  --glass-blur: blur(20px) saturate(180%);
+  --accent-desktop: #2d3748; /* tu active color original */
+  --muted: #718096; /* color icon/text secundario */
+  --mobile-drawer-width: 320px;
+  --z-overlay: 1001;
+  --z-drawer: 1002;
+  --z-header-btn: 1003;
+  --radius: 14px;
+  --transition-ease: cubic-bezier(0.25,0.46,0.45,0.94);
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+/* fuente base */
 .mainHeader {
   font-family: 'Poppins', sans-serif;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 40px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+  background: var(--bg-header);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--header-shadow);
   position: sticky;
   top: 0;
   z-index: 1000;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: all 0.35s var(--transition-ease);
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+/* header oculto al hacer scroll */
 .hide {
   transform: translateY(-100%);
   opacity: 0;
 }
 
+/* logo / contenedor */
 .logoContainer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  gap: 12px;
 }
 
-.logoLink { transition: transform 0.3s ease; }
+.logoLink { transition: transform 0.3s ease; display:inline-flex; align-items:center; }
 .logoLink:hover { transform: scale(1.05); }
 
 .logoImg {
@@ -37,11 +60,12 @@
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  display:block;
 }
 
-/* BOTÓN HAMBURGUESA: oculto en desktop */
+/* BOTÓN HAMBURGUESA: POR DEFECTO NO SE MUESTRA EN PC - fuerza con !important */
 .menuBtn {
-  display: none;
+  display: none !important; /* Garantía: oculto en escritorio */
   background: rgba(255,255,255,0.9);
   border: 1px solid rgba(0,0,0,0.1);
   cursor: pointer;
@@ -50,11 +74,14 @@
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0,0,0,0.08);
   backdrop-filter: blur(10px);
+  z-index: var(--z-header-btn);
+  align-items: center;
+  justify-content: center;
 }
 .menuBtn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); background: rgba(255,255,255,1); }
 .menuBtn svg { width:24px; height:24px; color:#333; }
 
-/* NAV DESKTOP */
+/* NAV DESKTOP (visible en PC) */
 .navLinks {
   display: flex;
   gap: 8px;
@@ -66,6 +93,7 @@
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   border: 1px solid rgba(255,255,255,0.5);
   z-index: 998;
+  align-items: center;
 }
 
 .navLinks a {
@@ -82,11 +110,10 @@
 .activeNav::after { content:""; position:absolute; bottom:4px; left:50%; transform: translateX(-50%); width:60%; height:2px; border-radius:1px; background: rgba(0,0,0,0.2); }
 .activeNav svg { color:#2d3748 !important; }
 
-/* Ocultar nav desktop cuando mobile está abierto */
+/* evitar mostrar nav desktop cuando el mobile está activo (clase toggled en JSX) */
 .hideDesktopNav { display: none !important; }
 
 /* ===== POR DEFECTO: ocultar menú móvil y overlay en desktop ===== */
-/* Usamos transform para desplazar (no right), y display:none por defecto */
 .mobileNav {
   display: none;               /* oculto fuera de mobile */
   pointer-events: none;
@@ -103,17 +130,22 @@
   padding: 90px 0 30px;
   gap: 8px;
   transform: translateX(100%); /* fuera de pantalla */
-  transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
-  z-index: 1002;
+  transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), visibility 0.35s;
+  z-index: var(--z-drawer);
   border-left: 1px solid rgba(255,255,255,0.3);
+  visibility: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Cuando se abre, transform se vuelve 0 (solo tendrá efecto dentro de media query donde display:flex) */
+/* Cuando se abre, transform se vuelve 0 */
 .mobileNav.open {
   transform: translateX(0);
   pointer-events: auto;
+  visibility: visible;
 }
 
+/* Links del drawer móviles */
 .mobileNav a {
   font-size:1rem; font-weight:500; color:#4a5568; text-decoration:none; display:flex; align-items:center; gap:15px;
   padding:18px 25px; margin:0 15px; border-radius:14px; transition:all 0.3s ease; position:relative; overflow:hidden;
@@ -125,7 +157,7 @@
 .mobileNav a:nth-child(4) { animation-delay: 0.25s; }
 .mobileNav a:nth-child(5) { animation-delay: 0.3s; }
 
-.mobileNav a::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent); transition:left 0.5s ease; }
+.mobileNav a::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent); transition:left 0.45s ease; }
 .mobileNav a:hover::before { left:100%; }
 .mobileNav a:hover { background: rgba(255,255,255,0.8); color:#2d3748; transform: translateX(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 .mobileNav a svg { width:20px; height:20px; transition: transform 0.3s ease; color:#718096; }
@@ -135,7 +167,7 @@
 .activeNavMobile::after { content:""; position:absolute; right:15px; top:50%; transform: translateY(-50%); width:4px; height:60%; border-radius:2px; background: rgba(0,0,0,0.2); }
 .activeNavMobile svg { color:#2d3748 !important; }
 
-/* Header inside mobile nav */
+/* Header dentro del drawer */
 .mobileNavHeader {
   position:absolute; top:0; left:0; right:0; padding:20px 25px; background: rgba(255,255,255,0.9);
   backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); color:#2d3748; display:flex; align-items:center; gap:12px;
@@ -144,6 +176,7 @@
 .mobileNavHeader img { height:40px; }
 .mobileNavHeader span { font-weight:600; font-size:1.1rem; }
 
+/* close button dentro del drawer */
 .closeBtn { background: rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.1); color:#4a5568; cursor:pointer; margin-left:auto; padding:8px; border-radius:8px; transition: all 0.3s ease; display:flex; align-items:center; justify-content:center; backdrop-filter: blur(10px); }
 .closeBtn:hover { background: rgba(0,0,0,0.1); transform: scale(1.05); }
 
@@ -153,9 +186,11 @@
   pointer-events: none;
   position: fixed;
   top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.4); /* tu color original */
   backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-  z-index: 1001; opacity:0; transition: opacity 0.4s ease;
+  z-index: var(--z-overlay);
+  opacity:0;
+  transition: opacity 0.4s ease;
 }
 .mobileNavOverlay.active { display:block; pointer-events:auto; opacity:1; }
 
@@ -164,12 +199,13 @@
 
 /* ===== Mostrar menú móvil SOLO en <=768px ===== */
 @media (max-width: 768px) {
-  .menuBtn { display: block; }
+  /* FORZAR que se muestre el botón en móvil */
+  .menuBtn { display: inline-flex !important; }
   .navLinks { display: none; }
 
   /* mobileNav visible y funciona con transform */
-  .mobileNav { display: flex; transform: translateX(100%); pointer-events: none; }
-  .mobileNav.open { transform: translateX(0); pointer-events: auto; }
+  .mobileNav { display: flex; transform: translateX(100%); pointer-events: none; visibility: hidden; }
+  .mobileNav.open { transform: translateX(0); pointer-events: auto; visibility: visible; }
 
   .mobileNavOverlay { display:block; pointer-events:none; opacity:0; }
   .mobileNavOverlay.active { pointer-events:auto; opacity:1; }
@@ -185,6 +221,15 @@
   .mobileNav a { padding:16px 20px; margin:0 12px; font-size:0.95rem; }
   .userMain { padding:15px; }
 }
+
+/* Accessibility focus */
+.menuBtn:focus, .closeBtn:focus, .mobileNav a:focus, .navLinks a:focus {
+  outline: 3px solid rgba(0,123,255,0.12);
+  outline-offset: 2px;
+}
+
+/* prevent unwanted horizontal scroll */
+html, body { overflow-x: hidden; }
 
 /* Animations */
 @keyframes slideIn { from { opacity:0; transform: translateX(30px);} to { opacity:1; transform: translateX(0);} }

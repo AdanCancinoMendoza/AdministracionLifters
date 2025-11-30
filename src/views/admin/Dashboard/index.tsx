@@ -5,6 +5,7 @@ import { Users, FileText, DollarSign, Activity, Clock } from "lucide-react";
 import styles from "../../../styles/Dashboard.module.css";
 
 const Dashboard = () => {
+  const ApiCompetidor = "http://localhost:3001/api/competidor";
   const totalCompetidores = 120;
   const totalInformes = 75;
   const competenciasActivas = 3;
