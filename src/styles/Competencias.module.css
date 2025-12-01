@@ -9,6 +9,7 @@
   font-family: Inter, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* SIDEBAR */
 .sidebar {
   background: rgba(0, 0, 0, 0.03);
   border-radius: 12px;
@@ -16,6 +17,7 @@
   display:flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 200px;
 }
 
 .brand{
@@ -24,7 +26,11 @@
   letter-spacing: -0.02em;
 }
 
-.filterRow{ display:flex; gap:8px; }
+.filterRow{ 
+  display:flex; 
+  gap:8px; 
+  align-items:center;
+}
 .filterBtn{
   flex:1;
   padding:8px 10px;
@@ -34,14 +40,29 @@
   color: inherit;
   cursor:pointer;
   font-weight:600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.filterBtn:hover{ transform: translateY(-1px); }
-.active{ background: linear-gradient(90deg,#ffffff,#ebebeb); box-shadow: 0 6px 18px rgba(255, 255, 255, 0.18); }
+.filterBtn:hover{ transform: translateY(-1px); transition: transform .12s; }
+.active{ 
+  background: linear-gradient(90deg,#ffffff,#ebebeb); 
+  box-shadow: 0 6px 18px rgba(255, 255, 255, 0.18); 
+}
 
-.listPreview{ margin-top:6px; display:flex; flex-direction:column; gap:10px; overflow:auto; max-height:420px; padding-right:6px; }
+.listPreview{ 
+  margin-top:6px; 
+  display:flex; 
+  flex-direction:column; 
+  gap:10px; 
+  overflow:auto; 
+  max-height:420px; 
+  padding-right:6px; 
+}
 .previewCard{ display:flex; gap:8px; align-items:center; padding:8px; border-radius:8px; cursor:pointer; transition:background .15s; }
 .previewCard:hover{ background: rgba(255,255,255,0.02); }
-.thumb{ width:72px; height:56px; object-fit:cover; border-radius:6px; }
+.thumb{ width:72px; height:56px; object-fit:cover; border-radius:6px; flex-shrink:0; }
 .previewInfo{ flex:1 }
 .previewTitle{ font-size:0.95rem; font-weight:700 }
 .previewMeta{ font-size:0.8rem; opacity:0.8 }
@@ -51,26 +72,29 @@
 .legend{ margin-top:auto; font-size:0.85rem; display:flex; flex-direction:column; gap:6px; color: #000000; }
 .dot{ width:10px;  height:10px; display:inline-block; background:#000000; border-radius:50%; margin-right:8px; vertical-align:middle }
 
+/* CONTENIDO PRINCIPAL */
 .content{ display:flex; flex-direction:column; gap:18px; }
-.calendarWrap{ background: rgba(255,255,255,0.02); padding:12px; border-radius:12px; }
+.calendarWrap{ background: rgba(255,255,255,0.02); padding:12px; border-radius:12px; overflow:hidden; }
 
+/* Cards */
 .cardsGrid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap:18px; }
 .card{ background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
 .cardMedia img{ width:100%; height:180px; object-fit:cover; display:block }
 .cardBody{ padding:14px; display:flex; flex-direction:column; gap:10px }
 .cardTitle{ margin:0; font-size:1.05rem }
 .cardMeta{ font-size:0.85rem; opacity:0.85 }
-.dateRow{ display:flex; justify-content:space-between; gap:12px; font-size:0.85rem }
+.dateRow{ display:flex; justify-content:space-between; gap:12px; font-size:0.85rem; flex-wrap:wrap }
 .cardActions{ display:flex; gap:8px }
-.btn{ background: linear-gradient(90deg,#00d9ff,#ff0000); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700 }
+.btn{ background: linear-gradient(90deg,#2563eb,#1e40af); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700 }
 .btnOutline{ background:transparent; border:1px solid rgba(255,255,255,0.08); color:inherit; padding:8px 12px; border-radius:8px; cursor:pointer }
 
+/* small map inside card */
 .mapSmall{ margin-top:10px; border-radius:8px; overflow:hidden; height:140px }
 .mapSmall iframe{ width:100%; height:100%; border:0 }
 
-/* Modal */
+/* Modal (resultados) */
 .modalBackdrop{ position:fixed; inset:0; background:rgba(2,6,23,0.6); display:flex; align-items:center; justify-content:center; z-index:60 }
-.modal{ width:min(1000px,95%); background:linear-gradient(180deg,#bdbdbd,#dce9ff); border-radius:12px; padding:14px; box-shadow: 0 10px 40px rgba(2,6,23,0.6); color:#000000 }
+.modal{ width:min(1000px,95%); background:linear-gradient(180deg,#bdbdbd,#dce9ff); border-radius:12px; padding:14px; box-shadow: 0 10px 40px rgba(2,6,23,0.6); color:#000000; position:relative; }
 .closeBtn{ position:absolute; right:18px; top:18px; background:rgb(255, 255, 255); border:0; color:#000000; font-size:1.6rem; cursor:pointer }
 .modalContent{ display:flex; gap:18px }
 .modalLeft img{ width:420px; max-width:320px; height:200px; object-fit:cover; border-radius:8px }
@@ -85,8 +109,226 @@
 .resultsTable{ width:100%; border-collapse:collapse; margin-top:8px }
 .resultsTable th, .resultsTable td{ padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.04) }
 
-@media (max-width:900px){
-  .page{ grid-template-columns: 1fr; }
+/* ------------------------
+   FULLCALENDAR GLOBAL OVERRIDES (necesario con CSS Modules usar :global)
+   ------------------------ */
+:global(.fc) {
+  font-family: inherit;
+  color: inherit;
+  --fc-border-color: rgba(0,0,0,0.06);
+}
+
+/* toolbar layout */
+:global(.fc .fc-toolbar) {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+  justify-content:space-between;
+  margin-bottom:6px;
+}
+
+/* cada "chunk" de la toolbar */
+:global(.fc .fc-toolbar-chunk) {
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+/* botones: destacados, color azul con texto blanco */
+:global(.fc .fc-button) {
+  padding:7px 10px;
+  border-radius:10px;
+  border: none;
+  background: linear-gradient(90deg,#2563eb,#1e40af);
+  color: #ffffff;
+  font-weight:700;
+  font-size:0.95rem;
+  min-width: auto;
+  height: auto;
+  line-height: 1;
+  box-shadow: 0 6px 18px rgba(30,64,175,0.18);
+  transition: transform .08s, box-shadow .12s, filter .12s;
+}
+
+/* hover / foco */
+:global(.fc .fc-button:hover) {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 10px 22px rgba(30,64,175,0.22);
+  filter: brightness(1.02);
+}
+
+/* foco accesible */
+:global(.fc .fc-button:focus) {
+  outline: 3px solid rgba(37,99,235,0.18);
+  outline-offset: 2px;
+}
+
+/* botón activo (más claro) */
+:global(.fc .fc-button.fc-button-active),
+:global(.fc .fc-button[aria-pressed="true"]) {
+  background: linear-gradient(90deg,#1e3a8a,#3b82f6);
+  box-shadow: 0 10px 28px rgba(14,165,233,0.14);
+}
+
+/* titulo del calendario */
+:global(.fc .fc-toolbar-title) {
+  font-size: 1.05rem;
+  font-weight:700;
+  padding: 6px 0;
+  margin: 0 8px;
+}
+
+/* evento en la celda: tamaño y truncado por defecto (no mostramos texto gigante aquí) */
+:global(.fc .fc-event .fc-event-title),
+:global(.fc .fc-event .fc-event-main-frame) {
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* cursor pointer para indicar interactividad */
+:global(.fc .fc-daygrid-event) {
+  cursor: pointer;
+}
+
+/* tamaño de las celdas */
+:global(.fc .fc-daygrid-day-frame) {
+  padding: 6px;
+}
+
+/* ajustes del header en pantallas pequeñas (usa varias filas cuando hace falta) */
+@media (max-width:900px) {
+  .page{ grid-template-columns: 1fr; padding:16px; }
   .modalContent{ flex-direction:column }
   .modalLeft img{ max-width:100% }
+  .sidebar{ order: 2; }
+  .content{ order: 1; }
+  .calendarWrap{ padding:10px; }
+  :global(.fc .fc-toolbar) {
+    gap:6px;
+  }
+  :global(.fc .fc-toolbar-chunk) { flex-wrap:wrap; }
+  :global(.fc .fc-button) {
+    padding:6px 8px;
+    font-size:0.92rem;
+  }
+}
+
+/* ajustes para móviles pequeños: mantenemos títulos legibles pero abrimos modal para detalle */
+@media (max-width:600px) {
+  .page{ grid-template-columns: 1fr; padding:12px; gap:12px; }
+  .brand{ font-size:1rem }
+  .filterBtn{ font-size:0.85rem; padding:6px 8px; }
+  .thumb{ width:64px; height:48px; }
+  .cardMedia img{ height:140px; }
+
+  :global(.fc .fc-toolbar) { flex-direction: row; align-items: center; gap:6px; }
+  :global(.fc .fc-toolbar-chunk:first-child) { order: 1; }
+  :global(.fc .fc-toolbar-chunk:nth-child(2)) { order: 2; flex:1; justify-content:center; }
+  :global(.fc .fc-toolbar-chunk:last-child) { order: 3; }
+
+  :global(.fc .fc-button) { padding:6px 8px; font-size:0.86rem; border-radius:10px; }
+
+  /* no inflamos el texto dentro de las celdas: usamos truncado por defecto
+     y delegamos la lectura completa al modal que aparece al tocar. */
+  :global(.fc .fc-event .fc-event-title) {
+    font-size:0.78rem;
+    font-weight:600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :global(.fc .fc-daygrid-event) {
+    margin: 3px 0;
+    border-radius:6px;
+  }
+
+  :global(.fc .fc-daygrid-day) { min-height:76px; }
+}
+
+/* ------------------------
+   MODAL PEQUEÑO PARA EVENTOS (cuando el usuario toca un evento)
+   ------------------------ */
+.eventModalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2,6,23,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80;
+  padding: 12px;
+}
+
+.eventModal {
+  width: min(420px, 96%);
+  background: white;
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 18px 48px rgba(2,6,23,0.45);
+  position: relative;
+  color: #0b1220;
+}
+
+.closeSmallBtn {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #111827;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.closeSmallBtn:hover { background: rgba(0,0,0,0.04); }
+
+.eventModalBody { display:flex; flex-direction:column; gap:8px; padding-top:6px; }
+
+.eventModalTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #0f1724;
+}
+
+.eventModalType {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.eventModalMeta { font-size: 0.85rem; color: #555; }
+
+.eventModalActions {
+  margin-top: 8px;
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+}
+
+/* botones dentro del modal (consistentes con el resto) */
+.eventModal .btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  border: none;
+  background: linear-gradient(90deg,#2563eb,#1e40af);
+  color: #fff;
+  cursor: pointer;
+}
+
+.eventModal .btnOutline {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.08);
+  color: inherit;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
 }

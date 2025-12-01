@@ -1,8 +1,8 @@
-// src/views/users/resultadosLive.tsx
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import styles from '../../styles/UsersLiveResults.module.css';
 import Footer from "../../components/users/footer";
 import { io, Socket } from "socket.io-client";
+import LoadingModalJuez from "../jueces/LoadingModalJuez";
 
 type Competencia = {
   id_competencia: number;
@@ -20,7 +20,7 @@ type AttemptApi = {
   exercise_id: number;
   attempt_number: number;
   weight_kg?: string | null;
-  approved?: number | null; // 1 | 0 | null
+  approved?: number | null;
   [k: string]: any;
 };
 
@@ -51,7 +51,6 @@ const COMPETITORS_API = `${BASE}/api/competidor`;
 const ATTEMPTS_BY_COMPETITOR = `${BASE}/api/attempts/by-competitor`;
 const SOCKET_URL = BASE;
 
-// Mapeo visual para los tres ejercicios (adaptado al layout de la vista)
 const EX_NAME: Record<number, string> = { 1: "Arranque", 2: "Press Banca", 3: "Peso Muerto" };
 
 type Repeticion = { valor: string; estado: "APROBADO" | "REPROBADO" | "PENDIENTE"; attemptId?: number | null };
@@ -98,18 +97,12 @@ export default function LiveResultsSection(): JSX.Element {
   const [competencias, setCompetencias] = useState<Competencia[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // streams activos
   const [activeStreams, setActiveStreams] = useState<Record<number, LiveStream>>({});
-
-  // Competidores por competencia
   const [competitorsByComp, setCompetitorsByComp] = useState<Record<number, Competidor[]>>({});
-
-  // results: [compId][competitorId] -> perExercise (1..3 -> [3 reps])
   const [resultsByComp, setResultsByComp] = useState<Record<number, Record<number, Record<number, Repeticion[]>>>>({});
 
   const socketRef = useRef<Socket | null>(null);
 
-  // carga competencias
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -131,7 +124,6 @@ export default function LiveResultsSection(): JSX.Element {
     return () => { mounted = false; };
   }, []);
 
-  // carga streams activos (polling cada 20s para mantener "en vivo")
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -165,7 +157,6 @@ export default function LiveResultsSection(): JSX.Element {
     return () => { mounted = false; clearInterval(timer); };
   }, []);
 
-  // decide qué competencias mostrar (prefiere activas; si no hay, muestra las del día)
   const liveCompetitions = useMemo(() => {
     const activeIds = Object.keys(activeStreams).map(k => Number(k));
     if (activeIds.length > 0) {
@@ -174,7 +165,6 @@ export default function LiveResultsSection(): JSX.Element {
     return competencias.filter(c => isSameDayISO(c.fecha_evento));
   }, [competencias, activeStreams]);
 
-  // cuando cambian las liveCompetitions, traemos competidores y sus attempts para cada competencia
   useEffect(() => {
     let mounted = true;
     const ac = new AbortController();
@@ -182,12 +172,10 @@ export default function LiveResultsSection(): JSX.Element {
     const loadForCompetitions = async () => {
       try {
         const comps = liveCompetitions;
-        // limpiar
         const newCompetitorsByComp: Record<number, Competidor[]> = {};
         const newResultsByComp: Record<number, Record<number, Record<number, Repeticion[]>>> = {};
 
         await Promise.all(comps.map(async (comp) => {
-          // obtener competidores para esa competencia
           try {
             const r = await fetch(COMPETITORS_API, { signal: ac.signal });
             if (!r.ok) {
@@ -199,7 +187,6 @@ export default function LiveResultsSection(): JSX.Element {
             const filtered = (Array.isArray(arr) ? arr : []).filter(c => Number(c.id_competencia) === Number(comp.id_competencia));
             newCompetitorsByComp[comp.id_competencia] = filtered;
 
-            // por cada competidor traer attempts
             const perCompResults: Record<number, Record<number, Repeticion[]>> = {};
             await Promise.all(filtered.map(async (compItem) => {
               const perExercise = defaultPerExercise();
@@ -220,7 +207,6 @@ export default function LiveResultsSection(): JSX.Element {
                   perExercise[ex][slotIdx] = { valor, estado, attemptId: a.id ?? null };
                 }
               } catch (err) {
-                // keep defaults
               } finally {
                 perCompResults[compItem.id_competidor] = perExercise;
               }
@@ -245,7 +231,6 @@ export default function LiveResultsSection(): JSX.Element {
     return () => { mounted = false; ac.abort(); };
   }, [liveCompetitions]);
 
-  // SOCKET: conectar una sola vez y hacer join a cada competencia mostrada
   useEffect(() => {
     if (liveCompetitions.length === 0) return;
     const s = io(SOCKET_URL, { transports: ["websocket"] });
@@ -253,7 +238,6 @@ export default function LiveResultsSection(): JSX.Element {
 
     s.on("connect", () => {
       try {
-        // unir a cada room de competencia activa para recibir intentos actualizados
         for (const c of liveCompetitions) {
           s.emit("join", { id_competencia: c.id_competencia });
         }
@@ -265,7 +249,6 @@ export default function LiveResultsSection(): JSX.Element {
       const att: AttemptApi = payload.attempt ?? payload;
       if (!att) return;
       const compId = Number(att.id_competencia);
-      // solo si estamos mostrando esa competencia
       if (!liveCompetitions.some(c => Number(c.id_competencia) === compId)) return;
 
       setResultsByComp(prev => {
@@ -287,9 +270,7 @@ export default function LiveResultsSection(): JSX.Element {
 
     s.on("attempt_update", handleAttempt);
     s.on("vote_update", handleAttempt);
-    // backend puede emitir 'competitor:selected' o 'next' — en esos casos recargamos attempts (simplemente trigger re-fetch)
     s.on("competitor:selected", () => {
-      // small re-fetch: iterate liveCompetitions and reload attempts for their competitors
       (async () => {
         try {
           const updatedResults: Record<number, Record<number, Record<number, Repeticion[]>>> = { ...resultsByComp };
@@ -329,7 +310,6 @@ export default function LiveResultsSection(): JSX.Element {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveCompetitions, competitorsByComp]);
 
-  // helpers de render
   const getColor = (estado: Repeticion["estado"]) => {
     switch (estado) {
       case "APROBADO": return "#4CAF50";
@@ -343,9 +323,10 @@ export default function LiveResultsSection(): JSX.Element {
   const nameOf = (c?: Competidor | null) => (!c ? "—" : `${c!.nombre}${c!.apellidos ? " " + c!.apellidos : ""}`);
 
   if (loading) {
+    // mostramos modal de carga mientras carga inicial
     return (
       <section className={styles.container}>
-        <div className={styles.centerSpinner}>Cargando resultados...</div>
+        <LoadingModalJuez open={true} message="Cargando resultados..." variant="spinner" size="md" backdropClose={false} />
       </section>
     );
   }
@@ -363,7 +344,6 @@ export default function LiveResultsSection(): JSX.Element {
             </div>
           </div>
           <div className={styles.emptyRight}>
-            {/* ilustración simple */}
             <svg width="260" height="160" viewBox="0 0 260 160" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="0" y="0" width="260" height="160" rx="12" fill="#f4f7fb"/>
               <g transform="translate(30,28)">
@@ -385,7 +365,6 @@ export default function LiveResultsSection(): JSX.Element {
       {liveCompetitions.map((comp) => {
         const competitors = competitorsByComp[comp.id_competencia] ?? [];
         const resultsMap = resultsByComp[comp.id_competencia] ?? {};
-
         const stream = activeStreams[comp.id_competencia];
 
         return (
@@ -463,6 +442,7 @@ export default function LiveResultsSection(): JSX.Element {
                           {(per[3] || []).map((r, idx) => (
                             <td key={`c${c.id_competidor}-3-${idx}`}><span style={{ background: getColor(r.estado), color: "#fff", padding: "6px 8px", borderRadius: 6, fontWeight: 700 }}>{r.valor}</span></td>
                           ))}
+
                         </tr>
                       );
                     })}
@@ -470,10 +450,8 @@ export default function LiveResultsSection(): JSX.Element {
                 </table>
               </div>
 
-              <div className={styles.actionsRow}>
-                <button className={styles.primary}>Ver todos los resultados</button>
-                <button className={styles.ghost}>Descargar hoja de resultados (CSV)</button>
-              </div>
+              {/* Botones removidos por petición (ver/descargar) */}
+
             </div>
           </article>
         );
