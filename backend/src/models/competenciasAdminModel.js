@@ -1,6 +1,13 @@
+// models/competenciasAdminModel.js
 import db from "../config/db.js";
 
-// Crear competencia
+// Helper para normalizar número o null
+const numOrNull = (val) => {
+  if (val === undefined || val === null || val === "") return null;
+  const n = Number(val);
+  return Number.isFinite(n) ? n : null;
+};
+
 export const crearCompetencia = async (data) => {
   const sql = `
     INSERT INTO competenciasadmin 
@@ -8,28 +15,26 @@ export const crearCompetencia = async (data) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   const [result] = await db.query(sql, [
-    data.nombre,
-    data.tipo,
-    data.foto || null,
-    data.fecha_inicio || null,
-    data.fecha_cierre || null,
-    data.fecha_evento || null,
-    data.categoria,
-    data.costo || 0,
-    data.ubicacion || null,
-    data.lat || null,
-    data.lng || null,
+    data.nombre ?? null,
+    data.tipo ?? null,
+    data.foto ?? null,
+    data.fecha_inicio ?? null,
+    data.fecha_cierre ?? null,
+    data.fecha_evento ?? null,
+    data.categoria ?? null,
+    data.costo !== undefined && data.costo !== null && data.costo !== "" ? Number(data.costo) : 0,
+    data.ubicacion ?? null,
+    numOrNull(data.lat),
+    numOrNull(data.lng),
   ]);
   return result.insertId;
 };
 
-// Obtener todas
 export const obtenerCompetencias = async () => {
   const [rows] = await db.query("SELECT * FROM competenciasadmin");
   return rows;
 };
 
-// Obtener por ID
 export const obtenerCompetenciaPorId = async (id) => {
   const [rows] = await db.query(
     "SELECT * FROM competenciasadmin WHERE id_competencia = ?",
@@ -38,7 +43,6 @@ export const obtenerCompetenciaPorId = async (id) => {
   return rows[0];
 };
 
-// Eliminar por ID
 export const eliminarCompetencia = async (id) => {
   const [result] = await db.query(
     "DELETE FROM competenciasadmin WHERE id_competencia = ?",
@@ -47,7 +51,6 @@ export const eliminarCompetencia = async (id) => {
   return result.affectedRows;
 };
 
-// Actualizar por ID
 export const editarCompetencia = async (id, data) => {
   const sql = `
     UPDATE competenciasadmin SET
@@ -56,17 +59,17 @@ export const editarCompetencia = async (id, data) => {
     WHERE id_competencia = ?
   `;
   const [result] = await db.query(sql, [
-    data.nombre,
-    data.tipo,
-    data.foto || null,
-    data.fecha_inicio || null,
-    data.fecha_cierre || null,
-    data.fecha_evento || null,
-    data.categoria,
-    data.costo || 0,
-    data.ubicacion || null,
-    data.lat || null,
-    data.lng || null,
+    data.nombre ?? null,
+    data.tipo ?? null,
+    data.foto ?? null,
+    data.fecha_inicio ?? null,
+    data.fecha_cierre ?? null,
+    data.fecha_evento ?? null,
+    data.categoria ?? null,
+    data.costo !== undefined && data.costo !== null && data.costo !== "" ? Number(data.costo) : 0,
+    data.ubicacion ?? null,
+    numOrNull(data.lat),
+    numOrNull(data.lng),
     id,
   ]);
   return result.affectedRows;

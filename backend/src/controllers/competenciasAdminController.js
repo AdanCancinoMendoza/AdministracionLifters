@@ -1,3 +1,4 @@
+// controllers/competenciasAdminController.js
 import {
   crearCompetencia,
   obtenerCompetencias,
@@ -6,15 +7,48 @@ import {
   editarCompetencia,
 } from "../models/competenciasAdminModel.js";
 
+// Helper: normalizar número o null
+const numOrNull = (val) => {
+  if (val === undefined || val === null || val === "") return null;
+  const n = Number(val);
+  return Number.isFinite(n) ? n : null;
+};
+
 // Crear
 export const crearCompetenciaController = async (req, res) => {
   try {
+    // Si multer está en la ruta, req.file contendrá la foto
     const foto = req.file ? `/uploads/${req.file.filename}` : null;
-    const data = { ...req.body, foto };
+
+    // Normalizar campos importantes
+    const lat = numOrNull(req.body.lat);
+    const lng = numOrNull(req.body.lng);
+    const costo =
+      req.body.costo !== undefined && req.body.costo !== null && req.body.costo !== ""
+        ? Number(req.body.costo)
+        : 0;
+
+    let ubicacion = req.body.ubicacion ?? null;
+    if (lat !== null && lng !== null) {
+      // Si lat/lng vienen, podemos fijar ubicacion consistente
+      ubicacion = `Lat: ${lat}, Lng: ${lng}`;
+    }
+
+    const data = {
+      ...req.body,
+      foto,
+      lat,
+      lng,
+      costo,
+      ubicacion,
+    };
+
+    console.log("POST /competenciasadmin - crear data:", data);
+
     const id = await crearCompetencia(data);
     res.status(201).json({ message: "Competencia creada correctamente", id });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error al crear competencia:", error);
     res.status(500).json({ error: "Error al crear la competencia" });
   }
 };
@@ -25,7 +59,7 @@ export const obtenerCompetenciasController = async (req, res) => {
     const competencias = await obtenerCompetencias();
     res.json(competencias);
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error al obtener competencias:", error);
     res.status(500).json({ error: "Error al obtener las competencias" });
   }
 };
@@ -38,12 +72,12 @@ export const obtenerCompetenciaController = async (req, res) => {
     if (!competencia) return res.status(404).json({ error: "Competencia no encontrada" });
     res.json(competencia);
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error al obtener competencia por id:", error);
     res.status(500).json({ error: "Error al obtener la competencia" });
   }
 };
 
-//  Actualizar competencia 
+// Actualizar competencia
 export const actualizarCompetenciaController = async (req, res) => {
   try {
     const { id } = req.params;
@@ -54,13 +88,39 @@ export const actualizarCompetenciaController = async (req, res) => {
       return res.status(404).json({ error: "Competencia no encontrada" });
     }
 
-    // Si hay nueva foto, úsala. Si no, conserva la anterior.
-    const foto = req.file
-      ? `/uploads/${req.file.filename}`
-      : competenciaActual.foto;
+    // Foto: si llega nueva foto la usamos, si no, conservamos la anterior
+    const foto = req.file ? `/uploads/${req.file.filename}` : competenciaActual.foto;
 
-    // Preparar datos actualizados
-    const data = { ...req.body, foto };
+    // Normalizar lat/lng/costo
+    const lat = numOrNull(req.body.lat);
+    const lng = numOrNull(req.body.lng);
+    const costo =
+      req.body.costo !== undefined && req.body.costo !== null && req.body.costo !== ""
+        ? Number(req.body.costo)
+        : competenciaActual.costo ?? 0;
+
+    // Ubicación: si lat y lng existen, crear ubicacion consistente; si no, usar la enviada o la existente
+    let ubicacion = req.body.ubicacion ?? competenciaActual.ubicacion ?? null;
+    if (lat !== null && lng !== null) {
+      ubicacion = `Lat: ${lat}, Lng: ${lng}`;
+    }
+
+    // Preparar objeto con los datos normalizados que pasaremos al modelo
+    const data = {
+      nombre: req.body.nombre ?? competenciaActual.nombre,
+      tipo: req.body.tipo ?? competenciaActual.tipo,
+      categoria: req.body.categoria ?? competenciaActual.categoria,
+      costo,
+      ubicacion,
+      lat,
+      lng,
+      fecha_inicio: req.body.fecha_inicio ?? competenciaActual.fecha_inicio,
+      fecha_cierre: req.body.fecha_cierre ?? competenciaActual.fecha_cierre,
+      fecha_evento: req.body.fecha_evento ?? competenciaActual.fecha_evento,
+      foto,
+    };
+
+    console.log("PUT /competenciasadmin/:id - data normalizada:", { id, data });
 
     const filas = await editarCompetencia(id, data);
 
@@ -75,7 +135,6 @@ export const actualizarCompetenciaController = async (req, res) => {
   }
 };
 
-
 // Eliminar
 export const eliminarCompetenciaController = async (req, res) => {
   try {
@@ -84,7 +143,7 @@ export const eliminarCompetenciaController = async (req, res) => {
     if (filas > 0) res.json({ message: "Competencia eliminada" });
     else res.status(404).json({ error: "Competencia no encontrada" });
   } catch (error) {
-    console.error(error);
+    console.error("❌ Error al eliminar competencia:", error);
     res.status(500).json({ error: "Error al eliminar la competencia" });
   }
 };

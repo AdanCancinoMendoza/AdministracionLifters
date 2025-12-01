@@ -1,3 +1,4 @@
+// src/views/admin/ListaCompetencias.tsx
 import React, { useEffect, useState } from "react";
 import {
   MapContainer,
@@ -46,7 +47,7 @@ const marcadorIcono = new L.Icon({
   iconSize: [30, 30],
 });
 
-// LocationMarker con logs
+// LocationMarker con prevención de loops y tolerancia de cambios
 const LocationMarker = ({
   externalPosition,
   onSelect,
@@ -59,20 +60,51 @@ const LocationMarker = ({
   );
   const map = useMap();
 
+  // prevExternal evita re-notificar si la posición externa no cambió significativamente
+  const prevExternalRef = React.useRef<[number, number] | null>(null);
+
+  const isDifferent = (a: [number, number] | null, b: [number, number] | null) => {
+    if (!a && !b) return false;
+    if (!a || !b) return true;
+    const eps = 1e-6;
+    return Math.abs(a[0] - b[0]) > eps || Math.abs(a[1] - b[1]) > eps;
+  };
+
   useMapEvents({
     click(e) {
       const { lat, lng } = e.latlng;
-      console.log("LocationMarker: map clicked ->", lat, lng); // <- LOG
+      console.log("LocationMarker: map clicked ->", lat, lng);
+      // Actualizamos posición local y notificamos al padre
       setPosition([lat, lng]);
+      prevExternalRef.current = [lat, lng]; // sincronizamos prevExternal
       onSelect(lat, lng);
     },
   });
 
   useEffect(() => {
     if (externalPosition) {
-      console.log("LocationMarker: externalPosition changed ->", externalPosition); // <- LOG
-      setPosition(externalPosition);
-      map.setView(externalPosition, 14);
+      console.log(
+        "LocationMarker: externalPosition changed ->",
+        externalPosition,
+        "prev:",
+        prevExternalRef.current
+      );
+
+      // Si es diferente a la anterior externa, actualizamos
+      if (isDifferent(externalPosition, prevExternalRef.current)) {
+        setPosition(externalPosition);
+        try {
+          map.setView(externalPosition, 14);
+        } catch (err) {}
+        // Notificar al padre sólo si la posición externa es distinta (evita loops)
+        onSelect(externalPosition[0], externalPosition[1]);
+        prevExternalRef.current = externalPosition;
+      } else {
+        // aún debemos ajustar view si es necesario, pero no re-notificar
+        try {
+          map.setView(externalPosition, 14);
+        } catch (err) {}
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalPosition]);
@@ -97,6 +129,12 @@ const ListaCompetencias: React.FC = () => {
   });
 
   const [editingMap, setEditingMap] = useState<L.Map | null>(null);
+
+  // Ref para evitar race conditions al leer el estado en submit
+  const editarRef = React.useRef<Competencia | null>(null);
+  useEffect(() => {
+    editarRef.current = editar;
+  }, [editar]);
 
   const cargarCompetencias = async () => {
     try {
@@ -178,7 +216,7 @@ const ListaCompetencias: React.FC = () => {
         ? Number(competencia.lng)
         : null;
 
-    setEditar({
+    const nueva: Competencia = {
       ...competencia,
       lat: isNaN(latNum as number) ? null : latNum,
       lng: isNaN(lngNum as number) ? null : lngNum,
@@ -186,7 +224,9 @@ const ListaCompetencias: React.FC = () => {
         competencia.costo !== undefined && competencia.costo !== null
           ? Number(competencia.costo)
           : 0,
-    });
+    };
+
+    setEditar(nueva);
 
     if (latNum !== null && lngNum !== null && !isNaN(latNum) && !isNaN(lngNum)) {
       setSearchPosition([latNum, lngNum]);
@@ -203,25 +243,30 @@ const ListaCompetencias: React.FC = () => {
     cargarCompetencias();
   };
 
-  // Normalizamos lat/lng y añadimos log
+  // Normalizamos lat/lng y otros campos (forma funcional para evitar stale state)
   const handleChange = (field: keyof Competencia, value: any) => {
-    if (!editar) return;
+    setEditar((prev) => {
+      if (!prev) return prev;
 
-    if (field === "lat" || field === "lng") {
-      const num =
-        value === "" || value === null || value === undefined
-          ? null
-          : Number(value);
-      console.log("handleChange (lat/lng) ->", field, value, "parsed:", num); // <- LOG
-      setEditar({
-        ...editar,
-        [field]: isNaN(num as number) ? null : (num as number | null),
-      });
-      return;
-    }
+      if (field === "lat" || field === "lng") {
+        // value puede ser number o string
+        let parsed: number | null;
+        if (value === "" || value === null || value === undefined) parsed = null;
+        else {
+          parsed = typeof value === "number" ? value : Number(value);
+          if (!Number.isFinite(parsed)) parsed = null;
+        }
 
-    console.log("handleChange ->", field, value); // <- LOG
-    setEditar({ ...editar, [field]: value });
+        console.log("handleChange (lat/lng) ->", field, value, "parsed:", parsed);
+        return {
+          ...prev,
+          [field]: parsed,
+        } as Competencia;
+      }
+
+      console.log("handleChange ->", field, value);
+      return { ...prev, [field]: value } as Competencia;
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -241,8 +286,9 @@ const ListaCompetencias: React.FC = () => {
       if (data && data.length > 0) {
         const { lat, lon, display_name } = data[0];
         const newPos: [number, number] = [parseFloat(lat), parseFloat(lon)];
-        console.log("Nominatim ->", newPos, display_name); // <- LOG
+        console.log("Nominatim ->", newPos, display_name);
         setSearchPosition(newPos);
+        // Estas llamadas usan handleChange (funcional) y actualizarán editar correctamente
         handleChange("lat", newPos[0]);
         handleChange("lng", newPos[1]);
         handleChange("ubicacion", display_name);
@@ -285,43 +331,38 @@ const ListaCompetencias: React.FC = () => {
   }, [editingMap, searchPosition, editar]);
 
   const handleSubmitEditar = async () => {
-    if (!editar) return;
+    const current = editarRef.current;
+    if (!current) return;
     setLoadingModal(true);
     try {
-      const latVal =
-        editar.lat !== null && editar.lat !== undefined && editar.lat !== ""
-          ? Number(editar.lat)
-          : null;
-      const lngVal =
-        editar.lng !== null && editar.lng !== undefined && editar.lng !== ""
-          ? Number(editar.lng)
-          : null;
+      const latVal = current.lat ?? null;
+      const lngVal = current.lng ?? null;
 
-      let ubicacionFinal = editar.ubicacion;
+      let ubicacionFinal = current.ubicacion ?? "";
       if (latVal !== null && lngVal !== null) {
         ubicacionFinal = `Lat: ${latVal}, Lng: ${lngVal}`;
       }
 
       const formData = new FormData();
-      formData.append("nombre", editar.nombre ?? "");
-      formData.append("tipo", editar.tipo ?? "");
-      formData.append("categoria", editar.categoria ?? "");
+      formData.append("nombre", current.nombre ?? "");
+      formData.append("tipo", current.tipo ?? "");
+      formData.append("categoria", current.categoria ?? "");
       formData.append(
         "costo",
-        editar.costo !== undefined && editar.costo !== null
-          ? String(Number(editar.costo))
+        current.costo !== undefined && current.costo !== null
+          ? String(Number(current.costo))
           : "0"
       );
       formData.append("ubicacion", ubicacionFinal ?? "");
       formData.append("lat", latVal !== null ? String(latVal) : "");
       formData.append("lng", lngVal !== null ? String(lngVal) : "");
-      if (editar.fecha_inicio)
-        formData.append("fecha_inicio", new Date(editar.fecha_inicio).toISOString());
-      if (editar.fecha_cierre)
-        formData.append("fecha_cierre", new Date(editar.fecha_cierre).toISOString());
-      if (editar.fecha_evento)
-        formData.append("fecha_evento", new Date(editar.fecha_evento).toISOString());
-      if (editar.foto instanceof File) formData.append("foto", editar.foto);
+      if (current.fecha_inicio)
+        formData.append("fecha_inicio", new Date(current.fecha_inicio).toISOString());
+      if (current.fecha_cierre)
+        formData.append("fecha_cierre", new Date(current.fecha_cierre).toISOString());
+      if (current.fecha_evento)
+        formData.append("fecha_evento", new Date(current.fecha_evento).toISOString());
+      if (current.foto instanceof File) formData.append("foto", current.foto);
 
       // DEBUG: ver qué se envía en FormData
       for (const pair of (formData as any).entries()) {
@@ -329,7 +370,7 @@ const ListaCompetencias: React.FC = () => {
       }
 
       const res = await fetch(
-        `http://localhost:3001/api/competenciasadmin/${editar.id_competencia}`,
+        `http://localhost:3001/api/competenciasadmin/${current.id_competencia}`,
         {
           method: "PUT",
           body: formData,
@@ -526,11 +567,30 @@ const ListaCompetencias: React.FC = () => {
                 />
                 <button
                   onClick={() => {
-                    // Si el usuario ya escribió coords manuales, sincronizamos el marker y vista.
-                    if (editar?.lat !== null && editar?.lng !== null) {
-                      setSearchPosition([editar.lat as number, editar.lng as number]);
-                      if (editingMap) editingMap.setView([editar.lat as number, editar.lng as number], 14);
-                      console.log("Manual coords applied ->", editar.lat, editar.lng);
+                    // Convertir a number por si el usuario escribió en el input (podría ser string)
+                    const latNumRaw = editar?.lat;
+                    const lngNumRaw = editar?.lng;
+                    const latNum = latNumRaw !== null && latNumRaw !== undefined ? Number(latNumRaw) : null;
+                    const lngNum = lngNumRaw !== null && lngNumRaw !== undefined ? Number(lngNumRaw) : null;
+
+                    if (
+                      latNum !== null &&
+                      lngNum !== null &&
+                      Number.isFinite(latNum) &&
+                      Number.isFinite(lngNum)
+                    ) {
+                      // usamos forma funcional
+                      setEditar(prev => prev ? { ...prev, lat: latNum, lng: lngNum } : prev);
+                      setSearchPosition([latNum, lngNum]);
+                      if (editingMap) editingMap.setView([latNum, lngNum], 14);
+                      console.log("Manual coords applied ->", latNum, lngNum);
+                    } else {
+                      setStatusModal({
+                        open: true,
+                        type: "error",
+                        title: "Coords inválidas",
+                        message: "Latitud o longitud inválida.",
+                      });
                     }
                   }}
                 >
@@ -553,12 +613,13 @@ const ListaCompetencias: React.FC = () => {
                     searchPosition || (editar.lat && editar.lng ? [editar.lat, editar.lng] : null)
                   }
                   onSelect={(lat, lng) => {
+                    // handleChange usa la forma funcional y mantiene coherencia
                     handleChange("lat", lat);
                     handleChange("lng", lng);
                     handleChange("ubicacion", `Lat: ${lat}, Lng: ${lng}`);
                     setSearch(`Lat: ${lat}, Lng: ${lng}`);
                     setSearchPosition([lat, lng]);
-                    console.log("onSelect set ->", lat, lng); // <- LOG
+                    console.log("onSelect set ->", lat, lng);
                   }}
                 />
 

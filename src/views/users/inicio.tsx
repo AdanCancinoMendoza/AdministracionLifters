@@ -1,3 +1,4 @@
+// src/views/users/InicioUsuarios.tsx
 import React, { useEffect, useState, useRef } from "react";
 import Footer from "../../components/users/footer";
 import styles from "../../styles/UsersInicio.module.css";
@@ -30,12 +31,15 @@ interface Competencia {
   nombre: string;
   tipo: string;
   foto: string;
-  fecha_inicio: string;
-  fecha_cierre: string;
-  fecha_evento: string;
+  fecha_inicio: string | null;
+  fecha_cierre: string | null;
+  fecha_evento: string | null;
   categoria: string;
   costo: string;
-  ubicacion: string;
+  ubicacion?: string | null;
+  // lat/lng en API pueden venir como strings; los dejamos opcionales
+  lat?: string | null;
+  lng?: string | null;
 }
 
 interface Poster {
@@ -62,7 +66,7 @@ const medallasMap: Record<string, string> = {
   bronce: bronce,
 };
 
-/* ------------------ Component: DateRects (solo los 3 rectángulos) ------------------ */
+/* ------------------ Component: DateRects ------------------ */
 const DateRects: React.FC<{ competencia: Competencia }> = ({ competencia }) => {
   const inicio = competencia.fecha_inicio ? new Date(competencia.fecha_inicio) : null;
   const cierre = competencia.fecha_cierre ? new Date(competencia.fecha_cierre) : null;
@@ -116,6 +120,58 @@ const DateRects: React.FC<{ competencia: Competencia }> = ({ competencia }) => {
   );
 };
 
+/* ------------------ Helpers ------------------ */
+
+// intenta obtener coordenadas numéricas desde la competencia (lat/lng o ubicacion)
+function parseCoordsFromCompetencia(c: Competencia): { lat: number | null; lng: number | null } {
+  // 1) usar lat/lng si existen
+  if (c.lat !== undefined && c.lat !== null && c.lng !== undefined && c.lng !== null) {
+    const la = Number(String(c.lat));
+    const lo = Number(String(c.lng));
+    if (Number.isFinite(la) && Number.isFinite(lo)) return { lat: la, lng: lo };
+  }
+
+  // 2) intentar parsear desde c.ubicacion con regex (busca dos floats)
+  if (c.ubicacion) {
+    // Ejemplos de ubicacion: "Lat: 19.93339536640198, Lng: -101.64490699768068"
+    const match = Array.from(String(c.ubicacion).matchAll(/-?\d+\.\d+/g)).map(m => m[0]);
+    if (match.length >= 2) {
+      const la = Number(match[0]);
+      const lo = Number(match[1]);
+      if (Number.isFinite(la) && Number.isFinite(lo)) return { lat: la, lng: lo };
+    }
+  }
+
+  return { lat: null, lng: null };
+}
+
+// elegir competencia próxima: prioriza próximas (fecha_evento >= ahora), si no hay devuelve la más reciente pasada
+function chooseNextCompetition(list: Competencia[]): Competencia | null {
+  if (!list || list.length === 0) return null;
+  const withDates = list.map((c) => ({
+    comp: c,
+    fecha_evento_date: c.fecha_evento ? new Date(c.fecha_evento) : null,
+  }));
+
+  const now = new Date();
+
+  const future = withDates.filter((x) => x.fecha_evento_date && x.fecha_evento_date >= now);
+  if (future.length > 0) {
+    future.sort((a, b) => (a.fecha_evento_date! > b.fecha_evento_date! ? 1 : -1));
+    return future[0].comp;
+  }
+
+  // si no hay futuras, tomar la pasada más cercana (máxima fecha_evento < now)
+  const past = withDates.filter((x) => x.fecha_evento_date && x.fecha_evento_date < now);
+  if (past.length > 0) {
+    past.sort((a, b) => (a.fecha_evento_date! < b.fecha_evento_date! ? 1 : -1)); // descendente
+    return past[0].comp;
+  }
+
+  // fallback: primera en la lista
+  return list[0];
+}
+
 /* ------------------ MAIN VIEW ------------------ */
 const InicioUsuarios: React.FC = () => {
   const [inicio, setInicio] = useState<Inicio | null>(null);
@@ -143,9 +199,13 @@ const InicioUsuarios: React.FC = () => {
       .then(setCategorias)
       .catch((err) => console.error(err));
 
+    // COMPETENCIAS: traemos todas, elegimos la más próxima y la mostramos
     fetch("http://localhost:3001/api/competenciasadmin")
       .then((res) => res.json())
-      .then((data: Competencia[]) => setCompetencia(data[0] || null))
+      .then((data: Competencia[]) => {
+        const next = chooseNextCompetition(data || []);
+        setCompetencia(next);
+      })
       .catch((err) => console.error(err));
 
     fetch("http://localhost:3001/api/poster")
@@ -164,6 +224,31 @@ const InicioUsuarios: React.FC = () => {
     const interval = setInterval(() => setActiveIndex((p) => (p + 1) % categorias.length), 5000);
     return () => clearInterval(interval);
   }, [categorias]);
+
+  // Construir src del iframe según coordenadas o texto de ubicacion
+  const buildMapIframeSrc = (c: Competencia | null) => {
+    if (!c) {
+      // fallback genérico (tu embed anterior o global)
+      return "https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3766.8694359667397!2d-98.9466476247904!3d19.24452118199507!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTnCsDE0JzQwLjMiTiA5OMKwNTYnMzguNyJX!5e0!3m2!1ses!2smx!4v1761276700501!5m2!1ses!2smx";
+    }
+
+    const { lat, lng } = parseCoordsFromCompetencia(c);
+
+    if (lat !== null && lng !== null) {
+      // usar query simple con lat,lng -> se centra en las coords
+      return `https://www.google.com/maps?q=${encodeURIComponent(`${lat},${lng}`)}&z=14&output=embed`;
+    }
+
+    // si no hay coords numéricas, usar la cadena de ubicacion para buscar
+    if (c.ubicacion) {
+      return `https://www.google.com/maps?q=${encodeURIComponent(c.ubicacion)}&z=14&output=embed`;
+    }
+
+    // fallback genérico
+    return "https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3766.8694359667397!2d-98.9466476247904!3d19.24452118199507!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTnCsDE0JzQwLjMiTiA5OMKwNTYnMzguNyJX!5e0!3m2!1ses!2smx!4v1761276700501!5m2!1ses!2smx";
+  };
+
+  const iframeSrc = buildMapIframeSrc(competencia);
 
   return (
     <>
@@ -187,8 +272,6 @@ const InicioUsuarios: React.FC = () => {
             </div>
             <div className={styles.scrollIndicator}></div>
           </section>
-
-
 
           {/* POWERLIFTING INFO */}
           <section ref={powerliftingRef} className={styles.powerliftingInfo}>
@@ -268,7 +351,7 @@ const InicioUsuarios: React.FC = () => {
                 {/* 4) UBICACION (abajo-derecha) */}
                 <div className={styles.ubicacionColumn}>
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3766.8694359667397!2d-98.9466476247904!3d19.24452118199507!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMTnCsDE0JzQwLjMiTiA5OMKwNTYnMzguNyJX!5e0!3m2!1ses!2smx!4v1761276700501!5m2!1ses!2smx"
+                    src={iframeSrc}
                     className={styles.mapaIframe}
                     allowFullScreen
                     loading="lazy"
