@@ -7,7 +7,7 @@ import styles from "../../styles/CalificarJuez.module.css";
 
 interface Juez { id_juez: number; id_competencia: number; nombre?: string; apellidos?: string; usuario?: string; }
 type PesoAsignado = { id?: number; id_ejercicio: number; intento: number; peso?: any; estado_intento?: string; approved?: number | null; notes?: string | null };
-type OrdenResponseItem = { competidor: { id_competidor: number; nombre: string; orden: number; [k: string]: any }; pesos: PesoAsignado[]; };
+type OrdenResponseItem = { competidor: { id_competidor: number; nombre: string; orden: number;[k: string]: any }; pesos: PesoAsignado[]; };
 
 type IntentoLocal = { intento: number; peso?: string | undefined; estado_intento: string; resultadoFinal?: "Bueno" | "Malo" | null; tally?: { Bueno: number; Malo: number }; attemptId?: number | null; votedByMe?: boolean };
 type EjercicioLocal = { id_ejercicio: number; nombre: string; intentos: IntentoLocal[]; };
@@ -272,7 +272,7 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
             const arr = await r2.json();
             detail = arr.find((x: any) => Number(x.id_competidor) === Number(id_competidor)) ?? null;
           }
-        } catch {}
+        } catch { }
       }
 
       if (!detail) {
@@ -347,7 +347,7 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
     const s = io(SOCKET_URL, { transports: ["websocket"] });
     socketRef.current = s;
     s.on("connect", () => {
-      try { s.emit("join", { id_competencia: competenciaId }); } catch {}
+      try { s.emit("join", { id_competencia: competenciaId }); } catch { }
     });
 
     // actualiza UI con eventos de voto
@@ -386,7 +386,7 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
 
       if (payload?.id_competidor != null) setActiveCompetitorId(Number(payload.id_competidor));
       if (payload?.id_ejercicio) {
-        const idx = [1,2,3].indexOf(Number(payload.id_ejercicio));
+        const idx = [1, 2, 3].indexOf(Number(payload.id_ejercicio));
         setCurrentEjercicioIndex(idx >= 0 ? idx : 0);
       } else setCurrentEjercicioIndex(0);
 
@@ -410,7 +410,7 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
       if (compId != null) {
         setActiveCompetitorId(Number(compId));
         if (payload?.id_ejercicio) {
-          const idx = [1,2,3].indexOf(Number(payload.id_ejercicio));
+          const idx = [1, 2, 3].indexOf(Number(payload.id_ejercicio));
           setCurrentEjercicioIndex(idx >= 0 ? idx : 0);
         } else setCurrentEjercicioIndex(0);
         if (typeof payload?.remaining === "number") {
@@ -452,7 +452,7 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
     });
 
     return () => {
-      try { s.emit("leave", { id_competencia: competenciaId }); } catch {}
+      try { s.emit("leave", { id_competencia: competenciaId }); } catch { }
       s.disconnect();
       socketRef.current = null;
     };
@@ -687,9 +687,9 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
 
                       const circleClass =
                         it.resultadoFinal === "Bueno" ? styles.bueno :
-                        it.resultadoFinal === "Malo" ? styles.malo :
-                        it.estado_intento === "realizado" ? styles.bueno :
-                        it.estado_intento === "invalidado" ? styles.malo : styles.pendiente;
+                          it.resultadoFinal === "Malo" ? styles.malo :
+                            it.estado_intento === "realizado" ? styles.bueno :
+                              it.estado_intento === "invalidado" ? styles.malo : styles.pendiente;
 
                       const attemptId = it.attemptId ?? null;
                       const submitting = attemptId ? !!pendingSubmits[attemptId] : false;
