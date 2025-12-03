@@ -5,10 +5,10 @@ dotenv.config();
 
 // Crear pool de conexiones
 const db = mysql.createPool({
-  host: process.env.DB_HOST || "liftersbd",
+  host: process.env.DB_HOST || "mysql-bso80c84g4gcw4skc0cccws0.internal",
   user: process.env.DB_USER || "mysql",
-  password: process.env.DB_PASSWORD || "7TAsdah4d2epJvEZsipks1lr57WJ2xFxRj3SgJZtcabNR3ZrVVBqUsjHT4rgYbZX",
-  database: process.env.DB_NAME || "liftersdb",
+  password: process.env.DB_PASSWORD || "raFQ6d1AQDbQPcQSEHU4ew6y76QUJfj6gLaG8tTIh26KWy7hqGXf1zz7fh7f6ZBC",
+  database: process.env.DB_NAME || "default",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
