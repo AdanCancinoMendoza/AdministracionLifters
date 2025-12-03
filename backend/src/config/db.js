@@ -5,9 +5,9 @@ dotenv.config();
 
 // Crear pool de conexiones
 const db = mysql.createPool({
-  host: process.env.DB_HOST || "http://host.docker.internal:8000",
-  user: process.env.DB_USER || "mariadb",
-  password: process.env.DB_PASSWORD || "UTdH7VXB2Q98ClWc4nshWjxKtsRfXErUH49btvcsxkmNTnffqebJt9rFyAGMN1xf",
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "7TAsdah4d2epJvEZsipks1lr57WJ2xFxRj3SgJZtcabNR3ZrVVBqUsjHT4rgYbZX",
   database: process.env.DB_NAME || "liftersdb",
   waitForConnections: true,
   connectionLimit: 10,
