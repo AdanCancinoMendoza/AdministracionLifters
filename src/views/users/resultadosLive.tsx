@@ -51,7 +51,7 @@ const COMPETITORS_API = `${BASE}/api/competidor`;
 const ATTEMPTS_BY_COMPETITOR = `${BASE}/api/attempts/by-competitor`;
 const SOCKET_URL = BASE;
 
-const EX_NAME: Record<number, string> = { 1: "Arranque", 2: "Press Banca", 3: "Peso Muerto" };
+const EX_NAME: Record<number, string> = { 1: "Press Banca", 2: "Peso Muerto", 3: "Sentadilla" };
 
 type Repeticion = { valor: string; estado: "APROBADO" | "REPROBADO" | "PENDIENTE"; attemptId?: number | null };
 
@@ -241,7 +241,7 @@ export default function LiveResultsSection(): JSX.Element {
         for (const c of liveCompetitions) {
           s.emit("join", { id_competencia: c.id_competencia });
         }
-      } catch {}
+      } catch { }
     });
 
     const handleAttempt = (payload: any) => {
@@ -291,8 +291,8 @@ export default function LiveResultsSection(): JSX.Element {
                   perExercise[ex] = perExercise[ex] || defaultPerExercise()[ex];
                   perExercise[ex][slotIdx] = { valor, estado, attemptId: a.id ?? null };
                 }
-                updatedResults[comp.id_competencia] = { ...(updatedResults[comp.id_competencia] || {}) , [compItem.id_competidor]: perExercise };
-              } catch {}
+                updatedResults[comp.id_competencia] = { ...(updatedResults[comp.id_competencia] || {}), [compItem.id_competidor]: perExercise };
+              } catch { }
             }
           }
           setResultsByComp(updatedResults);
@@ -303,11 +303,11 @@ export default function LiveResultsSection(): JSX.Element {
     return () => {
       try {
         for (const c of liveCompetitions) s.emit("leave", { id_competencia: c.id_competencia });
-      } catch {}
+      } catch { }
       s.disconnect();
       socketRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [liveCompetitions, competitorsByComp]);
 
   const getColor = (estado: Repeticion["estado"]) => {
@@ -345,13 +345,13 @@ export default function LiveResultsSection(): JSX.Element {
           </div>
           <div className={styles.emptyRight}>
             <svg width="260" height="160" viewBox="0 0 260 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="0" y="0" width="260" height="160" rx="12" fill="#f4f7fb"/>
+              <rect x="0" y="0" width="260" height="160" rx="12" fill="#f4f7fb" />
               <g transform="translate(30,28)">
-                <rect width="160" height="90" rx="8" fill="#e9f2ff"/>
-                <rect x="8" y="8" width="40" height="20" rx="4" fill="#d6e9ff"/>
-                <rect x="56" y="8" width="96" height="10" rx="5" fill="#dbeeff"/>
-                <rect x="8" y="36" width="144" height="8" rx="4" fill="#eaf4ff"/>
-                <rect x="8" y="52" width="70" height="8" rx="4" fill="#eaf4ff"/>
+                <rect width="160" height="90" rx="8" fill="#e9f2ff" />
+                <rect x="8" y="8" width="40" height="20" rx="4" fill="#d6e9ff" />
+                <rect x="56" y="8" width="96" height="10" rx="5" fill="#dbeeff" />
+                <rect x="8" y="36" width="144" height="8" rx="4" fill="#eaf4ff" />
+                <rect x="8" y="52" width="70" height="8" rx="4" fill="#eaf4ff" />
               </g>
             </svg>
           </div>
@@ -378,7 +378,7 @@ export default function LiveResultsSection(): JSX.Element {
               <div className={styles.headerMedia}>
                 <div className={styles.mediaLeft}>
                   <img src={comp.foto ?? "https://via.placeholder.com/640x360?text=Evento"} alt={comp.nombre} className={styles.eventImage} />
-                  { !stream && <div className={styles.mediaOverlayText}>Próximo</div> }
+                  {!stream && <div className={styles.mediaOverlayText}>Próximo</div>}
                 </div>
 
                 {stream && (

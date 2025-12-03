@@ -1,4 +1,4 @@
-// src/views/jueces/calificacion.tsx
+// src/views/jueces/Calificacion.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import { useNavigate } from "react-router-dom";
@@ -45,8 +45,8 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
 
   const [activeCompetitorDetail, setActiveCompetitorDetail] = useState<CompetidorApi | null>(null);
 
-  // evita dobles envíos: keyed por attemptId (si existe)
-  const [pendingSubmits, setPendingSubmits] = useState<Record<number, boolean>>({});
+  // evita dobles envíos: keyed por clave (id:123 o k:comp-ex-attempt)
+  const [pendingSubmits, setPendingSubmits] = useState<Record<string, boolean>>({});
 
   // almacenamiento local para saber si este juez ya votó un intento (keyed por attemptId o comp-ex-attempt)
   const [votedAttempts, setVotedAttempts] = useState<Record<string, boolean>>({});
@@ -66,6 +66,39 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
     setCompetenciaId(userJuez.id_competencia ?? null);
   }, [userJuez, navigate]);
 
+  // Restore state from LocalStorage on mount
+  useEffect(() => {
+    if (!competenciaId) return;
+    try {
+      const saved = localStorage.getItem(`judge_state_${competenciaId}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.activeCompetitorId && !activeCompetitorId) {
+          setActiveCompetitorId(parsed.activeCompetitorId);
+        }
+        if (parsed.currentEjercicioIndex !== undefined) {
+          setCurrentEjercicioIndex(parsed.currentEjercicioIndex);
+        }
+      }
+    } catch (e) {
+      console.warn("Error restoring state from localStorage", e);
+    }
+  }, [competenciaId]);
+
+  // Save state to LocalStorage whenever it changes
+  useEffect(() => {
+    if (!competenciaId) return;
+    try {
+      const stateToSave = {
+        activeCompetitorId,
+        currentEjercicioIndex
+      };
+      localStorage.setItem(`judge_state_${competenciaId}`, JSON.stringify(stateToSave));
+    } catch (e) {
+      console.warn("Error saving state to localStorage", e);
+    }
+  }, [competenciaId, activeCompetitorId, currentEjercicioIndex]);
+
   const parseNotesTally = (notesRaw: any) => {
     const tally = { Bueno: 0, Malo: 0 };
     if (!notesRaw) return tally;
@@ -83,7 +116,6 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
     return tally;
   };
 
-  // intenta detectar si en notes hay referencia a un voto del juez actual
   const didJudgeVote = (notesRaw: any, judgeIdToCheck: number | null) => {
     if (!notesRaw || !judgeIdToCheck) return false;
     try {
@@ -102,7 +134,7 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
 
   const getAttemptKey = (attemptId: number | null | undefined, id_competidor?: number, exercise_id?: number, attempt_number?: number) => {
     if (attemptId) return `id:${attemptId}`;
-    if (id_competidor != null && exercise_id != null && attempt_number != null) return `${id_competidor}-${exercise_id}-${attempt_number}`;
+    if (id_competidor != null && exercise_id != null && attempt_number != null) return `k:${id_competidor}-${exercise_id}-${attempt_number}`;
     return `unknown`;
   };
 
@@ -350,40 +382,41 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
       try { s.emit("join", { id_competencia: competenciaId }); } catch { }
     });
 
-    // actualiza UI con eventos de voto
+    // actualiza UI con eventos de voto/intent
     s.on("vote_update", (payload: any) => {
       if (!payload) return;
       if (payload.id_competencia && payload.id_competencia !== competenciaId) return;
       if (payload.attempt) {
         const att = payload.attempt;
-        setListaCompetidores(prev => {
-          const copy = prev.map(c => ({ ...c, ejercicios: c.ejercicios.map(e => ({ ...e, intentos: e.intentos.map(it => ({ ...it })) })) }));
-          for (const comp of copy) {
-            for (const ej of comp.ejercicios) {
-              for (let i = 0; i < ej.intentos.length; i++) {
-                if (ej.intentos[i].attemptId === att.id) {
-                  ej.intentos[i].estado_intento = att.approved == null ? "pendiente" : att.approved ? "realizado" : "invalidado";
-                  ej.intentos[i].resultadoFinal = att.approved == null ? null : att.approved ? "Bueno" : "Malo";
-                  ej.intentos[i].tally = parseNotesTally(att.notes);
-                  ej.intentos[i].votedByMe = didJudgeVote(att.notes, getJudgeId());
-                  if (ej.intentos[i].votedByMe) {
-                    const key = getAttemptKey(att.id, undefined, undefined, undefined);
-                    setVotedAttempts(prev => ({ ...prev, [key]: true }));
-                  }
-                }
-              }
-            }
-          }
-          return copy;
-        });
+        applyAttemptPayload(att);
+      } else {
+        applyAttemptPayload(payload);
       }
+    });
+
+    s.on("attempt_created", (att: any) => {
+      if (!att) return;
+      if (att.id_competencia && att.id_competencia !== competenciaId) return;
+      applyAttemptPayload(att);
+    });
+
+    s.on("attempt_upsert", (att: any) => {
+      if (!att) return;
+      if (att.id_competencia && att.id_competencia !== competenciaId) return;
+      applyAttemptPayload(att);
+    });
+
+    s.on("attempt_approved", (payload: any) => {
+      if (!payload) return;
+      const att = payload.attempt ?? payload;
+      if (!att) return;
+      if (att.id_competencia && att.id_competencia !== competenciaId) return;
+      applyAttemptPayload(att);
     });
 
     s.on("start", async (payload: any) => {
       if (payload?.id_competencia !== competenciaId) return;
-      // cuando admin manda start, limpiamos freeze para permitir nueva selección desde admin
       setFrozenAttemptKey(null);
-
       if (payload?.id_competidor != null) setActiveCompetitorId(Number(payload.id_competidor));
       if (payload?.id_ejercicio) {
         const idx = [1, 2, 3].indexOf(Number(payload.id_ejercicio));
@@ -403,9 +436,7 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
 
     s.on("competitor:selected", async (payload: any) => {
       if (payload?.id_competencia !== competenciaId) return;
-      // limpiar freeze si admin selecciona otro competidor/ejercicio
       setFrozenAttemptKey(null);
-
       const compId = payload?.id_competidor ?? null;
       if (compId != null) {
         setActiveCompetitorId(Number(compId));
@@ -440,9 +471,7 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
 
     s.on("next", async (payload: any) => {
       if (payload?.id_competencia !== competenciaId) return;
-      // admin avanzó al siguiente -> limpiamos freeze para mostrar el nuevo intento real
       setFrozenAttemptKey(null);
-
       const nextId = payload?.nextId ?? payload?.id_competidor;
       setActiveCompetitorId(nextId ?? null);
       setCurrentEjercicioIndex(0);
@@ -459,7 +488,6 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [competenciaId]);
 
-  // limpiar freeze si cambia el competidor o ejercicio localmente
   useEffect(() => {
     setFrozenAttemptKey(null);
   }, [activeCompetitorId, currentEjercicioIndex]);
@@ -493,18 +521,57 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
 
   const activeCompetitor = listaCompetidores.find((c) => c.id_competidor === activeCompetitorId) ?? null;
 
-  // primer intento pendiente del ejercicio activo -> intento actual
   const isIntentoCurrent = (ej: EjercicioLocal, it: IntentoLocal, ejIndex: number) => {
     if (ejIndex !== currentEjercicioIndex) return false;
-    const firstPending = ej.intentos.find(i => i.estado_intento === "pendiente");
-    return !!firstPending && firstPending.intento === it.intento;
+    // Highlight the one that is pending FOR ME
+    const firstPendingForMe = ej.intentos.find(i => !i.votedByMe);
+    return !!firstPendingForMe && firstPendingForMe.intento === it.intento;
   };
 
   const getJudgeId = () => {
     return (juez as any)?.id_juez ?? (juez as any)?.id ?? null;
   };
 
-  // envía la calificación al backend (usa la ruta ya existente)
+  function applyAttemptPayload(att: any) {
+    if (!att) return;
+    const id = att.id ?? att.attemptId ?? att.attempt_id ?? null;
+    const id_competidor = att.id_competidor ?? att.competitor_id ?? att.competitor ?? att.idCompetidor ?? null;
+    const exercise_id = att.exercise_id ?? att.exerciseId ?? att.id_ejercicio ?? null;
+    const attempt_number = att.attempt_number ?? att.attemptNumber ?? att.attempt_number ?? null;
+
+    setListaCompetidores(prev => {
+      const copy = prev.map((c) => ({ ...c, ejercicios: c.ejercicios.map(e => ({ ...e, intentos: e.intentos.map(it => ({ ...it })) })) }));
+      let comp = null as any;
+
+      if (id_competidor != null) comp = copy.find(c => c.id_competidor === Number(id_competidor));
+      if (!comp) return prev;
+      const ex = comp.ejercicios.find(e => e.id_ejercicio === Number(exercise_id));
+      if (!ex) return prev;
+      const slot = (attempt_number != null) ? Number(attempt_number) - 1 : -1;
+      if (slot < 0 || slot >= ex.intentos.length) return prev;
+
+      if (id) ex.intentos[slot].attemptId = Number(id);
+
+      if (att.approved === null || att.approved === undefined) {
+        ex.intentos[slot].estado_intento = "pendiente";
+        ex.intentos[slot].resultadoFinal = null;
+      } else {
+        ex.intentos[slot].estado_intento = att.approved ? "realizado" : "invalidado";
+        ex.intentos[slot].resultadoFinal = att.approved ? "Bueno" : "Malo";
+      }
+
+      if (att.notes) ex.intentos[slot].tally = parseNotesTally(att.notes);
+      ex.intentos[slot].votedByMe = didJudgeVote(att.notes, getJudgeId());
+
+      if (ex.intentos[slot].votedByMe) {
+        const k1 = getAttemptKey(ex.intentos[slot].attemptId ?? null, comp.id_competidor, ex.id_ejercicio, ex.intentos[slot].intento);
+        setVotedAttempts(prev => ({ ...prev, [k1]: true }));
+      }
+
+      return copy;
+    });
+  }
+
   async function handleJudgeAttempt(attemptId: number | null, id_competidor: number, exercise_id: number, attempt_number: number, valor: "Bueno" | "Malo") {
     if (!competenciaId) return;
     const judgeId = getJudgeId();
@@ -513,11 +580,10 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
       return;
     }
 
-    // proteger doble envío (por attemptId)
-    if (attemptId && pendingSubmits[attemptId]) return;
-    if (attemptId) setPendingSubmits(prev => ({ ...prev, [attemptId]: true }));
-
     const attemptKey = getAttemptKey(attemptId, id_competidor, exercise_id, attempt_number);
+
+    if (pendingSubmits[attemptKey]) return;
+    setPendingSubmits(prev => ({ ...prev, [attemptKey]: true }));
 
     try {
       const res = await fetch(`${ATTEMPTS_API}/competencias/${competenciaId}/calificaciones`, {
@@ -566,27 +632,33 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
         return copy;
       });
 
-      // marcar para deshabilitar localmente
-      setVotedAttempts(prev => ({ ...prev, [attemptKey]: true }));
+      const newKeys: string[] = [attemptKey];
+      if (updatedAttempt && updatedAttempt.id) {
+        const idKey = getAttemptKey(updatedAttempt.id, id_competidor, exercise_id, attempt_number);
+        if (!newKeys.includes(idKey)) newKeys.push(idKey);
+      }
 
-      // CONGELAMOS el intento votado para que la UI NO avance automáticamente al siguiente intento
-      setFrozenAttemptKey(attemptKey);
+      setVotedAttempts(prev => {
+        const copy = { ...prev };
+        for (const k of newKeys) copy[k] = true;
+        return copy;
+      });
+
+      const freezeKey = (updatedAttempt && updatedAttempt.id) ? getAttemptKey(updatedAttempt.id, id_competidor, exercise_id, attempt_number) : attemptKey;
+      setFrozenAttemptKey(freezeKey);
 
     } catch (err) {
       console.error("handleJudgeAttempt error", err);
       alert("Error de red al enviar la calificación");
     } finally {
-      if (attemptId) setPendingSubmits(prev => { const cp = { ...prev }; delete cp[attemptId]; return cp; });
+      setPendingSubmits(prev => { const cp = { ...prev }; delete cp[attemptKey]; return cp; });
     }
   }
 
-  // Helper: devuelve el intento actual (usa frozenAttemptKey si existe; si no, primer pendiente)
   const getCurrentAttemptInfo = () => {
     if (!activeCompetitor) return null;
 
-    // 1) si hay frozenAttemptKey, intentar devolver ese intento (aunque su estado haya cambiado localmente)
     if (frozenAttemptKey) {
-      // buscar en ejercicios del competidor
       for (const ej of activeCompetitor.ejercicios) {
         for (const it of ej.intentos) {
           const key = getAttemptKey(it.attemptId, activeCompetitor.id_competidor, ej.id_ejercicio, it.intento);
@@ -602,36 +674,44 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
           }
         }
       }
-      // si no se encuentra, limpiar freeze y continuar
       setFrozenAttemptKey(null);
     }
 
-    // 2) si no hay frozen, devolver primer pendiente del ejercicio activo (comportamiento anterior)
     const ej = activeCompetitor.ejercicios[currentEjercicioIndex];
     if (!ej) return null;
-    const firstPending = ej.intentos.find(i => i.estado_intento === "pendiente");
-    if (!firstPending) return null;
+    // Modified logic: Find the first attempt that I haven't voted on yet.
+    // This allows me to vote on an attempt even if another judge has already finished it (setting it to "realizado"/"invalidado").
+    const firstPendingForMe = ej.intentos.find(i => !i.votedByMe);
+
+    // If I've voted on everything, maybe show the first pending global? Or just null.
+    // Let's stick to "first pending for me". If all voted by me, then null (wait for next).
+    if (!firstPendingForMe) return null;
+
     return {
       exerciseId: ej.id_ejercicio,
       exerciseName: ej.nombre,
-      attemptNumber: firstPending.intento,
-      weight: firstPending.peso,
-      attemptId: firstPending.attemptId ?? null,
-      attemptLocal: firstPending
+      attemptNumber: firstPendingForMe.intento,
+      weight: firstPendingForMe.peso,
+      attemptId: firstPendingForMe.attemptId ?? null,
+      attemptLocal: firstPendingForMe
     };
   };
 
   const currentAttempt = getCurrentAttemptInfo();
 
-  // estado disabled del botón global
   const judgeButtonDisabled = (() => {
-    if (!currentAttempt) return true; // no hay intento activo
+    if (!currentAttempt) return true;
     if (!activeCompetitor) return true;
-    // si el intento ya tiene resultado final (ya fue resuelto por backend/admin), no se puede votar
-    if (currentAttempt.attemptLocal?.resultadoFinal) return true;
+    // Removed check for currentAttempt.attemptLocal?.resultadoFinal to allow multiple judges
+    // if (currentAttempt.attemptLocal?.resultadoFinal) return true; 
+
+    // Sync with timer: if not running (paused/stopped), disable buttons
+    if (!isRunning) return true;
+
     const attemptKey = getAttemptKey(currentAttempt.attemptId, activeCompetitor.id_competidor, currentAttempt.exerciseId, currentAttempt.attemptNumber);
     if (votedAttempts[attemptKey]) return true;
-    // Nota: No bloqueamos por isRunning; permitimos votar aunque el temporizador no haya comenzado.
+    if (currentAttempt.attemptLocal?.votedByMe) return true;
+
     return false;
   })();
 
@@ -692,8 +772,6 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
                               it.estado_intento === "invalidado" ? styles.malo : styles.pendiente;
 
                       const attemptId = it.attemptId ?? null;
-                      const submitting = attemptId ? !!pendingSubmits[attemptId] : false;
-
                       const attemptKey = getAttemptKey(attemptId, activeCompetitor.id_competidor, ej.id_ejercicio, it.intento);
                       const alreadyVoted = !!votedAttempts[attemptKey] || !!it.votedByMe;
 
@@ -717,12 +795,11 @@ const CalificarScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => {
                     })}
                   </div>
 
-                  {idx === currentEjercicioIndex && <p className={styles.textoActivo}>Ejercicio activo (solo lectura)</p>}
+                  {idx === currentEjercicioIndex && <p className={styles.textoActivo}>Ejercicio activo </p>}
                 </div>
               ))}
             </div>
 
-            {/* FOOTER GLOBAL DE CALIFICACIÓN (debajo de toda la lista) */}
             <div className={styles.calificarFooter}>
               <div className={styles.calificarActionsCard}>
                 <div className={styles.calificarActionsInfo}>

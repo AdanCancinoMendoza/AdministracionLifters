@@ -202,7 +202,7 @@ const ResultadosScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => 
     socketRef.current = s;
 
     s.on("connect", () => {
-      try { s.emit("join", { id_competencia: juez.id_competencia }); } catch {}
+      try { s.emit("join", { id_competencia: juez.id_competencia }); } catch { }
     });
 
     s.on("attempt_update", (payload: any) => {
@@ -247,12 +247,12 @@ const ResultadosScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => 
             })
           );
           setResultsMap(map);
-        } catch {}
+        } catch { }
       })();
     });
 
     return () => {
-      try { s.emit("leave", { id_competencia: juez.id_competencia }); } catch {}
+      try { s.emit("leave", { id_competencia: juez.id_competencia }); } catch { }
       s.disconnect();
       socketRef.current = null;
     };
@@ -324,8 +324,8 @@ const ResultadosScreen: React.FC<{ userJuez: Juez | null }> = ({ userJuez }) => 
               <table className={styles.resultadosTabla}>
                 <thead>
                   <tr>
-                    <th>Nombre</th>
-                    <th>Categoría / Peso</th>
+                    <th rowSpan={2}>Nombre</th>
+                    <th rowSpan={2}>Categoría / Peso</th>
                     <th colSpan={3}>Press Banca</th>
                     <th colSpan={3}>Peso Muerto</th>
                     <th colSpan={3}>Sentadilla</th>

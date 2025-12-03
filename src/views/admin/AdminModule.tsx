@@ -24,8 +24,8 @@ export function isAdminAuthenticated(): boolean {
 export const AdminAuthGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   if (!isAdminAuthenticated()) {
-    // redirige al login y recuerda la ruta origen
-    return <Navigate to="/loginAdmin" state={{ from: location.pathname }} replace />;
+    // redirige al login admin correcto (ahora bajo /admin/login) y recuerda la ruta origen
+    return <Navigate to="/admin/login" state={{ from: location.pathname }} replace />;
   }
   return <>{children}</>;
 };
@@ -36,7 +36,8 @@ export const AdminAuthGuard: React.FC<{ children: React.ReactNode }> = ({ childr
 export default function AdminModule() {
   const navigate = useNavigate();
   const location = useLocation();
-  const fromPath = (location.state as any)?.from || "/dashboard";
+  // si no viene state.from usamos la ruta admin por defecto
+  const fromPath = (location.state as any)?.from || "/admin/dashboard";
 
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -47,12 +48,12 @@ export default function AdminModule() {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    // Si ya está logueado lo llevamos al dashboard
+    // Si ya está logueado lo llevamos al dashboard admin
     if (isAdminAuthenticated()) {
       navigate(fromPath, { replace: true });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // dependencias necesarias para evitar warning y re-ejecutar si cambia fromPath/navigate
+  }, [navigate, fromPath]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +67,7 @@ export default function AdminModule() {
       if (username === "Admin" && password === "Admin@123$") {
         const expire = Date.now() + 24 * 60 * 60 * 1000; // 24 horas
         localStorage.setItem("userAdmin", JSON.stringify({ username, expire }));
-        // Redirigir a la ruta origen o dashboard
+        // Redirigir a la ruta origen o dashboard admin
         navigate(fromPath, { replace: true });
       } else {
         setError("Usuario o contraseña incorrectos.");
@@ -75,10 +76,8 @@ export default function AdminModule() {
   };
 
   const handleToggleShow = () => {
-    // Alterna y vuelve a enfocar el input para que el caret y el texto sean visibles
     setShowPwd((prev) => {
       const next = !prev;
-      // focus async después del re-render
       setTimeout(() => inputRef.current?.focus(), 0);
       return next;
     });
@@ -168,8 +167,6 @@ export default function AdminModule() {
                   Acceso directo 24 hrs
                 </label>
               </div>
-
-              {/* eliminado el botón "¿Olvidaste la contraseña?" por petición */}
             </div>
 
             {error && <div role="alert" className={styles.error}>{error}</div>}
@@ -178,7 +175,6 @@ export default function AdminModule() {
               <button className={styles.submit} type="submit" disabled={loading}>
                 {loading ? "Ingresando..." : "Ingresar"}
               </button>
-              {/* se eliminó la hint que mostraba credenciales */}
             </div>
 
             <footer className={styles.footer}>

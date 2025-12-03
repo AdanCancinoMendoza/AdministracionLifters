@@ -223,17 +223,13 @@ export async function selectParticipantHandler(req, res) {
   }
 }
 
-
-// backend/src/controllers/modulesController.js (añadir al final)
-
+// adicional: selectCompetitorHandler (emite selection con metadata)
 export async function selectCompetitorHandler(req, res) {
   try {
     const module_id = Number(req.params.id);
     const { id_competidor, id_competencia, id_ejercicio, source, timestamp, selected_by } = req.body;
     if (!module_id || !id_competidor) return res.status(400).json({ error: "module id e id_competidor requeridos" });
 
-    // Opcional: registrar selección en module_runs/state si quieres persistir.
-    // Por ahora solo emitimos el evento para que jueces reciban la selección inmediatamente.
     const io = req.app.get("io");
     if (io) {
       io.to(`competencia:${id_competencia ?? ""}`).emit("competitor:selected", {
@@ -462,11 +458,3 @@ export async function endModuleHandler(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
-
-// ------------------------------------------------------------------
-// backend/src/controllers/attemptsController.js (sin cambios necesarios)
-// ------------------------------------------------------------------
-
-// El archivo attemptsController.js se mantiene tal y como lo compartiste. Si quieres que haga cambios
-// concretos en attemptsController (por ejemplo emitir eventos adicionales o cambiar la ruta /attempts/reset),
-// dímelo y los aplico.

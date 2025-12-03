@@ -1,5 +1,6 @@
 // backend/src/controllers/attemptsController.js
 import * as Attempts from "../models/attemptsModel.js";
+import db from "../config/db.js";
 
 /**
  * POST /api/attempts/reset
@@ -103,6 +104,107 @@ export async function createAttemptHandler(req, res) {
 }
 
 /**
+ * POST /api/attempts/competencias/:id/calificaciones
+ * body: { id_competidor, exercise_id, attempt_number, judge_id, valor, force? }
+ *
+ * Operación atómica: asegura que exista el attempt (find-or-create) y aplica la aprobación (approve)
+ * en la misma transacción. Devuelve el attempt final.
+ */
+export async function upsertAndApproveHandler(req, res) {
+  const id_competencia = Number(req.params.id);
+  const { id_competidor, exercise_id, attempt_number, judge_id, valor, force } = req.body;
+  if (!id_competencia || !id_competidor || !exercise_id || !attempt_number) {
+    return res.status(400).json({ error: "faltan parametros" });
+  }
+
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // 1) Insertar si no existe (requiere UNIQUE index sobre id_competencia,id_competidor,exercise_id,attempt_number)
+    const insertSql = `
+      INSERT INTO attempts (id_competencia, id_competidor, exercise_id, attempt_number)
+      VALUES (?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)
+    `;
+    const [ins] = await conn.query(insertSql, [id_competencia, id_competidor, exercise_id, attempt_number]);
+
+    let attemptId = ins.insertId;
+    if (!attemptId) {
+      const [rows] = await conn.query(
+        `SELECT id FROM attempts WHERE id_competencia=? AND id_competidor=? AND exercise_id=? AND attempt_number=? LIMIT 1`,
+        [id_competencia, id_competidor, exercise_id, attempt_number]
+      );
+      attemptId = rows[0] && rows[0].id;
+    }
+
+    if (!attemptId) throw new Error("No se pudo crear/buscar intento");
+
+    // 2) Leer intento actual
+    const [existingRows] = await conn.query(`SELECT * FROM attempts WHERE id = ? LIMIT 1`, [attemptId]);
+    const existing = existingRows[0] ?? null;
+
+    const isAlreadyJudged = existing && existing.approved !== null;
+    const isJudgeAction = judge_id != null;
+    const forced = force === true || force === "true";
+
+    // if (isAlreadyJudged && isJudgeAction && !forced) {
+    //   await conn.commit();
+    //   return res.status(409).json({ error: "attempt_already_judged", current: existing });
+    // }
+
+    // 3) Actualizar approved y judge_id si se proporcionó valor
+    // 3) Actualizar approved y judge_id si se proporcionó valor
+    if (valor !== undefined && valor !== null) {
+      // Parse existing notes
+      let currentNotes = [];
+      try {
+        if (existing && existing.notes) {
+          const parsed = JSON.parse(existing.notes);
+          if (Array.isArray(parsed)) currentNotes = parsed;
+        }
+      } catch (e) { currentNotes = []; }
+
+      // Append new vote
+      currentNotes.push({ judge_id: Number(judge_id), valor: valor === "Bueno" ? "Bueno" : "Malo", ts: Date.now() });
+
+      // Calculate tally
+      const buenos = currentNotes.filter(n => n.valor === "Bueno").length;
+      const malos = currentNotes.filter(n => n.valor === "Malo").length;
+
+      // Rule: Bueno >= Malo -> Approved (1), else Rejected (0)
+      // (User specified: 1B+1M=B, 1B+2M=M, 0B+2M=M. This implies Tie=Bueno)
+      const finalApproved = (buenos >= malos) ? 1 : 0;
+
+      await conn.query(
+        `UPDATE attempts SET approved = ?, notes = ?, judge_id = ? WHERE id = ?`,
+        [finalApproved, JSON.stringify(currentNotes), judge_id ?? null, attemptId]
+      );
+    }
+
+    // 4) Leer intento final y commit
+    const [finalRows] = await conn.query(`SELECT * FROM attempts WHERE id = ? LIMIT 1`, [attemptId]);
+    const attempt = finalRows[0] ?? null;
+
+    await conn.commit();
+
+    // Emitir evento socket con attempt completo
+    const io = req.app.get("io");
+    if (io && attempt && attempt.id_competencia) {
+      io.to(`competencia:${attempt.id_competencia}`).emit("attempt_approved", { attempt });
+    }
+
+    return res.json({ ok: true, attempt });
+  } catch (err) {
+    try { await conn.rollback(); } catch (e) { /* ignore */ }
+    console.error("upsertAndApproveHandler error", err);
+    return res.status(500).json({ error: err.message || String(err) });
+  } finally {
+    conn.release();
+  }
+}
+
+/**
  * PATCH /api/attempts/:id/approve
  * body: { approved: boolean|null, judge_id?, force? }
  *
@@ -130,53 +232,66 @@ export async function approveAttemptHandler(req, res) {
     const attempt = await Attempts.getAttemptById(attemptId);
     if (!attempt) return res.status(404).json({ error: "attempt_not_found" });
 
-    /**
-     * Nuevo comportamiento:
-     * - Si el intento ya fue calificado (attempt.approved !== null) y quien intenta calificar
-     *   es un juez (judge_id != null) y no se pasó force=true -> bloquear (409).
-     * - Si judge_id == null (admin panel) permitimos sobrescribir sin force.
-     * - Si se pasa force === true, permitimos sobrescribir incluso si judge_id != null.
-     */
     const isAlreadyJudged = attempt.approved !== null;
     const isJudgeAction = judge_id != null;
     const forced = force === true || force === "true";
 
-    if (isAlreadyJudged && isJudgeAction && !forced) {
-      // bloqueo solo para casos donde un juez intenta re-calificar sin force
-      return res.status(409).json({ error: "attempt_already_judged", current: attempt });
-    }
+    // if (isAlreadyJudged && isJudgeAction && !forced) {
+    //   return res.status(409).json({ error: "attempt_already_judged", current: attempt });
+    // }
 
-    // setear approved e id de juez (puede ser null para admin)
-    await Attempts.setAttemptApproval(attemptId, approved == null ? null : Boolean(approved), judge_id == null ? null : Number(judge_id));
-
-    // agregar nota (registro del voto) si se proporcionó judge_id y approved no es null
+    // 3) Logic for majority voting
     if (judge_id != null && approved != null) {
-      const noteObj = { judge_id: Number(judge_id), valor: approved ? "Bueno" : "Malo", ts: Date.now() };
-      if (typeof Attempts.appendAttemptNote === "function") {
-        await Attempts.appendAttemptNote(attemptId, noteObj);
-      } else {
-        console.warn("appendAttemptNote no está implementada en attemptsModel. No se guardará nota de juez.");
-      }
+      // Parse existing notes
+      let currentNotes = [];
+      try {
+        if (attempt.notes) {
+          const parsed = JSON.parse(attempt.notes);
+          if (Array.isArray(parsed)) currentNotes = parsed;
+        }
+      } catch (e) { currentNotes = []; }
+
+      // Append new vote
+      currentNotes.push({ judge_id: Number(judge_id), valor: approved ? "Bueno" : "Malo", ts: Date.now() });
+
+      // Calculate tally
+      const buenos = currentNotes.filter(n => n.valor === "Bueno").length;
+      const malos = currentNotes.filter(n => n.valor === "Malo").length;
+
+      // Rule: Bueno >= Malo -> Approved (1), else Rejected (0)
+      const finalApproved = (buenos >= malos) ? 1 : 0;
+
+      // Update DB directly
+      await db.query(
+        "UPDATE attempts SET approved = ?, notes = ?, judge_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        [finalApproved, JSON.stringify(currentNotes), Number(judge_id), attemptId]
+      );
+    } else {
+      // Admin override or simple update without judge logic
+      await Attempts.setAttemptApproval(attemptId, approved == null ? null : Boolean(approved), judge_id == null ? null : Number(judge_id));
     }
+
+    // leer intento actualizado
+    const updated = await Attempts.getAttemptById(attemptId);
 
     // emitir evento socket (por room si la row contiene id_competencia)
     const io = req.app.get("io");
     try {
       let payload = { attemptId, approved: approved == null ? null : Boolean(approved), judge_id: judge_id == null ? null : Number(judge_id), forced: forced };
 
-      if (io && attempt && attempt.id_competencia) {
-        io.to(`competencia:${attempt.id_competencia}`).emit("attempt_approved", {
+      if (io && updated && updated.id_competencia) {
+        io.to(`competencia:${updated.id_competencia}`).emit("attempt_approved", {
           ...payload,
-          attempt,
+          attempt: updated,
         });
       } else if (io) {
-        io.emit("attempt_approved", payload);
+        io.emit("attempt_approved", { ...payload, attempt: updated });
       }
     } catch (emitErr) {
       console.warn("Error al emitir evento socket en approveAttemptHandler:", emitErr);
     }
 
-    res.json({ ok: true });
+    res.json({ ok: true, attempt: updated });
   } catch (err) {
     console.error("approveAttemptHandler error", err);
     res.status(500).json({ error: err.message || String(err) });
