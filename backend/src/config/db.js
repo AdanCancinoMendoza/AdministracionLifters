@@ -15,7 +15,7 @@ const db = mysql.createPool({
   charset: 'utf8mb4'
 });
 
-});
+
 
 // Probar la conexión
 db.getConnection()
